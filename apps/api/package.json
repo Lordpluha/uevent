@@ -9,8 +9,8 @@
     "build": "nest build",
     "format": "pnpx @biomejs/biome format --write",
     "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
+    "dev": "nest start --watch",
+    "debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "pnpx @biomejs/biome lint --write"
   },
