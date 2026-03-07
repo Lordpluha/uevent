@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common'
 import { AppController } from './app.controller'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { User } from './modules/users/entities/user.entity'
+import { UsersModule } from './modules/users/users.module'
+import { NotificationsModule } from './modules/notifications/notifications.module'
+import { TagsModule } from './modules/tags/tags.module'
+import { EventsModule } from './modules/events/events.module'
+import { OrganizationsModule } from './modules/organizations/organizations.module'
 
 @Module({
   imports: [
@@ -12,10 +16,14 @@ import { User } from './modules/users/entities/user.entity'
       username: 'uevent',
       password: 'uevent',
       database: 'uevent',
-      entities: [User],
       synchronize: true,
       autoLoadEntities: true,
     }),
+    UsersModule,
+    NotificationsModule,
+    TagsModule,
+    EventsModule,
+    OrganizationsModule,
   ],
   controllers: [AppController],
 })
