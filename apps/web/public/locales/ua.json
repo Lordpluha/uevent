@@ -1,0 +1,79 @@
+{
+  "header": {
+    "nav": {
+      "events": "Події",
+      "organizations": "Організації",
+      "tickets": "Квитки"
+    },
+    "actions": {
+      "dark": "Темна",
+      "light": "Світла",
+      "darkTheme": "Темна тема",
+      "lightTheme": "Світла тема",
+      "searchEvents": "Шукати події",
+      "startGroup": "Створити групу",
+      "login": "Увійти"
+    },
+    "menu": {
+      "open": "Відкрити меню",
+      "close": "Закрити меню"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Увійти",
+      "subtitle": "Ласкаво просимо назад",
+      "email": "Email",
+      "emailPlaceholder": "ви@приклад.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "Ваш пароль",
+      "submit": "Увійти",
+      "noAccount": "Немає облікового запису?",
+      "switchToRegister": "Зареєструватись",
+      "continueWithGoogle": "Продовжити з Google",
+      "orDivider": "або"
+    },
+    "register": {
+      "title": "Реєстрація",
+      "subtitle": "Створіть акаунт у uevent",
+      "name": "Імʼя",
+      "namePlaceholder": "Ваше імʼя",
+      "email": "Email",
+      "emailPlaceholder": "ви@приклад.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "Мінімум 8 символів",
+      "confirmPassword": "Підтвердження паролю",
+      "confirmPasswordPlaceholder": "Повторіть пароль",
+      "submit": "Створити акаунт",
+      "hasAccount": "Вже є акаунт?",
+      "switchToLogin": "Увійти",
+      "continueWithGoogle": "Продовжити з Google",
+      "orDivider": "або"
+    }
+  },
+  "footer": {
+    "description": "Платформа для людей, які обʼєднуються за інтересами.",
+    "createGroup": "Створити свою групу",
+    "sections": {
+      "account": {
+        "title": "Ваш акаунт",
+        "links": ["Налаштування", "Допомога", "Вийти"]
+      },
+      "discover": {
+        "title": "Пошук",
+        "links": ["Групи", "Події", "Теми", "Міста"]
+      },
+      "about": {
+        "title": "Про платформу",
+        "links": ["Про нас", "Блог", "Карʼєра", "Контакти"]
+      },
+      "organizers": {
+        "title": "Для організаторів",
+        "links": ["Створити групу", "Тарифи", "Реклама", "Партнери"]
+      }
+    },
+    "copyright": "© 2026 uevent. Усі права захищено.",
+    "privacyPolicy": "Політика конфіденційності",
+    "termsOfUse": "Умови використання"
+  }
+}
