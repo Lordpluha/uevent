@@ -1,58 +1,32 @@
-import { Globe } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components';
 import { useAppContext, type Locale } from '@shared/lib';
 
-const LOCALES: Locale[] = ['en', 'ua'];
-const LOCALE_LABELS: Record<Locale, string> = { en: 'EN', ua: 'UA' };
+const LOCALES: { value: Locale; label: string; flag: string }[] = [
+  { value: 'en', label: 'English', flag: '🇬🇧' },
+  { value: 'ua', label: 'Українська', flag: '🇺🇦' },
+];
 
-type Props = {
-  /** 'pill' – horizontal rounded buttons (desktop header)
-   *  'grid' – 2-column grid (mobile menu) */
-  variant?: 'pill' | 'grid';
-};
-
-export const LocaleSwitcher = ({ variant = 'pill' }: Props) => {
+export const LocaleSwitcher = () => {
   const { locale, setLocale } = useAppContext();
-
-  if (variant === 'grid') {
-    return (
-      <div className="grid grid-cols-2 overflow-hidden rounded-md border border-border text-sm font-medium">
-        {LOCALES.map((loc) => (
-          <button
-            key={loc}
-            type="button"
-            onClick={() => setLocale(loc)}
-            className={`flex items-center justify-center gap-1.5 px-4 py-2 transition-colors ${
-              locale === loc
-                ? 'bg-foreground text-background'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {LOCALE_LABELS[loc]}
-          </button>
-        ))}
-      </div>
-    );
-  }
+  const current = LOCALES.find((l) => l.value === locale);
 
   return (
-    <div className="inline-flex items-center rounded-full border border-border text-sm font-medium">
-      {LOCALES.map((loc, i) => (
-        <button
-          key={loc}
-          type="button"
-          onClick={() => setLocale(loc)}
-          className={`flex items-center gap-1.5 px-3 py-2 transition-colors ${
-            i === 0 ? 'rounded-l-full' : 'rounded-r-full'
-          } ${
-            locale === loc
-              ? 'bg-foreground text-background'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          {i === 0 && <Globe className="h-3.5 w-3.5" />}
-          {LOCALE_LABELS[loc]}
-        </button>
-      ))}
-    </div>
+    <Select value={locale} onValueChange={(value) => setLocale(value as Locale)}>
+      <SelectTrigger
+        aria-label="Select language"
+        className="!h-auto rounded-full border-border bg-transparent px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+      >
+        <span>{current?.flag}</span>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="end">
+        {LOCALES.map(({ value, label, flag }) => (
+          <SelectItem key={value} value={value}>
+            <span>{flag}</span>
+            {label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };

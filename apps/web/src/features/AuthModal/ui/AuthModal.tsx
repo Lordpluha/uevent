@@ -1,70 +1,103 @@
+import { cva } from 'class-variance-authority';
+import { Building2, User } from 'lucide-react';
 import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  Button,
-  Input,
-  Label,
-} from '@shared/components';
+import { Dialog, DialogContent, DialogTrigger, Button, Input, Label } from '@shared/components';
 import { useAppContext } from '@shared/lib';
+import { cn } from '@shared/lib/utils';
 
-type Tab = 'login' | 'register';
+/* ── cva ─────────────────────────────────────────────────── */
+
+const triggerVariants = cva(
+  'inline-flex items-center font-medium transition-colors border border-border hover:bg-accent',
+  {
+    variants: {
+      variant: {
+        pill: 'rounded-full px-3 py-2 text-sm text-foreground',
+        block: 'w-full justify-center rounded-md px-4 py-2 text-sm text-foreground',
+      },
+    },
+    defaultVariants: { variant: 'pill' },
+  },
+);
+
+/* ── Types ───────────────────────────────────────────────── */
+
+type AccountType = 'user' | 'organization';
+type AuthTab = 'login' | 'register';
 
 type Props = {
-  /** Which tab to show initially */
-  defaultTab?: Tab;
-  /** 'pill'  – rounded-full trigger button (desktop header)
-   *  'block' – full-width rounded-md trigger button (mobile menu) */
+  defaultTab?: AuthTab;
   variant?: 'pill' | 'block';
 };
 
+/* ── Component ───────────────────────────────────────────── */
+
 export const AuthModal = ({ defaultTab = 'login', variant = 'pill' }: Props) => {
   const { t } = useAppContext();
-  const [tab, setTab] = useState<Tab>(defaultTab);
-
-  const triggerClassName =
-    variant === 'block'
-      ? 'inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent'
-      : 'inline-flex items-center rounded-full border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent';
+  const [accountType, setAccountType] = useState<AccountType>('user');
+  const [tab, setTab] = useState<AuthTab>(defaultTab);
 
   return (
     <Dialog>
-      <DialogTrigger render={<button type="button" className={triggerClassName} />}>
+      <DialogTrigger render={<button type="button" className={cn(triggerVariants({ variant }))} />}>
         {t.header.actions.login}
       </DialogTrigger>
 
       <DialogContent className="w-full max-w-sm rounded-2xl p-8">
-        {/* Tab switcher */}
-        <div className="mb-6 grid grid-cols-2 overflow-hidden rounded-full border border-border text-sm font-medium">
-          <button
-            type="button"
-            onClick={() => setTab('login')}
-            className={`px-4 py-2 text-center transition-colors ${
-              tab === 'login'
-                ? 'bg-foreground text-background'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t.auth.login.title}
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('register')}
-            className={`px-4 py-2 text-center transition-colors ${
-              tab === 'register'
-                ? 'bg-foreground text-background'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t.auth.register.title}
-          </button>
+        {/* Account type switcher */}
+        <div className="mb-5 grid grid-cols-2 gap-2">
+          {(['user', 'organization'] as AccountType[]).map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setAccountType(type)}
+              className={cn(
+                'flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-colors',
+                accountType === type
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
+              )}
+            >
+              {type === 'user' ? <User className="h-3.5 w-3.5" /> : <Building2 className="h-3.5 w-3.5" />}
+              {type === 'user' ? t.auth.tabs.user : t.auth.tabs.organization}
+            </button>
+          ))}
         </div>
 
-        {tab === 'login' ? (
-          <LoginForm t={t.auth.login} onSwitch={() => setTab('register')} />
+        {/* Login / Register sub-tabs */}
+        <div className="mb-6 grid grid-cols-2 overflow-hidden rounded-full border border-border text-sm font-medium">
+          {(['login', 'register'] as AuthTab[]).map((authTab) => (
+            <button
+              key={authTab}
+              type="button"
+              onClick={() => setTab(authTab)}
+              className={cn(
+                'px-4 py-2 text-center transition-colors',
+                tab === authTab ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {authTab === 'login'
+                ? accountType === 'user'
+                  ? t.auth.login.title
+                  : t.auth.orgLogin.title
+                : accountType === 'user'
+                  ? t.auth.register.title
+                  : t.auth.orgRegister.title}
+            </button>
+          ))}
+        </div>
+
+        {/* Forms */}
+        {accountType === 'user' ? (
+          tab === 'login' ? (
+            <LoginForm t={t.auth.login} onSwitch={() => setTab('register')} />
+          ) : (
+            <RegisterForm t={t.auth.register} onSwitch={() => setTab('login')} />
+          )
+        ) : tab === 'login' ? (
+          <OrgLoginForm t={t.auth.orgLogin} onSwitch={() => setTab('register')} />
         ) : (
-          <RegisterForm t={t.auth.register} onSwitch={() => setTab('login')} />
+          <OrgRegisterForm t={t.auth.orgRegister} onSwitch={() => setTab('login')} />
         )}
       </DialogContent>
     </Dialog>
@@ -72,11 +105,44 @@ export const AuthModal = ({ defaultTab = 'login', variant = 'pill' }: Props) => 
 };
 
 /* ──────────────────────────────────────────────────────────── */
-/*  Login form                                                   */
+/*  Shared helpers                                               */
+/* ──────────────────────────────────────────────────────────── */
+
+const Divider = ({ label }: { label: string }) => (
+  <div className="flex items-center gap-3">
+    <span className="h-px flex-1 bg-border" />
+    <span className="text-xs text-muted-foreground">{label}</span>
+    <span className="h-px flex-1 bg-border" />
+  </div>
+);
+
+const GoogleButton = ({ label }: { label: string }) => (
+  <button
+    type="button"
+    onClick={() => {
+      window.location.href = '/auth/google';
+    }}
+    className="flex w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+  >
+    <GoogleIcon />
+    {label}
+  </button>
+);
+
+const SwitchPrompt = ({ text, action, onAction }: { text: string; action: string; onAction: () => void }) => (
+  <p className="text-center text-sm text-muted-foreground">
+    {text}{' '}
+    <button type="button" onClick={onAction} className="font-medium text-foreground underline-offset-2 hover:underline">
+      {action}
+    </button>
+  </p>
+);
+
+/* ──────────────────────────────────────────────────────────── */
+/*  User — Login                                                 */
 /* ──────────────────────────────────────────────────────────── */
 
 type LoginDict = {
-  title: string;
   subtitle: string;
   email: string;
   emailPlaceholder: string;
@@ -89,82 +155,37 @@ type LoginDict = {
   orDivider: string;
 };
 
-const LoginForm = ({
-  t,
-  onSwitch,
-}: { t: LoginDict; onSwitch: () => void }) => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: wire up real auth
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="mb-1 text-center">
-        <p className="text-sm text-muted-foreground">{t.subtitle}</p>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="login-email">{t.email}</Label>
-        <Input
-          id="login-email"
-          type="email"
-          placeholder={t.emailPlaceholder}
-          required
-          autoComplete="email"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="login-password">{t.password}</Label>
-        <Input
-          id="login-password"
-          type="password"
-          placeholder={t.passwordPlaceholder}
-          required
-          autoComplete="current-password"
-        />
-      </div>
-
-      <Button type="submit" className="mt-2 w-full">
-        {t.submit}
-      </Button>
-
-      {/* Google OAuth */}
-      <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-border" />
-        <span className="text-xs text-muted-foreground">{t.orDivider}</span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-      <button
-        type="button"
-        onClick={() => { window.location.href = '/auth/google'; }}
-        className="flex w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-      >
-        <GoogleIcon />
-        {t.continueWithGoogle}
-      </button>
-
-      <p className="text-center text-sm text-muted-foreground">
-        {t.noAccount}{' '}
-        <button
-          type="button"
-          onClick={onSwitch}
-          className="font-medium text-foreground underline-offset-2 hover:underline"
-        >
-          {t.switchToRegister}
-        </button>
-      </p>
-    </form>
-  );
-};
+const LoginForm = ({ t, onSwitch }: { t: LoginDict; onSwitch: () => void }) => (
+  <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-4">
+    <p className="mb-1 text-center text-sm text-muted-foreground">{t.subtitle}</p>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="login-email">{t.email}</Label>
+      <Input id="login-email" type="email" placeholder={t.emailPlaceholder} required autoComplete="email" />
+    </div>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="login-password">{t.password}</Label>
+      <Input
+        id="login-password"
+        type="password"
+        placeholder={t.passwordPlaceholder}
+        required
+        autoComplete="current-password"
+      />
+    </div>
+    <Button type="submit" className="mt-2 w-full">
+      {t.submit}
+    </Button>
+    <Divider label={t.orDivider} />
+    <GoogleButton label={t.continueWithGoogle} />
+    <SwitchPrompt text={t.noAccount} action={t.switchToRegister} onAction={onSwitch} />
+  </form>
+);
 
 /* ──────────────────────────────────────────────────────────── */
-/*  Register form                                               */
+/*  User — Register                                              */
 /* ──────────────────────────────────────────────────────────── */
 
 type RegisterDict = {
-  title: string;
   subtitle: string;
   name: string;
   namePlaceholder: string;
@@ -181,101 +202,148 @@ type RegisterDict = {
   orDivider: string;
 };
 
-const RegisterForm = ({
-  t,
-  onSwitch,
-}: { t: RegisterDict; onSwitch: () => void }) => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: wire up real auth
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="mb-1 text-center">
-        <p className="text-sm text-muted-foreground">{t.subtitle}</p>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="reg-name">{t.name}</Label>
-        <Input
-          id="reg-name"
-          type="text"
-          placeholder={t.namePlaceholder}
-          required
-          autoComplete="name"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="reg-email">{t.email}</Label>
-        <Input
-          id="reg-email"
-          type="email"
-          placeholder={t.emailPlaceholder}
-          required
-          autoComplete="email"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="reg-password">{t.password}</Label>
-        <Input
-          id="reg-password"
-          type="password"
-          placeholder={t.passwordPlaceholder}
-          required
-          autoComplete="new-password"
-          minLength={8}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="reg-confirm">{t.confirmPassword}</Label>
-        <Input
-          id="reg-confirm"
-          type="password"
-          placeholder={t.confirmPasswordPlaceholder}
-          required
-          autoComplete="new-password"
-        />
-      </div>
-
-      <Button type="submit" className="mt-2 w-full">
-        {t.submit}
-      </Button>
-
-      {/* Google OAuth */}
-      <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-border" />
-        <span className="text-xs text-muted-foreground">{t.orDivider}</span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-      <button
-        type="button"
-        onClick={() => { window.location.href = '/auth/google'; }}
-        className="flex w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-      >
-        <GoogleIcon />
-        {t.continueWithGoogle}
-      </button>
-
-      <p className="text-center text-sm text-muted-foreground">
-        {t.hasAccount}{' '}
-        <button
-          type="button"
-          onClick={onSwitch}
-          className="font-medium text-foreground underline-offset-2 hover:underline"
-        >
-          {t.switchToLogin}
-        </button>
-      </p>
-    </form>
-  );
-};
+const RegisterForm = ({ t, onSwitch }: { t: RegisterDict; onSwitch: () => void }) => (
+  <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-4">
+    <p className="mb-1 text-center text-sm text-muted-foreground">{t.subtitle}</p>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="reg-name">{t.name}</Label>
+      <Input id="reg-name" type="text" placeholder={t.namePlaceholder} required autoComplete="name" />
+    </div>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="reg-email">{t.email}</Label>
+      <Input id="reg-email" type="email" placeholder={t.emailPlaceholder} required autoComplete="email" />
+    </div>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="reg-password">{t.password}</Label>
+      <Input
+        id="reg-password"
+        type="password"
+        placeholder={t.passwordPlaceholder}
+        required
+        autoComplete="new-password"
+        minLength={8}
+      />
+    </div>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="reg-confirm">{t.confirmPassword}</Label>
+      <Input
+        id="reg-confirm"
+        type="password"
+        placeholder={t.confirmPasswordPlaceholder}
+        required
+        autoComplete="new-password"
+      />
+    </div>
+    <Button type="submit" className="mt-2 w-full">
+      {t.submit}
+    </Button>
+    <Divider label={t.orDivider} />
+    <GoogleButton label={t.continueWithGoogle} />
+    <SwitchPrompt text={t.hasAccount} action={t.switchToLogin} onAction={onSwitch} />
+  </form>
+);
 
 /* ──────────────────────────────────────────────────────────── */
-/*  Google icon (official color SVG, no external dependency)    */
+/*  Organization — Login                                         */
+/* ──────────────────────────────────────────────────────────── */
+
+type OrgLoginDict = {
+  subtitle: string;
+  email: string;
+  emailPlaceholder: string;
+  password: string;
+  passwordPlaceholder: string;
+  submit: string;
+  noAccount: string;
+  switchToRegister: string;
+  orDivider: string;
+};
+
+const OrgLoginForm = ({ t, onSwitch }: { t: OrgLoginDict; onSwitch: () => void }) => (
+  <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-4">
+    <p className="mb-1 text-center text-sm text-muted-foreground">{t.subtitle}</p>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="org-login-email">{t.email}</Label>
+      <Input id="org-login-email" type="email" placeholder={t.emailPlaceholder} required autoComplete="email" />
+    </div>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="org-login-password">{t.password}</Label>
+      <Input
+        id="org-login-password"
+        type="password"
+        placeholder={t.passwordPlaceholder}
+        required
+        autoComplete="current-password"
+      />
+    </div>
+    <Button type="submit" className="mt-2 w-full">
+      {t.submit}
+    </Button>
+    <SwitchPrompt text={t.noAccount} action={t.switchToRegister} onAction={onSwitch} />
+  </form>
+);
+
+/* ──────────────────────────────────────────────────────────── */
+/*  Organization — Register                                      */
+/* ──────────────────────────────────────────────────────────── */
+
+type OrgRegisterDict = {
+  subtitle: string;
+  orgName: string;
+  orgNamePlaceholder: string;
+  email: string;
+  emailPlaceholder: string;
+  password: string;
+  passwordPlaceholder: string;
+  confirmPassword: string;
+  confirmPasswordPlaceholder: string;
+  submit: string;
+  hasAccount: string;
+  switchToLogin: string;
+  orDivider: string;
+};
+
+const OrgRegisterForm = ({ t, onSwitch }: { t: OrgRegisterDict; onSwitch: () => void }) => (
+  <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-4">
+    <p className="mb-1 text-center text-sm text-muted-foreground">{t.subtitle}</p>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="org-name">{t.orgName}</Label>
+      <Input id="org-name" type="text" placeholder={t.orgNamePlaceholder} required autoComplete="organization" />
+    </div>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="org-reg-email">{t.email}</Label>
+      <Input id="org-reg-email" type="email" placeholder={t.emailPlaceholder} required autoComplete="email" />
+    </div>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="org-reg-password">{t.password}</Label>
+      <Input
+        id="org-reg-password"
+        type="password"
+        placeholder={t.passwordPlaceholder}
+        required
+        autoComplete="new-password"
+        minLength={8}
+      />
+    </div>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="org-reg-confirm">{t.confirmPassword}</Label>
+      <Input
+        id="org-reg-confirm"
+        type="password"
+        placeholder={t.confirmPasswordPlaceholder}
+        required
+        autoComplete="new-password"
+      />
+    </div>
+    <Button type="submit" className="mt-2 w-full">
+      {t.submit}
+    </Button>
+    <SwitchPrompt text={t.hasAccount} action={t.switchToLogin} onAction={onSwitch} />
+  </form>
+);
+
+/* ──────────────────────────────────────────────────────────── */
+/*  Google icon                                                  */
 /* ──────────────────────────────────────────────────────────── */
 
 const GoogleIcon = () => (

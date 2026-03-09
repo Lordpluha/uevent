@@ -14,12 +14,24 @@
       "startGroup": "Start a group",
       "login": "Log in"
     },
+    "search": {
+      "placeholder": "Search events, organizations…",
+      "empty": "No results found.",
+      "groups": {
+        "events": "Events",
+        "organizations": "Organizations"
+      }
+    },
     "menu": {
       "open": "Open menu",
       "close": "Close menu"
     }
   },
   "auth": {
+    "tabs": {
+      "user": "Personal",
+      "organization": "Organization"
+    },
     "login": {
       "title": "Log in",
       "subtitle": "Welcome back to uevent",
@@ -31,6 +43,34 @@
       "noAccount": "Don't have an account?",
       "switchToRegister": "Sign up",
       "continueWithGoogle": "Continue with Google",
+      "orDivider": "or"
+    },
+    "orgLogin": {
+      "title": "Organization login",
+      "subtitle": "Sign in to manage your organization",
+      "email": "Work email",
+      "emailPlaceholder": "org@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Your password",
+      "submit": "Sign in",
+      "noAccount": "No organization account?",
+      "switchToRegister": "Register organization",
+      "orDivider": "or"
+    },
+    "orgRegister": {
+      "title": "Register organization",
+      "subtitle": "Create an organizer account on uevent",
+      "orgName": "Organization name",
+      "orgNamePlaceholder": "My Awesome Org",
+      "email": "Work email",
+      "emailPlaceholder": "org@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Minimum 8 characters",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Repeat your password",
+      "submit": "Create organization",
+      "hasAccount": "Already registered?",
+      "switchToLogin": "Sign in",
       "orDivider": "or"
     },
     "register": {
@@ -49,6 +89,31 @@
       "switchToLogin": "Log in",
       "continueWithGoogle": "Continue with Google",
       "orDivider": "or"
+    }
+  },
+  "home": {
+    "hero": {
+      "headline": "Discover events that move you",
+      "subheadline": "Find the best meetups, workshops, and conferences near you — or join online from anywhere.",
+      "cta": "Browse events",
+      "ctaHost": "Host an event"
+    },
+    "stats": {
+      "events": "Events",
+      "cities": "Cities",
+      "attendees": "Attendees"
+    },
+    "trending": {
+      "title": "Trending this week",
+      "browseAll": "Browse all"
+    },
+    "categories": {
+      "title": "Explore by category"
+    },
+    "hostCta": {
+      "title": "Ready to host your own event?",
+      "subtitle": "Create an organizer account and start reaching thousands of attendees.",
+      "cta": "Start organizing"
     }
   },
   "footer": {

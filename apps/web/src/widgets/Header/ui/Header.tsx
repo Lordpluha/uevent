@@ -1,10 +1,11 @@
-import { Menu, Search, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 import { AuthModal } from '@features/AuthModal';
 import { LocaleSwitcher } from '@features/LocaleSwitcher';
 import { ThemeSwitcher } from '@features/ThemeSwitcher';
+import { SearchModal } from '@features/SearchModal';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,15 +42,9 @@ export const Header = () => {
         </NavigationMenu>
 
         <div className="hidden items-center gap-3 [@media(min-width:768px)]:flex">
-          <LocaleSwitcher variant="pill" />
+          <LocaleSwitcher />
           <ThemeSwitcher variant="pill" />
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm text-muted-foreground"
-          >
-            <Search className="h-4 w-4" />
-            {t.header.actions.searchEvents}
-          </button>
+          <SearchModal variant="pill" />
           <button
             type="button"
             className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
@@ -99,15 +94,9 @@ export const Header = () => {
             </nav>
 
             <div className="flex flex-col gap-3">
-              <LocaleSwitcher variant="grid" />
+              <LocaleSwitcher />
               <ThemeSwitcher variant="block" />
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-border px-4 py-2 text-sm text-muted-foreground"
-              >
-                <Search className="h-4 w-4" />
-                {t.header.actions.searchEvents}
-              </button>
+              <SearchModal variant="block" />
               <button
                 type="button"
                 className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
