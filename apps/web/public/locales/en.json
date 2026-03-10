@@ -1,0 +1,164 @@
+{
+  "header": {
+    "nav": {
+      "events": "Events",
+      "organizations": "Organizations",
+      "tickets": "Tickets"
+    },
+    "actions": {
+      "dark": "Dark",
+      "light": "Light",
+      "darkTheme": "Dark theme",
+      "lightTheme": "Light theme",
+      "searchEvents": "Search events",
+      "startGroup": "Start a group",
+      "login": "Log in"
+    },
+    "search": {
+      "placeholder": "Search events, organizations…",
+      "empty": "No results found.",
+      "groups": {
+        "events": "Events",
+        "organizations": "Organizations"
+      }
+    },
+    "menu": {
+      "open": "Open menu",
+      "close": "Close menu"
+    }
+  },
+  "auth": {
+    "tabs": {
+      "user": "Personal",
+      "organization": "Organization"
+    },
+    "login": {
+      "title": "Log in",
+      "subtitle": "Welcome back to uevent",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Your password",
+      "submit": "Log in",
+      "noAccount": "Don't have an account?",
+      "switchToRegister": "Sign up",
+      "continueWithGoogle": "Continue with Google",
+      "orDivider": "or"
+    },
+    "orgLogin": {
+      "title": "Organization login",
+      "subtitle": "Sign in to manage your organization",
+      "email": "Work email",
+      "emailPlaceholder": "org@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Your password",
+      "submit": "Sign in",
+      "noAccount": "No organization account?",
+      "switchToRegister": "Register organization",
+      "orDivider": "or"
+    },
+    "orgRegister": {
+      "title": "Register organization",
+      "subtitle": "Create an organizer account on uevent",
+      "orgName": "Organization name",
+      "orgNamePlaceholder": "My Awesome Org",
+      "email": "Work email",
+      "emailPlaceholder": "org@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Minimum 8 characters",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Repeat your password",
+      "submit": "Create organization",
+      "hasAccount": "Already registered?",
+      "switchToLogin": "Sign in",
+      "orDivider": "or"
+    },
+    "register": {
+      "title": "Sign up",
+      "subtitle": "Create your uevent account",
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Minimum 8 characters",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Repeat your password",
+      "submit": "Create account",
+      "hasAccount": "Already have an account?",
+      "switchToLogin": "Log in",
+      "continueWithGoogle": "Continue with Google",
+      "orDivider": "or"
+    }
+  },
+  "home": {
+    "hero": {
+      "headline": "Discover events that move you",
+      "subheadline": "Find the best meetups, workshops, and conferences near you — or join online from anywhere.",
+      "cta": "Browse events",
+      "ctaHost": "Host an event"
+    },
+    "stats": {
+      "events": "Events",
+      "cities": "Cities",
+      "attendees": "Attendees",
+      "organizations": "Organizations"
+    },
+    "trending": {
+      "title": "Trending this week",
+      "browseAll": "Browse all"
+    },
+    "categories": {
+      "title": "Explore by category"
+    },
+    "hostCta": {
+      "title": "Ready to host your own event?",
+      "subtitle": "Create an organizer account and start reaching thousands of attendees.",
+      "cta": "Start organizing"
+    }
+  },
+  "footer": {
+    "description": "A platform for people who connect through shared interests.",
+    "createGroup": "Create your group",
+    "sections": {
+      "account": {
+        "title": "Your account",
+        "links": [
+          "Settings",
+          "Help",
+          "Log out"
+        ]
+      },
+      "discover": {
+        "title": "Discover",
+        "links": [
+          "Groups",
+          "Events",
+          "Topics",
+          "Cities"
+        ]
+      },
+      "about": {
+        "title": "About platform",
+        "links": [
+          "About us",
+          "Blog",
+          "Careers",
+          "Contact"
+        ]
+      },
+      "organizers": {
+        "title": "For organizers",
+        "links": [
+          "Create a group",
+          "Pricing",
+          "Advertising",
+          "Partners"
+        ]
+      }
+    },
+    "copyright": "© 2026 uevent. All rights reserved.",
+    "privacyPolicy": "Privacy policy",
+    "termsOfUse": "Terms of use"
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "header": {
+    "nav": {
+      "events": "Події",
+      "organizations": "Організації",
+      "tickets": "Квитки"
+    },
+    "actions": {
+      "dark": "Темна",
+      "light": "Світла",
+      "darkTheme": "Темна тема",
+      "lightTheme": "Світла тема",
+      "searchEvents": "Шукати події",
+      "startGroup": "Створити групу",
+      "login": "Увійти"
+    },
+    "search": {
+      "placeholder": "Пошук подій, організацій…",
+      "empty": "Нічого не знайдено.",
+      "groups": {
+        "events": "Події",
+        "organizations": "Організації"
+      }
+    },
+    "menu": {
+      "open": "Відкрити меню",
+      "close": "Закрити меню"
+    }
+  },
+  "auth": {
+    "tabs": {
+      "user": "Особистий",
+      "organization": "Організація"
+    },
+    "login": {
+      "title": "Увійти",
+      "subtitle": "Ласкаво просимо назад",
+      "email": "Email",
+      "emailPlaceholder": "ви@приклад.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "Ваш пароль",
+      "submit": "Увійти",
+      "noAccount": "Немає облікового запису?",
+      "switchToRegister": "Зареєструватись",
+      "continueWithGoogle": "Продовжити з Google",
+      "orDivider": "або"
+    },
+    "orgLogin": {
+      "title": "Вхід для організацій",
+      "subtitle": "Увійдіть, щоб керувати організацією",
+      "email": "Робочий email",
+      "emailPlaceholder": "org@приклад.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "Ваш пароль",
+      "submit": "Увійти",
+      "noAccount": "Немає акаунта організації?",
+      "switchToRegister": "Зареєструвати організацію",
+      "orDivider": "або"
+    },
+    "orgRegister": {
+      "title": "Реєстрація організації",
+      "subtitle": "Створіть акаунт організатора на uevent",
+      "orgName": "Назва організації",
+      "orgNamePlaceholder": "Моя чудова організація",
+      "email": "Робочий email",
+      "emailPlaceholder": "org@приклад.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "Мінімум 8 символів",
+      "confirmPassword": "Підтвердження паролю",
+      "confirmPasswordPlaceholder": "Повторіть пароль",
+      "submit": "Створити організацію",
+      "hasAccount": "Вже зареєстровані?",
+      "switchToLogin": "Увійти",
+      "orDivider": "або"
+    },
+    "register": {
+      "title": "Реєстрація",
+      "subtitle": "Створіть акаунт у uevent",
+      "name": "Імʼя",
+      "namePlaceholder": "Ваше імʼя",
+      "email": "Email",
+      "emailPlaceholder": "ви@приклад.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "Мінімум 8 символів",
+      "confirmPassword": "Підтвердження паролю",
+      "confirmPasswordPlaceholder": "Повторіть пароль",
+      "submit": "Створити акаунт",
+      "hasAccount": "Вже є акаунт?",
+      "switchToLogin": "Увійти",
+      "continueWithGoogle": "Продовжити з Google",
+      "orDivider": "або"
+    }
+  },
+  "home": {
+    "hero": {
+      "headline": "Відкрий події, які надихають",
+      "subheadline": "Знаходь найкращі мітапи, воркшопи та конференції поруч — або приєднуйся онлайн звідусіль.",
+      "cta": "Переглянути події",
+      "ctaHost": "Організувати подію"
+    },
+    "stats": {
+      "events": "Подій",
+      "cities": "Міст",
+      "attendees": "Учасників",
+      "organizations": "Organizations"
+    },
+    "trending": {
+      "title": "Популярне цього тижня",
+      "browseAll": "Переглянути все"
+    },
+    "categories": {
+      "title": "Досліджуй за категорією"
+    },
+    "hostCta": {
+      "title": "Готовий організувати свою подію?",
+      "subtitle": "Створи акаунт організатора та почни залучати тисячі учасників.",
+      "cta": "Почати організовувати"
+    }
+  },
+  "footer": {
+    "description": "Платформа для людей, які обʼєднуються за інтересами.",
+    "createGroup": "Створити свою групу",
+    "sections": {
+      "account": {
+        "title": "Ваш акаунт",
+        "links": [
+          "Налаштування",
+          "Допомога",
+          "Вийти"
+        ]
+      },
+      "discover": {
+        "title": "Пошук",
+        "links": [
+          "Групи",
+          "Події",
+          "Теми",
+          "Міста"
+        ]
+      },
+      "about": {
+        "title": "Про платформу",
+        "links": [
+          "Про нас",
+          "Блог",
+          "Карʼєра",
+          "Контакти"
+        ]
+      },
+      "organizers": {
+        "title": "Для організаторів",
+        "links": [
+          "Створити групу",
+          "Тарифи",
+          "Реклама",
+          "Партнери"
+        ]
+      }
+    },
+    "copyright": "© 2026 uevent. Усі права захищено.",
+    "privacyPolicy": "Політика конфіденційності",
+    "termsOfUse": "Умови використання"
+  }
+}
