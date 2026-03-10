@@ -6,9 +6,10 @@ import { User } from './entities/user.entity'
 import { UserSession } from './entities/user-session.entity'
 import { UserOtp } from './entities/user-otp.entity'
 import { Ticket } from './entities/ticket.entity'
+import { File } from '../files/entities/file.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserSession, UserOtp, Ticket])],
+  imports: [TypeOrmModule.forFeature([User, UserSession, UserOtp, Ticket, File])],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],
