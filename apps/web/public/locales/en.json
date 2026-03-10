@@ -101,7 +101,8 @@
     "stats": {
       "events": "Events",
       "cities": "Cities",
-      "attendees": "Attendees"
+      "attendees": "Attendees",
+      "organizations": "Organizations"
     },
     "trending": {
       "title": "Trending this week",
@@ -122,19 +123,38 @@
     "sections": {
       "account": {
         "title": "Your account",
-        "links": ["Settings", "Help", "Log out"]
+        "links": [
+          "Settings",
+          "Help",
+          "Log out"
+        ]
       },
       "discover": {
         "title": "Discover",
-        "links": ["Groups", "Events", "Topics", "Cities"]
+        "links": [
+          "Groups",
+          "Events",
+          "Topics",
+          "Cities"
+        ]
       },
       "about": {
         "title": "About platform",
-        "links": ["About us", "Blog", "Careers", "Contact"]
+        "links": [
+          "About us",
+          "Blog",
+          "Careers",
+          "Contact"
+        ]
       },
       "organizers": {
         "title": "For organizers",
-        "links": ["Create a group", "Pricing", "Advertising", "Partners"]
+        "links": [
+          "Create a group",
+          "Pricing",
+          "Advertising",
+          "Partners"
+        ]
       }
     },
     "copyright": "© 2026 uevent. All rights reserved.",

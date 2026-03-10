@@ -13,6 +13,7 @@ import type { Route } from './+types/root'
 import type { PropsWithChildren } from 'react'
 import { useCallback, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { NuqsAdapter } from 'nuqs/adapters/react'
 
 import '@app/styles/global.css'
 import { Header } from '@widgets/Header'
@@ -128,14 +129,16 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContext.Provider value={ctx}>
-        <TooltipProvider>
-          <Header />
-          <Outlet />
-          <Toaster />
-          <Footer />
-        </TooltipProvider>
-      </AppContext.Provider>
+      <NuqsAdapter>
+        <AppContext.Provider value={ctx}>
+          <TooltipProvider>
+            <Header />
+            <Outlet />
+            <Toaster />
+            <Footer />
+          </TooltipProvider>
+        </AppContext.Provider>
+      </NuqsAdapter>
     </QueryClientProvider>
   )
 }

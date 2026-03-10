@@ -37,8 +37,8 @@ const FORMAT_LABELS: Record<EventFormat, string> = {
 const cardVariants = cva('overflow-hidden border-border/60 transition-shadow hover:shadow-md', {
   variants: {
     size: {
-      default: 'w-80',
-      compact: 'w-64',
+      default: 'w-full',
+      compact: 'w-64 shrink-0',
     },
   },
   defaultVariants: { size: 'default' },

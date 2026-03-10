@@ -7,9 +7,12 @@ export default [
   route('/events', 'app/events.tsx'),
   route('/events/:id', 'app/event.tsx'),
 
+  // Organizations
+  route('/organizations', 'app/organizations.tsx'),
+  route('/organizations/:id', 'app/organization.tsx'),
+
   // Public profiles
   route('/users/:id', 'app/user.tsx'),
-  route('/organizations/:id', 'app/organization.tsx'),
 
   // Private: own profile
   route('/profile', 'app/profile.tsx'),

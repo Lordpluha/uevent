@@ -2,9 +2,11 @@ import { Link } from 'react-router';
 import { ArrowRight, Briefcase, Camera, Code2, Globe, Landmark, MonitorPlay, Music2, Users } from 'lucide-react';
 import { EventCard } from '@entities/Event';
 import { MOCK_EVENTS } from '@shared/mocks/mock-events';
+import { MOCK_ORGS } from '@shared/mocks/mock-orgs';
 import { useAppContext } from '@shared/lib';
 import { Badge, buttonVariants } from '@shared/components';
 import { cn } from '@shared/lib/utils';
+import { useCountUp } from '@shared/hooks/useCountUp';
 
 /* ── static data ──────────────────────────────────────────── */
 
@@ -19,11 +21,32 @@ const CATEGORIES = [
   { label: 'Online', icon: Globe, color: 'text-cyan-400' },
 ] as const;
 
-const STATS = [
-  { value: '6K+', key: 'events' },
-  { value: '120+', key: 'cities' },
-  { value: '500K+', key: 'attendees' },
-] as const;
+/* ── computed real stats from mock data ─────────────────────── */
+
+const REAL_STATS = {
+  events: MOCK_EVENTS.length,
+  organizations: MOCK_ORGS.length,
+  members: MOCK_ORGS.reduce((sum, o) => sum + o.membersCount, 0),
+};
+
+/* ── animated stat counter ──────────────────────────────────── */
+
+function StatCounter({ value, label, suffix = '' }: { value: number; label: string; suffix?: string }) {
+  const { value: displayed, ref } = useCountUp<HTMLSpanElement>(value, { duration: 1600 });
+  return (
+    <div className="flex flex-col items-center gap-1 text-center">
+      <span
+        ref={ref}
+        className="tabular-nums text-4xl font-extrabold tracking-tight text-primary transition-all"
+      >
+        {displayed.toLocaleString()}{suffix}
+      </span>
+      <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+        {label}
+      </span>
+    </div>
+  );
+}
 
 /* ── component ────────────────────────────────────────────── */
 
@@ -71,14 +94,9 @@ export function HomePage() {
       {/* ── STATS ────────────────────────────────────────────── */}
       <section className="border-y border-border/50 bg-card/40 px-6 py-12">
         <div className="mx-auto flex max-w-3xl flex-wrap justify-around gap-8">
-          {STATS.map(({ value, key }) => (
-            <div key={key} className="flex flex-col items-center gap-1 text-center">
-              <span className="text-4xl font-extrabold tracking-tight text-primary">{value}</span>
-              <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                {h.stats[key]}
-              </span>
-            </div>
-          ))}
+          <StatCounter value={REAL_STATS.events} suffix="+" label={h.stats.events} />
+          <StatCounter value={REAL_STATS.organizations} suffix="+" label={h.stats.organizations} />
+          <StatCounter value={REAL_STATS.members} suffix="+" label={h.stats.attendees} />
         </div>
       </section>
 

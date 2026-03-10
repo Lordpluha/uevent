@@ -112,6 +112,7 @@ export type Dictionary = {
       events: string;
       cities: string;
       attendees: string;
+      organizations: string;
     };
     trending: {
       title: string;

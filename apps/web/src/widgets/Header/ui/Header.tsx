@@ -16,7 +16,6 @@ export const Header = () => {
   const navigationLinks = [
     { label: t.header.nav.events, href: '/events' },
     { label: t.header.nav.organizations, href: '/organizations' },
-    { label: t.header.nav.tickets, href: '/tickets' },
   ];
 
   return (
@@ -45,12 +44,6 @@ export const Header = () => {
           <LocaleSwitcher />
           <ThemeSwitcher variant="pill" />
           <SearchModal variant="pill" />
-          <button
-            type="button"
-            className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-          >
-            {t.header.actions.startGroup}
-          </button>
           <AuthModal variant="pill" />
         </div>
 
@@ -97,12 +90,6 @@ export const Header = () => {
               <LocaleSwitcher />
               <ThemeSwitcher variant="block" />
               <SearchModal variant="block" />
-              <button
-                type="button"
-                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-              >
-                {t.header.actions.startGroup}
-              </button>
               <AuthModal variant="block" />
             </div>
           </aside>

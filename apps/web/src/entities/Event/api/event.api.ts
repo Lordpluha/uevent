@@ -1,3 +1,5 @@
+import { useQuery } from '@tanstack/react-query';
+import { parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { BasicClientApi } from '@shared/api';
 import type { EventModel, EventList } from '../model/eventEntity';
 import type { CreateEventDto, UpdateEventDto, EventListParams } from '../model/dtos';
@@ -13,6 +15,8 @@ export const MOCK_EVENTS: EventModel[] = [
     time: '10:00',
     format: 'offline',
     location: 'Unit.City, Kyiv',
+    locationFrom: 'Warsaw',
+    locationTo: 'Kyiv',
     organizer: 'JS Ukraine',
     rating: 4.8,
     attendeeCount: 340,
@@ -29,6 +33,36 @@ export const MOCK_EVENTS: EventModel[] = [
       { ticketType: 'free', price: 0, status: 'available' },
       { ticketType: 'standard', price: 12, status: 'limited' },
       { ticketType: 'vip', price: 49, seat: 'A-7', status: 'available' },
+    ],
+    gallery: [
+      {
+        src: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Main stage',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Networking session',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1528901166007-3784c7dd3653?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1528901166007-3784c7dd3653?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Live coding demo',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Q&A panel',
+      },
     ],
   },
   {
@@ -54,6 +88,29 @@ export const MOCK_EVENTS: EventModel[] = [
       { ticketType: 'standard', price: 25, status: 'available' },
       { ticketType: 'vip', price: 89, status: 'sold-out' },
     ],
+    gallery: [
+      {
+        src: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Opening keynote',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Design workshop',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Component library showcase',
+      },
+    ],
   },
   {
     id: '3',
@@ -63,6 +120,8 @@ export const MOCK_EVENTS: EventModel[] = [
     time: '11:00',
     format: 'offline',
     location: 'UNIT.City Hub, Floor 3',
+    locationFrom: 'Kyiv',
+    locationTo: 'Lviv',
     organizer: 'Kyiv Tech Hub',
     rating: 4.9,
     attendeeCount: 80,
@@ -78,6 +137,36 @@ export const MOCK_EVENTS: EventModel[] = [
     tickets: [
       { ticketType: 'standard', price: 20, status: 'limited' },
       { ticketType: 'vip', price: 60, seat: 'B-3', status: 'available' },
+    ],
+    gallery: [
+      {
+        src: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Hands-on coding',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Team collaboration',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Workshop venue',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1200&h=800&fit=crop',
+        msrc: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=267&fit=crop',
+        w: 1200,
+        h: 800,
+        title: 'Node.js deep dive session',
+      },
     ],
   },
   {
@@ -108,6 +197,8 @@ export const MOCK_EVENTS: EventModel[] = [
     time: '13:00',
     format: 'offline',
     location: 'Platforma, Lviv',
+    locationFrom: 'Warsaw',
+    locationTo: 'Lviv',
     organizer: 'Lviv JS',
     rating: 4.7,
     attendeeCount: 150,
@@ -168,6 +259,22 @@ class EventApi extends BasicClientApi {
           e.description.toLowerCase().includes(q) ||
           e.tags.some((t) => t.toLowerCase().includes(q)),
       );
+    }
+    if (params?.tags && params.tags.length > 0) {
+      results = results.filter((e) => params.tags!.some((t) => e.tags.includes(t)));
+    }
+    if (params?.dateFrom || params?.dateTo) {
+      const from = params.dateFrom ? startOfDay(parseISO(params.dateFrom)) : null;
+      const to = params.dateTo ? endOfDay(parseISO(params.dateTo)) : null;
+      results = results.filter((e) => {
+        // e.date is stored as ISO string or event date string
+        let eventDate: Date;
+        try { eventDate = parseISO(e.date); } catch { return true; }
+        if (from && to) return isWithinInterval(eventDate, { start: from, end: to });
+        if (from) return eventDate >= from;
+        if (to) return eventDate <= to;
+        return true;
+      });
     }
     return Promise.resolve(results);
     // return (await this.http.get<EventList>(this.basePath, { params })).data;
@@ -259,3 +366,20 @@ class EventApi extends BasicClientApi {
 }
 
 export const eventsApi = new EventApi('/events');
+
+/* ── React-Query hooks ────────────────────────────────────────────────── */
+
+export function useEvents(params?: EventListParams) {
+  return useQuery({
+    queryKey: ['events', params ?? {}],
+    queryFn: () => eventsApi.getAll(params),
+  });
+}
+
+export function useEvent(id: string) {
+  return useQuery({
+    queryKey: ['events', id],
+    queryFn: () => eventsApi.getOne(id),
+    enabled: !!id,
+  });
+}

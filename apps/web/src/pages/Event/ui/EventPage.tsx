@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { Bookmark, CalendarDays, ChevronLeft, Clock, MapPin, Share2, Star, Users, Video } from 'lucide-react';
+import { Bookmark, CalendarDays, ChevronLeft, Clock, Images, MapPin, Share2, Star, Users, Video } from 'lucide-react';
+import { EventLightbox } from '@entities/Event';
 import { TicketCard } from '@entities/Ticket';
 import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
 import { MOCK_EVENTS } from '@shared/mocks/mock-events';
@@ -9,6 +10,20 @@ export function EventPage() {
   const { id } = useParams();
   const event = MOCK_EVENTS.find((e) => e.id === id);
   const [isBookmarked, setIsBookmarked] = useState(event?.isBookmarked ?? false);
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+
+  const hasGallery = Boolean(event?.gallery && event.gallery.length > 0);
+
+  const openGallery = (index: number) => {
+    setGalleryIndex(index);
+    setGalleryOpen(true);
+  };
+
+  const handleLightboxOpenChange = (open: boolean) => {
+    setGalleryOpen(open);
+    if (!open) setGalleryIndex(null);
+  };
 
   if (!event) {
     return (
@@ -32,9 +47,24 @@ export function EventPage() {
         All events
       </Link>
 
-      <div className="relative mb-8 h-64 w-full overflow-hidden rounded-2xl bg-muted sm:h-80">
+      <div
+        className={`relative mb-8 h-64 w-full overflow-hidden rounded-2xl bg-muted sm:h-80 ${
+          hasGallery ? 'cursor-pointer' : ''
+        }`}
+        onClick={hasGallery ? () => openGallery(0) : undefined}
+        role={hasGallery ? 'button' : undefined}
+        aria-label={hasGallery ? 'Open photo gallery' : undefined}
+        tabIndex={hasGallery ? 0 : undefined}
+        onKeyDown={hasGallery ? (e) => e.key === 'Enter' && openGallery(0) : undefined}
+      >
         {event.imageUrl ? (
-          <img src={event.imageUrl} alt={event.title} className="h-full w-full object-cover" />
+          <img
+            src={event.imageUrl}
+            alt={event.title}
+            className={`h-full w-full object-cover transition-opacity ${
+              hasGallery ? 'hover:opacity-90' : ''
+            }`}
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No image</div>
         )}
@@ -45,6 +75,14 @@ export function EventPage() {
             {event.format === 'online' ? 'Online' : 'Offline'}
           </Badge>
         </div>
+        {hasGallery && (
+          <div className="absolute bottom-4 right-4">
+            <Badge variant="secondary" className="flex items-center gap-1.5 backdrop-blur-sm">
+              <Images className="h-3 w-3" />
+              {event.gallery!.length} photos
+            </Badge>
+          </div>
+        )}
       </div>
 
       <div className="mb-6 flex items-start justify-between gap-4">
@@ -118,7 +156,7 @@ export function EventPage() {
         </div>
       </div>
 
-      <div className="mb-8">
+      <div className="mb-6">
         <h2 className="mb-3 text-base font-semibold text-foreground">About this event</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">{event.description}</p>
       </div>
@@ -166,6 +204,16 @@ export function EventPage() {
           ))}
         </div>
       </div>
+
+      {event.gallery && event.gallery.length > 0 && (
+        <EventLightbox
+          images={event.gallery}
+          index={galleryIndex}
+          open={galleryOpen}
+          onIndexChange={setGalleryIndex}
+          onOpenChange={handleLightboxOpenChange}
+        />
+      )}
     </main>
   );
 }

@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { BasicClientApi } from '@shared/api';
 import type { Organization, OrganizationList } from '../model/organizationEntity';
 import type { CreateOrganizationDto, UpdateOrganizationDto, OrganizationListParams } from '../model/dtos';
@@ -102,9 +103,21 @@ export const MOCK_MY_ORG: Organization = MOCK_ORGS[0];
 class OrganizationApi extends BasicClientApi {
   /* ── READ ─────────────────────────────────────────────── */
 
-  async getAll(_params?: OrganizationListParams): Promise<OrganizationList> {
-    return Promise.resolve(MOCK_ORGS);
-    // return (await this.http.get<OrganizationList>(this.basePath, { params: _params })).data;
+  async getAll(params?: OrganizationListParams): Promise<OrganizationList> {
+    let results = MOCK_ORGS;
+    if (params?.search) {
+      const q = params.search.toLowerCase();
+      results = results.filter(
+        (o) =>
+          o.title.toLowerCase().includes(q) ||
+          o.description?.toLowerCase().includes(q),
+      );
+    }
+    if (params?.category) {
+      results = results.filter((o) => o.category === params.category);
+    }
+    return Promise.resolve(results);
+    // return (await this.http.get<OrganizationList>(this.basePath, { params })).data;
 
   }
 
@@ -198,3 +211,20 @@ class OrganizationApi extends BasicClientApi {
 }
 
 export const organizationsApi = new OrganizationApi('/organizations');
+
+/* ── React-Query hooks ────────────────────────────────────────────────── */
+
+export function useOrgs(params?: OrganizationListParams) {
+  return useQuery({
+    queryKey: ['organizations', params ?? {}],
+    queryFn: () => organizationsApi.getAll(params),
+  });
+}
+
+export function useOrg(id: string) {
+  return useQuery({
+    queryKey: ['organizations', id],
+    queryFn: () => organizationsApi.getOne(id),
+    enabled: !!id,
+  });
+}

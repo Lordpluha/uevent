@@ -37,3 +37,4 @@ export * from './toggle';
 export * from './tooltip';
 export * from './typography';
 export * from './rich-text-editor';
+export * from './drawer'
