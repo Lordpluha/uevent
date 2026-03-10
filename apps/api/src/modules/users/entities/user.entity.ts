@@ -1,16 +1,67 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm'
+import { Ticket } from './ticket.entity'
+import { UserSession } from './user-session.entity'
+import { UserOtp } from './user-otp.entity'
+import { Notification } from '../../notifications/entities/notification.entity'
 
-@Entity()
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: number
+
+  @Column({ unique: true })
+  username: string
+
+  @Column({ unique: true })
+  email: string
 
   @Column()
-  firstName: string;
+  password: string
 
-  @Column()
-  lastName: string;
+  @Column({ nullable: true })
+  first_name: string
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column({ nullable: true })
+  last_name: string
+
+  @Column({ unique: true, nullable: true })
+  phone: string
+
+  @Column({ nullable: true })
+  location: string
+
+  @Column({ nullable: true })
+  avatar: string
+
+  @Column({ default: false })
+  is_banned: boolean
+
+  @Column({ default: false })
+  two_fa: boolean
+
+  // relations
+
+  @OneToMany(
+    () => Ticket,
+    (ticket) => ticket.user,
+  )
+  tickets: Ticket[]
+
+  @OneToMany(
+    () => UserSession,
+    (session) => session.user,
+  )
+  sessions: UserSession[]
+
+  @OneToMany(
+    () => UserOtp,
+    (otp) => otp.user,
+  )
+  otps: UserOtp[]
+
+  @OneToMany(
+    () => Notification,
+    (notification) => notification.user,
+  )
+  notifications: Notification[]
 }
