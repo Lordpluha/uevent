@@ -1,4 +1,6 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateNotificationDto } from './create-notification.dto';
+import z from 'zod'
+import { CreateNotificationDtoSchema } from './create-notification.dto'
 
-export class UpdateNotificationDto extends PartialType(CreateNotificationDto) {}
+export const UpdateNotificationDtoSchema = CreateNotificationDtoSchema.partial()
+
+export type UpdateNotificationDto = z.infer<typeof UpdateNotificationDtoSchema>

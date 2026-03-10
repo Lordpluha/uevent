@@ -1,10 +1,14 @@
-export class CreateUserDto {
-    username: string;
-    email: string;
-    password: string;
-    first_name?: string;
-    last_name?: string;
-    phone?: string;
-    location?: string;
-    avatar?: string;
-}
+import z from 'zod'
+
+export const CreateUserDtoSchema = z.object({
+  username: z.string(),
+  email: z.string().email(),
+  password: z.string(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  phone: z.string().optional(),
+  location: z.string().optional(),
+  avatar: z.string().optional(),
+})
+
+export type CreateUserDto = z.infer<typeof CreateUserDtoSchema>

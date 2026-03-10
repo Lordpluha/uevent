@@ -1,23 +1,26 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from './user.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm'
+import { User } from './user.entity'
 
 @Entity('user_otps')
 export class UserOtp {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: number
 
   @Column()
-  code: string;
+  code: string
 
   @Column()
-  expires_at: Date;
+  expires_at: Date
 
   // relations
 
   @Column()
-  used_id: number;
+  used_id: number
 
-  @ManyToOne(() => User, (user) => user.otps)
+  @ManyToOne(
+    () => User,
+    (user) => user.otps,
+  )
   @JoinColumn({ name: 'used_id' })
-  user: User;
+  user: User
 }

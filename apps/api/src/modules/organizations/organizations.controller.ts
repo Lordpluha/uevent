@@ -1,34 +1,43 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
-import { OrganizationsService } from './organizations.service';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query } from '@nestjs/common'
+import { OrganizationsService } from './organizations.service'
+import {
+  CreateOrganizationDto,
+  CreateOrganizationDtoSchema,
+  UpdateOrganizationDto,
+  UpdateOrganizationDtoSchema,
+} from './dto'
+import { GetOrganizationsParams, GetOrganizationsParamsSchema } from './params'
+import { ZodValidationPipe } from 'nestjs-zod'
 
 @Controller('organizations')
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
   @Post()
-  create(@Body() dto: CreateOrganizationDto) {
-    return this.organizationsService.create(dto);
+  create(@Body(new ZodValidationPipe(CreateOrganizationDtoSchema)) dto: CreateOrganizationDto) {
+    return this.organizationsService.create(dto)
   }
 
   @Get()
-  findAll() {
-    return this.organizationsService.findAll();
+  findAll(@Query(new ZodValidationPipe(GetOrganizationsParamsSchema)) query: GetOrganizationsParams) {
+    return this.organizationsService.findAll(query)
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.organizationsService.findOne(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.organizationsService.findOne(id)
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateOrganizationDto) {
-    return this.organizationsService.update(id, dto);
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(UpdateOrganizationDtoSchema)) dto: UpdateOrganizationDto,
+  ) {
+    return this.organizationsService.update(id, dto)
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.organizationsService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.organizationsService.remove(id)
   }
 }

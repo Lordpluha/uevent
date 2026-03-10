@@ -1,38 +1,44 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { OrganizationSession } from './organization-session.entity';
-import { OrganizationOtp } from './organization-otp.entity';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm'
+import { OrganizationSession } from './organization-session.entity'
+import { OrganizationOtp } from './organization-otp.entity'
 
 @Entity('organizations')
 export class Organization {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string
 
   @Column()
-  name: string;
+  name: string
 
   @Column({ nullable: true })
-  slogan: string;
+  slogan: string
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description: string
 
   @Column({ nullable: true })
-  avatar: string;
+  avatar: string
 
   @Column({ nullable: true })
-  phone: string;
+  phone: string
 
   @Column({ unique: true })
-  email: string;
+  email: string
 
   @Column()
-  password: string;
+  password: string
 
   // relations
 
-  @OneToMany(() => OrganizationSession, (session) => session.organization)
-  sessions: OrganizationSession[];
+  @OneToMany(
+    () => OrganizationSession,
+    (session) => session.organization,
+  )
+  sessions: OrganizationSession[]
 
-  @OneToMany(() => OrganizationOtp, (otp) => otp.organization)
-  otps: OrganizationOtp[];
+  @OneToMany(
+    () => OrganizationOtp,
+    (otp) => otp.organization,
+  )
+  otps: OrganizationOtp[]
 }

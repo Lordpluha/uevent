@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Organization } from './entities/organization.entity';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { Organization } from './entities'
+import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
+import { GetOrganizationsParams } from './params'
 
 @Injectable()
 export class OrganizationsService {
@@ -12,37 +12,52 @@ export class OrganizationsService {
     private readonly orgsRepo: Repository<Organization>,
   ) {}
 
-  async create(dto: CreateOrganizationDto): Promise<Organization> {
-    const exists = await this.orgsRepo.findOneBy({ email: dto.email });
+  async create(dto: CreateOrganizationDto) {
+    const exists = await this.orgsRepo.findOneBy({ email: dto.email })
 
-    if(exists) throw new ConflictException('Email already in use');
+    if (exists) throw new ConflictException('Email already in use')
 
-    const org = this.orgsRepo.create(dto);
-    return await this.orgsRepo.save(org);
+    const org = this.orgsRepo.create(dto)
+    return await this.orgsRepo.save(org)
   }
 
-  async findAll(): Promise<Organization[]> {
-    return await this.orgsRepo.find({ relations: ['sessions'] });
+  async findAll({ page, limit }: GetOrganizationsParams) {
+
+    const [data, total] = await this.orgsRepo.findAndCount({
+      relations: ['sessions'],
+      skip: (page - 1) * limit,
+      take: limit,
+    })
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        total_pages: Math.ceil(total / limit),
+      },
+    }
   }
 
-  async findOne(id: number): Promise<Organization> {
+  async findOne(id: string) {
     const org = await this.orgsRepo.findOne({
       where: { id },
       relations: ['sessions', 'otps'],
-    });
-    
-    if(!org) throw new NotFoundException(`Organization with id #${id} not found`);
-    return org;
+    })
+
+    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
+    return org
   }
 
-  async update(id: number, dto: UpdateOrganizationDto): Promise<Organization> {
-    const org = await this.findOne(id);
-    Object.assign(org, dto);
-    return await this.orgsRepo.save(org);
+  async update(id: string, dto: UpdateOrganizationDto) {
+    const org = await this.findOne(id)
+    Object.assign(org, dto)
+    return await this.orgsRepo.save(org)
   }
 
-  async remove(id: number): Promise<void> {
-    const org = await this.findOne(id);
-    await this.orgsRepo.remove(org);
+  async remove(id: string) {
+    const org = await this.findOne(id)
+    await this.orgsRepo.remove(org)
   }
 }

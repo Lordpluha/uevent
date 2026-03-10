@@ -1,55 +1,67 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { Ticket } from './ticket.entity';
-import { UserSession } from './user-session.entity';
-import { UserOtp } from './user-otp.entity';
-import { Notification } from '../../notifications/entities/notification.entity';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm'
+import { Ticket } from './ticket.entity'
+import { UserSession } from './user-session.entity'
+import { UserOtp } from './user-otp.entity'
+import { Notification } from '../../notifications/entities/notification.entity'
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: number
 
   @Column({ unique: true })
-  username: string;
+  username: string
 
   @Column({ unique: true })
-  email: string;
+  email: string
 
   @Column()
-  password: string;
+  password: string
 
   @Column({ nullable: true })
-  first_name: string;
+  first_name: string
 
   @Column({ nullable: true })
-  last_name: string;
+  last_name: string
 
   @Column({ unique: true, nullable: true })
-  phone: string;
+  phone: string
 
   @Column({ nullable: true })
-  location: string;
+  location: string
 
   @Column({ nullable: true })
-  avatar: string;
+  avatar: string
 
   @Column({ default: false })
-  is_banned: boolean;
+  is_banned: boolean
 
   @Column({ default: false })
-  two_fa: boolean;
+  two_fa: boolean
 
   // relations
 
-  @OneToMany(() => Ticket, (ticket) => ticket.user)
-  tickets: Ticket[];
+  @OneToMany(
+    () => Ticket,
+    (ticket) => ticket.user,
+  )
+  tickets: Ticket[]
 
-  @OneToMany(() => UserSession, (session) => session.user)
-  sessions: UserSession[];
+  @OneToMany(
+    () => UserSession,
+    (session) => session.user,
+  )
+  sessions: UserSession[]
 
-  @OneToMany(() => UserOtp, (otp) => otp.user)
-  otps: UserOtp[];
+  @OneToMany(
+    () => UserOtp,
+    (otp) => otp.user,
+  )
+  otps: UserOtp[]
 
-  @OneToMany(() => Notification, (notification) => notification.user)
-  notifications: Notification[];
+  @OneToMany(
+    () => Notification,
+    (notification) => notification.user,
+  )
+  notifications: Notification[]
 }

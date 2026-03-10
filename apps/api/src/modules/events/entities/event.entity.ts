@@ -1,50 +1,62 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, OneToMany, OneToOne, JoinColumn, JoinTable, } from 'typeorm';
-import { Tag } from '../../tags/entities/tag.entity';
-import { Recurrence } from './recurrence.entity';
-import { Ticket } from '../../users/entities/ticket.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToMany,
+  OneToMany,
+  OneToOne,
+  JoinColumn,
+  JoinTable,
+} from 'typeorm'
+import { Tag } from '../../tags/entities/tag.entity'
+import { Recurrence } from './recurrence.entity'
+import { Ticket } from '../../users/entities/ticket.entity'
 
 @Entity('events')
 export class Event {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string
 
   @Column()
-  name: string;
+  name: string
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description: string
 
   @Column({ type: 'simple-array', nullable: true })
-  gallery: string[];
+  gallery: string[]
 
   @Column()
-  time_zone: string;
+  time_zone: string
 
   @Column()
-  datetime_start: Date;
+  datetime_start: Date
 
   @Column()
-  datetime_end: Date;
+  datetime_end: Date
 
   @Column({ nullable: true })
-  seats: number;
+  seats: number
 
   @Column({ nullable: true })
-  location: string;
+  location: string
 
   // relations
 
   @ManyToMany(() => Tag)
   @JoinTable({ name: 'event_tags' })
-  tags: Tag[];
+  tags: Tag[]
 
   @OneToOne(() => Recurrence)
   @JoinColumn()
-  recurrence: Recurrence;
+  recurrence: Recurrence
 
-  @OneToMany(() => Ticket, (ticket) => ticket.event)
-  tickets: Ticket[];
+  @OneToMany(
+    () => Ticket,
+    (ticket) => ticket.event,
+  )
+  tickets: Ticket[]
 
   @Column({ nullable: true })
-  organization_id: number;
+  organization_id: number
 }

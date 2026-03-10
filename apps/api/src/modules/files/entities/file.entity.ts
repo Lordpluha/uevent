@@ -1,26 +1,29 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Ticket } from '../../users/entities/ticket.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm'
+import { Ticket } from '../../users/entities/ticket.entity'
 
 @Entity('files')
 export class File {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string
 
-    @Column()
-    name: string;
+  @Column()
+  name: string
 
-    @Column()
-    size: number;
+  @Column()
+  size: number
 
-    @Column()
-    src: string;
+  @Column()
+  src: string
 
-    // relations
+  // relations
 
-    @Column()
-    ticket_id: number;
+  @Column()
+  ticket_id: string
 
-    @ManyToOne(() => Ticket, (ticket) => ticket.private_files)
-    @JoinColumn({ name: 'ticket_id' })
-    ticket: Ticket;
+  @ManyToOne(
+    () => Ticket,
+    (ticket) => ticket.private_files,
+  )
+  @JoinColumn({ name: 'ticket_id' })
+  ticket: Ticket
 }
