@@ -1,5 +1,5 @@
 import type { ChangeEvent, FormEvent } from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { Camera, ChevronLeft, Eye, EyeOff, Save, Shield, ShieldCheck } from 'lucide-react';
 import {
@@ -21,18 +21,29 @@ import {
   buttonVariants,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
-import { MOCK_CURRENT_USER } from '@shared/mocks/mock-users';
+import { useMe } from '@entities/User';
 
 export function ProfileEditPage() {
-  const user = MOCK_CURRENT_USER;
+  const { data: user, isLoading, isError } = useMe();
 
   const [form, setForm] = useState({
-    name: user.name,
-    username: user.username,
-    bio: user.bio ?? '',
-    location: user.location ?? '',
-    website: user.website ?? '',
+    name: '',
+    username: '',
+    bio: '',
+    location: '',
+    website: '',
   });
+
+  useEffect(() => {
+    if (!user) return;
+    setForm({
+      name: user.name ?? '',
+      username: user.username ?? '',
+      bio: user.bio ?? '',
+      location: user.location ?? '',
+      website: user.website ?? '',
+    });
+  }, [user]);
 
   const [passwordForm, setPasswordForm] = useState({
     current: '',
@@ -91,6 +102,24 @@ export function ProfileEditPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading profile...</p>
+      </main>
+    );
+  }
+
+  if (isError) {
+    return (
+      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <p className="text-5xl">⚠️</p>
+        <h1 className="text-xl font-semibold">Failed to load profile</h1>
+        <Link to="/" className="text-sm text-primary hover:underline">← Back to home</Link>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
       <Link
@@ -110,8 +139,8 @@ export function ProfileEditPage() {
         <div className="flex items-center gap-4">
           <div className="relative">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={user.avatarUrl} alt={user.name} />
-              <AvatarFallback className="text-xl">{user.name[0]}</AvatarFallback>
+              <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+              <AvatarFallback className="text-xl">{user?.name?.[0] ?? '?'}</AvatarFallback>
             </Avatar>
             <button
               type="button"

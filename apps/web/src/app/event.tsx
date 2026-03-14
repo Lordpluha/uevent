@@ -1,12 +1,10 @@
 import type { Route } from './+types/event';
-import { MOCK_EVENTS } from '@shared/mocks/mock-events';
 import { EventPage } from '@pages/Event';
 
-export function meta({ params }: Route.MetaArgs) {
-  const event = MOCK_EVENTS.find((e) => e.id === params.id);
+export function meta(_: Route.MetaArgs) {
   return [
-    { title: event ? `${event.title} — uevent` : 'Event — uevent' },
-    { name: 'description', content: event?.description ?? '' },
+    { title: 'Event — uevent' },
+    { name: 'description', content: 'Event details and ticket options.' },
   ];
 }
 

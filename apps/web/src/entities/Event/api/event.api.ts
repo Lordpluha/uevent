@@ -4,6 +4,95 @@ import { BasicClientApi } from '@shared/api';
 import type { EventModel, EventList } from '../model/eventEntity';
 import type { CreateEventDto, UpdateEventDto, EventListParams } from '../model/dtos';
 
+type ApiListResponse<T> = {
+  data: T[];
+};
+
+type ApiEvent = {
+  id: string;
+  name: string;
+  description?: string | null;
+  gallery?: string[] | null;
+  datetime_start?: string | Date;
+  datetime_end?: string | Date;
+  location?: string | null;
+  organization_id?: string | number | null;
+  tags?: Array<{ id: string; name: string }>;
+  tickets?: Array<{
+    id: number;
+    name?: string | null;
+    price?: number | string | null;
+    status?: string | null;
+  }>;
+};
+
+const mapTicketStatus = (status?: string | null): 'available' | 'limited' | 'sold-out' => {
+  switch (status) {
+    case 'RESERVED':
+      return 'limited';
+    case 'PAID':
+      return 'sold-out';
+    default:
+      return 'available';
+  }
+};
+
+const toDisplayDate = (value?: string | Date) => {
+  if (!value) return 'TBD';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'TBD';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const toDisplayTime = (value?: string | Date) => {
+  if (!value) return '--:--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--:--';
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+};
+
+const mapApiEvent = (event: ApiEvent): EventModel => {
+  const firstGalleryImage = event.gallery?.[0];
+
+  return {
+    id: event.id,
+    title: event.name,
+    imageUrl: firstGalleryImage,
+    date: toDisplayDate(event.datetime_start),
+    time: toDisplayTime(event.datetime_start),
+    format: event.location ? 'offline' : 'online',
+    location: event.location ?? undefined,
+    organizer: event.organization_id ? String(event.organization_id) : 'Organizer',
+    rating: 0,
+    attendeeCount: 0,
+    attendees: [],
+    isBookmarked: false,
+    description: event.description ?? '',
+    tags: event.tags?.map((tag) => tag.name) ?? [],
+    tickets:
+      event.tickets?.map((ticket) => ({
+        ticketType: Number(ticket.price ?? 0) === 0 ? 'free' : 'standard',
+        price: Number(ticket.price ?? 0),
+        status: mapTicketStatus(ticket.status),
+      })) ?? [],
+    gallery:
+      event.gallery?.map((src) => ({
+        src,
+        msrc: src,
+        w: 1200,
+        h: 800,
+      })) ?? [],
+  };
+};
+
 /* ── Mock data (swap Promise.resolve → this.$* when backend is ready) ─── */
 
 export const MOCK_EVENTS: EventModel[] = [
@@ -244,47 +333,67 @@ class EventApi extends BasicClientApi {
   /* ── READ ─────────────────────────────────────────────── */
 
   async getAll(params?: EventListParams): Promise<EventList> {
-    let results = MOCK_EVENTS;
-    if (params?.organizationId) {
-      results = results.filter((e) => e.organizer === params.organizationId);
-    }
+    const requestParams: Record<string, string | number> = {
+      page: params?.page ?? 1,
+      limit: params?.limit ?? 100,
+    };
+
+    if (params?.dateFrom) requestParams.date_from = params.dateFrom;
+    if (params?.dateTo) requestParams.date_to = params.dateTo;
+    if (params?.search) requestParams.location = params.search;
+
+    const response = await this.http.get<ApiListResponse<ApiEvent>>(this.basePath, { params: requestParams });
+    let results = response.data.data.map(mapApiEvent);
+
     if (params?.format) {
-      results = results.filter((e) => e.format === params.format);
+      results = results.filter((event) => event.format === params.format);
     }
+
+    if (params?.organizationId) {
+      results = results.filter((event) => event.organizer === params.organizationId);
+    }
+
     if (params?.search) {
-      const q = params.search.toLowerCase();
+      const query = params.search.toLowerCase();
       results = results.filter(
-        (e) =>
-          e.title.toLowerCase().includes(q) ||
-          e.description.toLowerCase().includes(q) ||
-          e.tags.some((t) => t.toLowerCase().includes(q)),
+        (event) =>
+          event.title.toLowerCase().includes(query) ||
+          event.description.toLowerCase().includes(query) ||
+          event.tags.some((tag) => tag.toLowerCase().includes(query)) ||
+          event.location?.toLowerCase().includes(query),
       );
     }
-    if (params?.tags && params.tags.length > 0) {
-      results = results.filter((e) => params.tags!.some((t) => e.tags.includes(t)));
+
+    if (params?.tags?.length) {
+      const selectedTags = params.tags;
+      results = results.filter((event) => selectedTags.some((tag) => event.tags.includes(tag)));
     }
+
     if (params?.dateFrom || params?.dateTo) {
       const from = params.dateFrom ? startOfDay(parseISO(params.dateFrom)) : null;
       const to = params.dateTo ? endOfDay(parseISO(params.dateTo)) : null;
-      results = results.filter((e) => {
-        // e.date is stored as ISO string or event date string
+
+      results = results.filter((event) => {
         let eventDate: Date;
-        try { eventDate = parseISO(e.date); } catch { return true; }
+        try {
+          eventDate = parseISO(event.date);
+        } catch {
+          return true;
+        }
         if (from && to) return isWithinInterval(eventDate, { start: from, end: to });
         if (from) return eventDate >= from;
         if (to) return eventDate <= to;
         return true;
       });
     }
-    return Promise.resolve(results);
-    // return (await this.http.get<EventList>(this.basePath, { params })).data;
+
+    return results;
 
   }
 
   async getOne(id: string): Promise<EventModel> {
-    const event = MOCK_EVENTS.find((e) => e.id === id) ?? MOCK_EVENTS[0];
-    return Promise.resolve(event);
-    // return (await this.http.get<EventModel>(`${this.basePath}/${id}`)).data;
+    const response = await this.http.get<ApiEvent>(`${this.basePath}/${id}`);
+    return mapApiEvent(response.data);
 
   }
 

@@ -3,6 +3,34 @@ import { BasicClientApi } from '@shared/api';
 import type { Organization, OrganizationList } from '../model/organizationEntity';
 import type { CreateOrganizationDto, UpdateOrganizationDto, OrganizationListParams } from '../model/dtos';
 
+type ApiListResponse<T> = {
+  data: T[];
+};
+
+type ApiOrganization = {
+  id: string;
+  name: string;
+  slogan?: string | null;
+  description?: string | null;
+  avatar?: string | null;
+};
+
+const mapApiOrganization = (org: ApiOrganization): Organization => ({
+  id: org.id,
+  title: org.name,
+  href: `/organizations/${org.id}`,
+  avatarUrl: org.avatar ?? undefined,
+  description: org.description ?? org.slogan ?? undefined,
+  location: undefined,
+  website: undefined,
+  category: 'General',
+  foundedAt: 'N/A',
+  membersCount: 0,
+  eventsCount: 0,
+  followers: 0,
+  verified: false,
+});
+
 /* ── Mock data (swap Promise.resolve → this.$* when backend is ready) ─── */
 
 export const MOCK_ORGS: Organization[] = [
@@ -104,27 +132,35 @@ class OrganizationApi extends BasicClientApi {
   /* ── READ ─────────────────────────────────────────────── */
 
   async getAll(params?: OrganizationListParams): Promise<OrganizationList> {
-    let results = MOCK_ORGS;
+    const response = await this.http.get<ApiListResponse<ApiOrganization>>(this.basePath, {
+      params: {
+        page: params?.page ?? 1,
+        limit: params?.limit ?? 100,
+      },
+    });
+
+    let results = response.data.data.map(mapApiOrganization);
+
     if (params?.search) {
-      const q = params.search.toLowerCase();
+      const query = params.search.toLowerCase();
       results = results.filter(
-        (o) =>
-          o.title.toLowerCase().includes(q) ||
-          o.description?.toLowerCase().includes(q),
+        (org) =>
+          org.title.toLowerCase().includes(query) ||
+          org.description?.toLowerCase().includes(query),
       );
     }
+
     if (params?.category) {
-      results = results.filter((o) => o.category === params.category);
+      results = results.filter((org) => org.category === params.category);
     }
-    return Promise.resolve(results);
-    // return (await this.http.get<OrganizationList>(this.basePath, { params })).data;
+
+    return results;
 
   }
 
   async getOne(id: string): Promise<Organization> {
-    const org = MOCK_ORGS.find((o) => o.id === id) ?? MOCK_ORGS[0];
-    return Promise.resolve(org);
-    // return (await this.http.get<Organization>(`${this.basePath}/${id}`)).data;
+    const response = await this.http.get<ApiOrganization>(`${this.basePath}/${id}`);
+    return mapApiOrganization(response.data);
 
   }
 

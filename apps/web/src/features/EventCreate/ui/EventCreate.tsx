@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@shared/components';
 import { createEventSchema, type CreateEventDto } from '@entities/Event';
-import { MOCK_ORGS } from '@entities/Organization';
+import { useOrgs } from '@entities/Organization';
 import { eventsApi } from '@entities/Event';
 
 /* ── Types ────────────────────────────────────────────────────────────── */
@@ -34,6 +34,7 @@ interface EventCreateProps {
 
 export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreateProps) {
   const [tagInput, setTagInput] = useState('');
+  const { data: organizations = [], isLoading: organizationsLoading, isError: organizationsError } = useOrgs({ page: 1, limit: 100 });
 
   const {
     register,
@@ -185,7 +186,9 @@ export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreatePro
                   <SelectValue placeholder="Select organization" />
                 </SelectTrigger>
                 <SelectContent>
-                  {MOCK_ORGS.map((org) => (
+                  {organizationsLoading && <SelectItem value="__loading" disabled>Loading organizations...</SelectItem>}
+                  {organizationsError && <SelectItem value="__error" disabled>Failed to load organizations</SelectItem>}
+                  {!organizationsLoading && !organizationsError && organizations.map((org) => (
                     <SelectItem key={org.id} value={org.id}>
                       {org.title}
                     </SelectItem>

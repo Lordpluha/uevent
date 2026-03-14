@@ -1,8 +1,7 @@
 import { Link } from 'react-router';
 import { ArrowRight, Briefcase, Camera, Code2, Globe, Landmark, MonitorPlay, Music2, Users } from 'lucide-react';
-import { EventCard } from '@entities/Event';
-import { MOCK_EVENTS } from '@shared/mocks/mock-events';
-import { MOCK_ORGS } from '@shared/mocks/mock-orgs';
+import { EventCard, useEvents } from '@entities/Event';
+import { useOrgs } from '@entities/Organization';
 import { useAppContext } from '@shared/lib';
 import { Badge, buttonVariants } from '@shared/components';
 import { cn } from '@shared/lib/utils';
@@ -20,14 +19,6 @@ const CATEGORIES = [
   { label: 'Culture', icon: Landmark, color: 'text-orange-400' },
   { label: 'Online', icon: Globe, color: 'text-cyan-400' },
 ] as const;
-
-/* ── computed real stats from mock data ─────────────────────── */
-
-const REAL_STATS = {
-  events: MOCK_EVENTS.length,
-  organizations: MOCK_ORGS.length,
-  members: MOCK_ORGS.reduce((sum, o) => sum + o.membersCount, 0),
-};
 
 /* ── animated stat counter ──────────────────────────────────── */
 
@@ -53,6 +44,14 @@ function StatCounter({ value, label, suffix = '' }: { value: number; label: stri
 export function HomePage() {
   const { t } = useAppContext();
   const h = t.home;
+  const { data: events = [] } = useEvents({ page: 1, limit: 20 });
+  const { data: organizations = [] } = useOrgs({ page: 1, limit: 20 });
+
+  const stats = {
+    events: events.length,
+    organizations: organizations.length,
+    members: organizations.reduce((sum, org) => sum + org.membersCount, 0),
+  };
 
   return (
     <main className="flex flex-col">
@@ -94,9 +93,9 @@ export function HomePage() {
       {/* ── STATS ────────────────────────────────────────────── */}
       <section className="border-y border-border/50 bg-card/40 px-6 py-12">
         <div className="mx-auto flex max-w-3xl flex-wrap justify-around gap-8">
-          <StatCounter value={REAL_STATS.events} suffix="+" label={h.stats.events} />
-          <StatCounter value={REAL_STATS.organizations} suffix="+" label={h.stats.organizations} />
-          <StatCounter value={REAL_STATS.members} suffix="+" label={h.stats.attendees} />
+          <StatCounter value={stats.events} suffix="+" label={h.stats.events} />
+          <StatCounter value={stats.organizations} suffix="+" label={h.stats.organizations} />
+          <StatCounter value={stats.members} suffix="+" label={h.stats.attendees} />
         </div>
       </section>
 
@@ -113,7 +112,7 @@ export function HomePage() {
 
           {/* horizontal scroll row */}
           <div className="flex gap-4 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
-            {MOCK_EVENTS.slice(0, 5).map((event) => (
+            {events.slice(0, 5).map((event) => (
               <Link key={event.id} to={`/events/${event.id}`} className="shrink-0">
                 <EventCard {...event} size="compact" />
               </Link>

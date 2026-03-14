@@ -2,7 +2,8 @@ import type { ChangeEvent } from 'react';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { CalendarDays, Camera, Edit, Globe, Lock, MapPin, Shield, ShieldCheck, Ticket, Users } from 'lucide-react';
-import { EventCard } from '@entities/Event';
+import { EventCard, useEvents } from '@entities/Event';
+import { useMe } from '@entities/User';
 import {
   Avatar,
   AvatarFallback,
@@ -16,12 +17,10 @@ import {
   buttonVariants,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
-import { MOCK_EVENTS } from '@shared/mocks/mock-events';
-import { MOCK_CURRENT_USER } from '@shared/mocks/mock-users';
 
 export function ProfileViewPage() {
-  const user = MOCK_CURRENT_USER;
-  const myEvents = MOCK_EVENTS.slice(0, 4);
+  const { data: user, isLoading, isError } = useMe();
+  const { data: myEvents = [] } = useEvents({ page: 1, limit: 4 });
 
   const [twoFaEnabled, setTwoFaEnabled] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -34,6 +33,26 @@ export function ProfileViewPage() {
       console.log('Avatar file selected:', file.name);
     }
   };
+
+  if (isLoading) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading profile...</p>
+      </main>
+    );
+  }
+
+  if (!user || isError) {
+    return (
+      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <p className="text-5xl">👤</p>
+        <h1 className="text-xl font-semibold">Profile unavailable</h1>
+        <Link to="/" className="text-sm text-primary hover:underline">
+          ← Back to home
+        </Link>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">

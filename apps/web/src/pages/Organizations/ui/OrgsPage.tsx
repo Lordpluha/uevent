@@ -2,21 +2,25 @@ import { useMemo } from 'react';
 import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
 import { BadgeCheck, Search } from 'lucide-react';
 import { OrgCard, useOrgs } from '@entities/Organization';
-import { MOCK_ORGS } from '@shared/mocks/mock-orgs';
-
-const ALL_CATEGORIES = ['All', ...new Set(MOCK_ORGS.map((o) => o.category).filter(Boolean))].sort(
-  (a, b) => (a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b)),
-);
 
 export function OrgsPage() {
   const [query, setQuery] = useQueryState('q', parseAsString.withDefault(''));
   const [category, setCategory] = useQueryState('category', parseAsString.withDefault('All'));
   const [verifiedOnly, setVerifiedOnly] = useQueryState('verified', parseAsBoolean.withDefault(false));
 
+  const { data: catalogOrgs = [] } = useOrgs();
   const { data: allOrgs = [] } = useOrgs({
     ...(query ? { search: query } : {}),
     ...(category !== 'All' ? { category } : {}),
   });
+
+  const allCategories = useMemo(
+    () =>
+      ['All', ...new Set(catalogOrgs.map((org) => org.category).filter(Boolean))].sort((a, b) =>
+        a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b),
+      ),
+    [catalogOrgs],
+  );
 
   /* client-side verified filter (not in OrganizationListParams) */
   const filtered = useMemo(
@@ -50,7 +54,7 @@ export function OrgsPage() {
 
         {/* Category pills — scrollable on mobile */}
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0" style={{ scrollbarWidth: 'none' }}>
-          {ALL_CATEGORIES.map((cat) => (
+          {allCategories.map((cat) => (
             <button
               key={cat}
               type="button"

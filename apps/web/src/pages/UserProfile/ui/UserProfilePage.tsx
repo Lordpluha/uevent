@@ -1,15 +1,23 @@
 import { Link, useParams } from 'react-router';
 import { CalendarDays, ChevronLeft, Globe, MapPin, Star, Users } from 'lucide-react';
-import { EventCard } from '@entities/Event';
+import { EventCard, useEvents } from '@entities/Event';
+import { useUser } from '@entities/User';
 import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
-import { MOCK_EVENTS } from '@shared/mocks/mock-events';
-import { MOCK_USERS } from '@shared/mocks/mock-users';
 
 export function UserProfilePage() {
   const { id } = useParams();
-  const user = MOCK_USERS.find((u) => u.id === id);
+  const { data: user, isLoading, isError } = useUser(id ?? '');
+  const { data: userEvents = [] } = useEvents({ page: 1, limit: 3 });
 
-  if (!user) {
+  if (isLoading) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading user...</p>
+      </main>
+    );
+  }
+
+  if (!user || isError) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="text-5xl">👤</p>
@@ -20,8 +28,6 @@ export function UserProfilePage() {
       </main>
     );
   }
-
-  const userEvents = MOCK_EVENTS.slice(0, 3);
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">

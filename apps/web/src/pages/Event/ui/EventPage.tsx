@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { Bookmark, CalendarDays, ChevronLeft, Clock, Images, MapPin, Share2, Star, Users, Video } from 'lucide-react';
-import { EventLightbox } from '@entities/Event';
+import { EventLightbox, useEvent } from '@entities/Event';
 import { TicketCard } from '@entities/Ticket';
 import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
-import { MOCK_EVENTS } from '@shared/mocks/mock-events';
 
 export function EventPage() {
   const { id } = useParams();
-  const event = MOCK_EVENTS.find((e) => e.id === id);
-  const [isBookmarked, setIsBookmarked] = useState(event?.isBookmarked ?? false);
+  const { data: event, isLoading, isError } = useEvent(id ?? '');
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+
+  useEffect(() => {
+    setIsBookmarked(event?.isBookmarked ?? false);
+  }, [event?.isBookmarked]);
 
   const hasGallery = Boolean(event?.gallery && event.gallery.length > 0);
 
@@ -25,7 +28,15 @@ export function EventPage() {
     if (!open) setGalleryIndex(null);
   };
 
-  if (!event) {
+  if (isLoading) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </main>
+    );
+  }
+
+  if (!event || isError) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="text-5xl">📭</p>
@@ -47,15 +58,14 @@ export function EventPage() {
         All events
       </Link>
 
-      <div
-        className={`relative mb-8 h-64 w-full overflow-hidden rounded-2xl bg-muted sm:h-80 ${
-          hasGallery ? 'cursor-pointer' : ''
+      <button
+        type="button"
+        className={`relative mb-8 h-64 w-full overflow-hidden rounded-2xl bg-muted text-left sm:h-80 ${
+          hasGallery ? 'cursor-pointer' : 'cursor-default'
         }`}
         onClick={hasGallery ? () => openGallery(0) : undefined}
-        role={hasGallery ? 'button' : undefined}
+        disabled={!hasGallery}
         aria-label={hasGallery ? 'Open photo gallery' : undefined}
-        tabIndex={hasGallery ? 0 : undefined}
-        onKeyDown={hasGallery ? (e) => e.key === 'Enter' && openGallery(0) : undefined}
       >
         {event.imageUrl ? (
           <img
@@ -79,11 +89,11 @@ export function EventPage() {
           <div className="absolute bottom-4 right-4">
             <Badge variant="secondary" className="flex items-center gap-1.5 backdrop-blur-sm">
               <Images className="h-3 w-3" />
-              {event.gallery!.length} photos
+              {event.gallery?.length ?? 0} photos
             </Badge>
           </div>
         )}
-      </div>
+      </button>
 
       <div className="mb-6 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">{event.title}</h1>

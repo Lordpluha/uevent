@@ -1,6 +1,43 @@
+import { useQuery } from '@tanstack/react-query';
 import { BasicClientApi } from '@shared/api';
 import type { User, UserList } from '../model/userEntity';
 import type { CreateUserDto, UpdateUserDto, UserListParams } from '../model/dtos';
+
+type ApiListResponse<T> = {
+  data: T[];
+};
+
+type ApiUser = {
+  id: number;
+  username: string;
+  email?: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  location?: string | null;
+  avatar?: string | null;
+};
+
+const mapApiUser = (user: ApiUser): User => {
+  const fullName = `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim();
+  const displayName = fullName || user.username || `User #${user.id}`;
+
+  return {
+    id: String(user.id),
+    name: displayName,
+    username: user.username,
+    avatarUrl: user.avatar ?? undefined,
+    bio: undefined,
+    location: user.location ?? undefined,
+    website: undefined,
+    joinedAt: 'Recently',
+    ticketsCount: 0,
+    eventsAttended: 0,
+    followers: 0,
+    following: 0,
+    interests: [],
+  };
+};
 
 /* ── Mock data (swap Promise.resolve → this.$* when backend is ready) ─── */
 
@@ -59,44 +96,45 @@ export const MOCK_CURRENT_USER: User = MOCK_USERS[0];
 class UserApi extends BasicClientApi {
   /* ── READ ─────────────────────────────────────────────── */
 
-  async getAll(_params?: UserListParams): Promise<UserList> {
-    return Promise.resolve(MOCK_USERS);
-    // return (await this.http.get<UserList>(this.basePath, { params: _params })).data;
+  async getAll(params?: UserListParams): Promise<UserList> {
+    const requestParams: Record<string, string | number> = {
+      page: params?.page ?? 1,
+      limit: params?.limit ?? 50,
+    };
 
+    const response = await this.http.get<ApiListResponse<ApiUser>>(this.basePath, {
+      params: requestParams,
+    });
+
+    return response.data.data.map(mapApiUser);
   }
 
   async getOne(id: string): Promise<User> {
-    const user = MOCK_USERS.find((u) => u.id === id) ?? MOCK_USERS[0];
-    return Promise.resolve(user);
-    // return (await this.http.get<User>(`${this.basePath}/${id}`)).data;
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId) || numericId <= 0) {
+      throw new Error('Invalid user id');
+    }
+
+    const response = await this.http.get<ApiUser>(`${this.basePath}/${numericId}`);
+    return mapApiUser(response.data);
 
   }
 
   /* ── WRITE ────────────────────────────────────────────── */
 
   async create(body: CreateUserDto): Promise<User> {
-    const next: User = {
-      id: String(Date.now()),
-      name: body.name,
-      username: body.username,
-      joinedAt: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      ticketsCount: 0,
-      eventsAttended: 0,
-      followers: 0,
-      following: 0,
-      interests: [],
-    };
-    MOCK_USERS.push(next);
-    return Promise.resolve(next);
-    // return (await this.http.post<User>(this.basePath, body)).data;
+    const response = await this.http.post<ApiUser>(this.basePath, body);
+    return mapApiUser(response.data);
 
   }
 
   async update(id: string, body: UpdateUserDto): Promise<User> {
-    const idx = MOCK_USERS.findIndex((u) => u.id === id);
-    if (idx !== -1) Object.assign(MOCK_USERS[idx], body);
-    return Promise.resolve(MOCK_USERS[idx] ?? MOCK_USERS[0]);
-    // return (await this.http.put<User>(`${this.basePath}/${id}`, body)).data;
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId) || numericId <= 0) {
+      throw new Error('Invalid user id');
+    }
+    const response = await this.http.patch<ApiUser>(`${this.basePath}/${numericId}`, body);
+    return mapApiUser(response.data);
 
   }
 
@@ -108,24 +146,26 @@ class UserApi extends BasicClientApi {
 
   /* ── DELETE ───────────────────────────────────────────── */
 
-  async remove(_id: string): Promise<void> {
-    return Promise.resolve();
-    // return (await this.http.delete(`${this.basePath}/${_id}`)).data;
+  async remove(id: string): Promise<void> {
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId) || numericId <= 0) {
+      throw new Error('Invalid user id');
+    }
+    await this.http.delete(`${this.basePath}/${numericId}`);
 
   }
 
   /* ── CUSTOM ───────────────────────────────────────────── */
 
   async getMe(): Promise<User> {
-    return Promise.resolve(MOCK_CURRENT_USER);
-    // return (await this.http.get<User>(`${this.basePath}/me`)).data;
+    const users = await this.getAll({ page: 1, limit: 1 });
+    return users[0] ?? MOCK_CURRENT_USER;
 
   }
 
   async updateMe(body: UpdateUserDto): Promise<User> {
-    Object.assign(MOCK_CURRENT_USER, body);
-    return Promise.resolve({ ...MOCK_CURRENT_USER });
-    // return (await this.http.patch<User>(`${this.basePath}/me`, body)).data;
+    const me = await this.getMe();
+    return this.update(me.id, body);
 
   }
 
@@ -155,3 +195,25 @@ class UserApi extends BasicClientApi {
 }
 
 export const usersApi = new UserApi('/users');
+
+export function useUsers(params?: UserListParams) {
+  return useQuery({
+    queryKey: ['users', params ?? {}],
+    queryFn: () => usersApi.getAll(params),
+  });
+}
+
+export function useUser(id: string) {
+  return useQuery({
+    queryKey: ['users', id],
+    queryFn: () => usersApi.getOne(id),
+    enabled: !!id,
+  });
+}
+
+export function useMe() {
+  return useQuery({
+    queryKey: ['users', 'me'],
+    queryFn: () => usersApi.getMe(),
+  });
+}

@@ -17,8 +17,6 @@ import {
 } from '@shared/components';
 import {
   FORMAT_OPTIONS,
-  ALL_TAGS,
-  ALL_CITIES,
   type Format,
 } from '../model/useEventsFilters';
 
@@ -38,6 +36,8 @@ interface Props {
   tagsAnchor: RefObject<HTMLDivElement | null>;
   locFromAnchor: RefObject<HTMLDivElement | null>;
   locToAnchor: RefObject<HTMLDivElement | null>;
+  tags: string[];
+  cities: string[];
 }
 
 export function EventsFilterBar({
@@ -48,6 +48,8 @@ export function EventsFilterBar({
   locFrom, onLocFromChange,
   locTo, onLocToChange,
   tagsAnchor, locFromAnchor, locToAnchor,
+  tags,
+  cities,
 }: Props) {
   return (
     <div className="mb-8 hidden flex-wrap items-center gap-3 sm:flex">
@@ -104,7 +106,7 @@ export function EventsFilterBar({
           <ComboboxContent anchor={tagsAnchor} align="start">
             <ComboboxInput placeholder="Search tags…" showTrigger={false} />
             <ComboboxList>
-              {ALL_TAGS.map((tag) => (
+              {tags.map((tag) => (
                 <ComboboxItem key={tag} value={tag}>
                   {tag}
                 </ComboboxItem>
@@ -169,7 +171,7 @@ export function EventsFilterBar({
           </div>
           <ComboboxContent anchor={locFromAnchor} align="start">
             <ComboboxList>
-              {ALL_CITIES.map((city) => (
+              {cities.map((city) => (
                 <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
               ))}
               <ComboboxEmpty>No cities found</ComboboxEmpty>
@@ -195,7 +197,7 @@ export function EventsFilterBar({
           </div>
           <ComboboxContent anchor={locToAnchor} align="start">
             <ComboboxList>
-              {ALL_CITIES.map((city) => (
+              {cities.map((city) => (
                 <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
               ))}
               <ComboboxEmpty>No cities found</ComboboxEmpty>
