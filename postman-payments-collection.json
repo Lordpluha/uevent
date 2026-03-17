@@ -1,0 +1,769 @@
+{
+  "info": {
+    "_postman_id": "uevent-stripe-payments-complete",
+    "name": "UEvent Stripe Payments - Complete Testing Suite",
+    "description": "Comprehensive Postman collection for testing UEvent Stripe payment integration.\n\n STRUCTURE:\n├─  Successful Payments (Standard & High-Value)\n├─  Failed Payments (Invalid amounts, Non-existent)\n├─  Webhooks (Succeeded, Failed, Refunded)\n├─  Database Verification\n└─  Test Scenarios (Complete workflows)\n\n BASE URL: http://localhost:3000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": " Environment Setup",
+      "description": "Initialize test environment and variables",
+      "item": [
+        {
+          "name": "Initialize Test Environment",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Set base URL",
+                  "pm.environment.set('baseUrl', 'http://localhost:3000');",
+                  "",
+                  "// Initialize timestamp for unique order IDs",
+                  "pm.environment.set('timestamp', new Date().getTime());",
+                  "",
+                  "// Log initialization",
+                  "console.log(' Environment Initialized');",
+                  "console.log('Base URL:', pm.environment.get('baseUrl'));",
+                  "console.log('Timestamp:', pm.environment.get('timestamp'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"]
+            }
+          },
+          "description": "Initialize test environment variables before running tests. Must be executed first."
+        }
+      ]
+    },
+    {
+      "name": " Successful Payments",
+      "description": "Test successful payment scenarios with various amounts",
+      "item": [
+        {
+          "name": "1.1 Create Standard Payment - $29.99",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('testAmount', 29.99);",
+                  "pm.environment.set('testCurrency', 'usd');",
+                  "pm.environment.set('testOrderId', 'order-std-' + pm.environment.get('timestamp'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test 1: Status code validation",
+                  "pm.test(' Status code is 200 or 201', function() {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "// Test 2: Response structure",
+                  "pm.test(' Response contains paymentIntentId', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('paymentIntentId');",
+                  "    pm.expect(jsonData.paymentIntentId).to.match(/^pi_/);",
+                  "    pm.environment.set('paymentIntentId', jsonData.paymentIntentId);",
+                  "});",
+                  "",
+                  "// Test 3: Client secret is present",
+                  "pm.test(' Response contains clientSecret', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('clientSecret');",
+                  "    pm.expect(jsonData.clientSecret).to.be.a('string');",
+                  "    pm.environment.set('clientSecret', jsonData.clientSecret);",
+                  "});",
+                  "",
+                  "console.log(' Payment Intent Created:', pm.environment.get('paymentIntentId'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{testAmount}},\n  \"currency\": \"{{testCurrency}}\",\n  \"orderId\": \"{{testOrderId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/create-intent",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "create-intent"]
+            }
+          },
+          "description": "Create a standard payment intent for $29.99 USD. Saves paymentIntentId for use in subsequent requests."
+        },
+        {
+          "name": "1.2 Create High-Value Payment - $99.99",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('highAmount', 99.99);",
+                  "pm.environment.set('highOrderId', 'order-premium-' + pm.environment.get('timestamp'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(' High-value payment created successfully', function() {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.paymentIntentId).to.exist;",
+                  "    pm.environment.set('highValuePaymentId', jsonData.paymentIntentId);",
+                  "});",
+                  "",
+                  "console.log(' High-value payment created:', pm.environment.get('highValuePaymentId'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{highAmount}},\n  \"currency\": \"usd\",\n  \"orderId\": \"{{highOrderId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/create-intent",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "create-intent"]
+            }
+          },
+          "description": "Create a high-value payment intent for $99.99 USD. Tests handling of premium tier payments."
+        },
+        {
+          "name": "1.3 Get Payment Status - Successful",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test 1: Status code",
+                  "pm.test(' Status code is 200', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "// Test 2: Response contains payment details",
+                  "pm.test(' Response contains required fields', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('amount');",
+                  "    pm.expect(jsonData).to.have.property('currency');",
+                  "    pm.expect(jsonData).to.have.property('clientSecret');",
+                  "});",
+                  "",
+                  "// Test 3: Validate field types",
+                  "pm.test(' Fields have correct types', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.amount).to.be.a('number');",
+                  "    pm.expect(jsonData.currency).to.be.a('string');",
+                  "    pm.expect(jsonData.status).to.be.a('string');",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "console.log(' Payment Status:', jsonData.status);",
+                  "console.log('Amount:', jsonData.amount, jsonData.currency);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/{{paymentIntentId}}",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "{{paymentIntentId}}"]
+            }
+          },
+          "description": "Retrieve the status of a payment using the paymentIntentId from previous request."
+        }
+      ]
+    },
+    {
+      "name": " Failed Payments",
+      "description": "Test error handling and payment failure scenarios",
+      "item": [
+        {
+          "name": "2.1 Invalid Amount - Negative Value",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(' Invalid amount returns 400 error', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});",
+                  "",
+                  "pm.test(' Error response structure is correct', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message').or.have.property('error');",
+                  "    pm.expect(jsonData).to.have.property('statusCode');",
+                  "});",
+                  "",
+                  "console.log(' Error message:', pm.response.json().message);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": -10,\n  \"currency\": \"usd\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/create-intent",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "create-intent"]
+            }
+          },
+          "description": "Test error handling when negative amount is provided. Should return 400 Bad Request."
+        },
+        {
+          "name": "2.2 Invalid Amount - Zero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(' Zero amount returns error', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 0,\n  \"currency\": \"usd\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/create-intent",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "create-intent"]
+            }
+          },
+          "description": "Test error handling when zero amount is provided."
+        },
+        {
+          "name": "2.3 Get Non-Existent Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(' Non-existent payment returns 400', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});",
+                  "",
+                  "pm.test(' Error indicates payment not found', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('not found');",
+                  "});",
+                  "",
+                  "console.log(' Not found error:', pm.response.json().message);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/pi_nonexistent_12345",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "pi_nonexistent_12345"]
+            }
+          },
+          "description": "Test error handling when retrieving a non-existent payment ID."
+        }
+      ]
+    },
+    {
+      "name": " Webhooks",
+      "description": "Test webhook event processing from Stripe",
+      "item": [
+        {
+          "name": "3.1 Webhook - Payment Succeeded",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('webhookEventId', 'evt_succeeded_' + pm.environment.get('timestamp'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(' Webhook received successfully (HTTP 200)', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test(' Response indicates webhook was processed', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.received).to.equal(true);",
+                  "});",
+                  "",
+                  "console.log(' Webhook processed: payment_intent.succeeded');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "stripe-signature",
+                "value": "test_webhook_signature_success"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{webhookEventId}}\",\n  \"type\": \"payment_intent.succeeded\",\n  \"created\": {{timestamp}},\n  \"data\": {\n    \"object\": {\n      \"id\": \"{{paymentIntentId}}\",\n      \"object\": \"payment_intent\",\n      \"amount\": 2999,\n      \"amount_capturable\": 0,\n      \"amount_received\": 2999,\n      \"currency\": \"usd\",\n      \"status\": \"succeeded\",\n      \"client_secret\": \"{{clientSecret}}\",\n      \"metadata\": {\n        \"orderId\": \"{{testOrderId}}\"\n      }\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/webhook",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "webhook"]
+            }
+          },
+          "description": "Simulate a successful payment webhook from Stripe. This event should be logged to the database with status 'succeeded'."
+        },
+        {
+          "name": "3.2 Webhook - Payment Failed",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('failedPaymentId', 'pi_failed_' + pm.environment.get('timestamp'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(' Failed payment webhook received', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "console.log(' Webhook processed: payment_intent.payment_failed');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "stripe-signature",
+                "value": "test_webhook_signature_failed"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_failed_{{timestamp}}\",\n  \"type\": \"payment_intent.payment_failed\",\n  \"created\": {{timestamp}},\n  \"data\": {\n    \"object\": {\n      \"id\": \"{{failedPaymentId}}\",\n      \"object\": \"payment_intent\",\n      \"amount\": 5000,\n      \"currency\": \"usd\",\n      \"status\": \"requires_payment_method\",\n      \"client_secret\": \"pi_failed_secret_xyz\",\n      \"last_payment_error\": {\n        \"message\": \"Your card was declined\",\n        \"type\": \"card_error\"\n      }\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/webhook",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "webhook"]
+            }
+          },
+          "description": "Simulate a payment failed webhook from Stripe. This should be logged with status 'failed' and include the failure reason."
+        },
+        {
+          "name": "3.3 Webhook - Charge Refunded",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(' Refund webhook received', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "console.log(' Webhook processed: charge.refunded');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "stripe-signature",
+                "value": "test_webhook_signature_refund"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_refund_{{timestamp}}\",\n  \"type\": \"charge.refunded\",\n  \"created\": {{timestamp}},\n  \"data\": {\n    \"object\": {\n      \"id\": \"ch_refunded_{{timestamp}}\",\n      \"object\": \"charge\",\n      \"amount\": 2999,\n      \"amount_refunded\": 2999,\n      \"currency\": \"usd\",\n      \"paid\": true,\n      \"refunded\": true,\n      \"payment_intent\": \"{{paymentIntentId}}\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/webhook",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "webhook"]
+            }
+          },
+          "description": "Simulate a charge refunded webhook from Stripe. This should update the payment status to 'refunded'."
+        },
+        {
+          "name": "3.4 Webhook - Invalid Signature",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(' Invalid webhook signature returns error', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});",
+                  "",
+                  "console.log(' Invalid signature detected');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "stripe-signature",
+                "value": "invalid_signature_xyz"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_invalid_sig\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_test\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/webhook",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "webhook"]
+            }
+          },
+          "description": "Test webhook signature verification. Invalid signatures should be rejected."
+        }
+      ]
+    },
+    {
+      "name": " Database Verification",
+      "description": "Verify payment records in database",
+      "item": [
+        {
+          "name": "4.1 Query Payments from Database",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "console.log(' Use the following PostgreSQL command to verify payments:');",
+                  "console.log('');",
+                  "console.log('psql -U uevent -d uevent');",
+                  "console.log('SELECT id, stripe_payment_intent_id, amount, status, created_at FROM payments ORDER BY created_at DESC;');",
+                  "console.log('');",
+                  "console.log(' Or via Docker:');",
+                  "console.log('docker compose exec postgres psql -U uevent -d uevent -c \"SELECT * FROM payments;\"');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "protocol": "http",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          },
+          "description": "To verify payment records in the database, use PostgreSQL commands shown in the test output. This collection doesn't include a dedicated payments list endpoint by default."
+        }
+      ]
+    },
+    {
+      "name": " Complete Test Workflows",
+      "description": "Full end-to-end testing scenarios",
+      "item": [
+        {
+          "name": "Scenario 1: Complete Payment Flow",
+          "description": "Full workflow: Setup → Create Payment → Check Status → Simulate Webhook",
+          "item": [
+            {
+              "name": "S1.1 Setup Environment",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.environment.set('scenarioAmount', 49.99);",
+                      "pm.environment.set('scenarioOrderId', 'scenario1-flow-' + pm.environment.get('timestamp'));",
+                      "console.log(' Scenario 1: Starting Complete Payment Flow');"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/",
+                  "protocol": "http",
+                  "host": ["{{baseUrl}}"]
+                }
+              }
+            },
+            {
+              "name": "S1.2 Create Payment",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": {{scenarioAmount}},\n  \"currency\": \"usd\",\n  \"orderId\": \"{{scenarioOrderId}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/payments/create-intent",
+                  "protocol": "http",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "payments", "create-intent"]
+                }
+              }
+            },
+            {
+              "name": "S1.3 Check Payment Status",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/payments/{{paymentIntentId}}",
+                  "protocol": "http",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "payments", "{{paymentIntentId}}"]
+                }
+              }
+            },
+            {
+              "name": "S1.4 Process Webhook",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "stripe-signature",
+                    "value": "test_sig"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"evt_scenario1_{{timestamp}}\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"{{paymentIntentId}}\",\n      \"amount\": 4999,\n      \"currency\": \"usd\",\n      \"status\": \"succeeded\",\n      \"metadata\": {\"orderId\": \"{{scenarioOrderId}}\"}\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/payments/webhook",
+                  "protocol": "http",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "payments", "webhook"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Scenario 2: Payment Failure & Retry",
+          "description": "Test failed payment and retry mechanism",
+          "item": [
+            {
+              "name": "S2.1 Create Initial Payment",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 39.99,\n  \"currency\": \"usd\",\n  \"orderId\": \"scenario2-retry-{{timestamp}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/payments/create-intent",
+                  "protocol": "http",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "payments", "create-intent"]
+                }
+              }
+            },
+            {
+              "name": "S2.2 Simulate Payment Failure",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "stripe-signature",
+                    "value": "test_sig"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"evt_scenario2_fail_{{timestamp}}\",\n  \"type\": \"payment_intent.payment_failed\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"{{paymentIntentId}}\",\n      \"amount\": 3999,\n      \"currency\": \"usd\",\n      \"status\": \"requires_payment_method\",\n      \"last_payment_error\": {\n        \"message\": \"Card declined\"\n      }\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/payments/webhook",
+                  "protocol": "http",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "payments", "webhook"]
+                }
+              }
+            },
+            {
+              "name": "S2.3 Retry Payment",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 39.99,\n  \"currency\": \"usd\",\n  \"orderId\": \"scenario2-retry-second-{{timestamp}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/payments/create-intent",
+                  "protocol": "http",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "payments", "create-intent"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "paymentIntentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clientSecret",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testAmount",
+      "value": "29.99",
+      "type": "string"
+    },
+    {
+      "key": "testCurrency",
+      "value": "usd",
+      "type": "string"
+    },
+    {
+      "key": "testOrderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "timestamp",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

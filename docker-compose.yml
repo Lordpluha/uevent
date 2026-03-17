@@ -17,5 +17,14 @@ services:
       timeout: 5s
       retries: 5
 
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    container_name: uevent-stripe-cli
+    command: listen --forward-to http://api:3000/api/payments/webhook
+    environment:
+      STRIPE_API_KEY: ${STRIPE_SECRET_KEY}
+    depends_on:
+      - postgres
+
 volumes:
   postgres_data:
