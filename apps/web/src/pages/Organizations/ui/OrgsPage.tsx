@@ -2,11 +2,8 @@ import { useMemo } from 'react';
 import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
 import { BadgeCheck, Search } from 'lucide-react';
 import { OrgCard, useOrgs } from '@entities/Organization';
-import { MOCK_ORGS } from '@shared/mocks/mock-orgs';
 
-const ALL_CATEGORIES = ['All', ...new Set(MOCK_ORGS.map((o) => o.category).filter(Boolean))].sort(
-  (a, b) => (a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b)),
-);
+
 
 export function OrgsPage() {
   const [query, setQuery] = useQueryState('q', parseAsString.withDefault(''));
@@ -17,6 +14,11 @@ export function OrgsPage() {
     ...(query ? { search: query } : {}),
     ...(category !== 'All' ? { category } : {}),
   });
+
+  const ALL_CATEGORIES = useMemo(() => [
+    'All',
+    ...Array.from(new Set(allOrgs.map((o) => o.category).filter(Boolean)))
+  ].sort((a, b) => (a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b))), [allOrgs]);
 
   /* client-side verified filter (not in OrganizationListParams) */
   const filtered = useMemo(

@@ -8,7 +8,7 @@ import {
 } from 'nuqs';
 import type { DateRange } from 'react-day-picker';
 import { useComboboxAnchor } from '@shared/components';
-import { MOCK_EVENTS } from '@shared/mocks/mock-events';
+import { useEvents } from '@entities/Event';
 import type { EventListParams } from '@entities/Event';
 
 const FORMAT_VALUES = ['all', 'online', 'offline'] as const;
@@ -21,14 +21,24 @@ export const FORMAT_OPTIONS: { label: string; value: Format }[] = [
   { label: 'Offline', value: 'offline' },
 ];
 
-export const ALL_TAGS = [...new Set(MOCK_EVENTS.flatMap((e) => e.tags))].sort();
-export const ALL_CITIES = [
-  ...new Set(
-    MOCK_EVENTS.flatMap((e) =>
-      [e.locationFrom, e.locationTo].filter(Boolean) as string[],
+
+
+export function useAllTags() {
+  const { data } = useEvents();
+  const events = Array.isArray(data) ? data : [];
+  return [...new Set(events.flatMap((e) => e.tags))].sort();
+}
+
+
+export function useAllCities() {
+  const { data } = useEvents();
+  const events = Array.isArray(data) ? data : [];
+  return [
+    ...new Set(
+      events.flatMap((e) => [e.locationFrom, e.locationTo].filter(Boolean) as string[]),
     ),
-  ),
-].sort();
+  ].sort();
+}
 
 export function useEventsFilters() {
   /* ── URL state via nuqs ─────────────────────────────────────────── */

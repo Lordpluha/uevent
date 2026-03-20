@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query } from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common'
 import { OrganizationsService } from './organizations.service'
 import {
   CreateOrganizationDto,
@@ -8,6 +8,9 @@ import {
 } from './dto'
 import { GetOrganizationsParams, GetOrganizationsParamsSchema } from './params'
 import { ZodValidationPipe } from 'nestjs-zod'
+import { JwtGuard } from '../auth/guards/jwt.guard'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
+import { JwtPayload } from '../auth/types/jwt-payload.interface'
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -21,6 +24,12 @@ export class OrganizationsController {
   @Get()
   findAll(@Query(new ZodValidationPipe(GetOrganizationsParamsSchema)) query: GetOrganizationsParams) {
     return this.organizationsService.findAll(query)
+  }
+
+  @Get('me')
+  @UseGuards(JwtGuard)
+  getMe(@CurrentUser() user: JwtPayload) {
+    return this.organizationsService.findOne(user.sub as string)
   }
 
   @Get(':id')

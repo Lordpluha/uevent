@@ -4,6 +4,7 @@ import { Repository } from 'typeorm'
 import { Organization } from './entities'
 import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
 import { GetOrganizationsParams } from './params'
+import { hashPassword } from '../../common/password.util'
 
 @Injectable()
 export class OrganizationsService {
@@ -17,7 +18,8 @@ export class OrganizationsService {
 
     if (exists) throw new ConflictException('Email already in use')
 
-    const org = this.orgsRepo.create(dto)
+    const password = await hashPassword(dto.password)
+    const org = this.orgsRepo.create({ ...dto, password })
     return await this.orgsRepo.save(org)
   }
 
@@ -52,6 +54,7 @@ export class OrganizationsService {
 
   async update(id: string, dto: UpdateOrganizationDto) {
     const org = await this.findOne(id)
+    if (dto.password) dto.password = await hashPassword(dto.password)
     Object.assign(org, dto)
     return await this.orgsRepo.save(org)
   }

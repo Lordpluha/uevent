@@ -23,6 +23,7 @@ import { ErrorBoundary as ErrorBoundaryWidget } from '@widgets/Error'
 import { TooltipProvider } from '@shared/components'
 import { Toaster } from 'sonner'
 import { AppContext, type AppContextValue, fetchLocale } from '@shared/lib'
+import { AuthProvider } from '@shared/lib/auth-context'
 import type { Dictionary, Locale } from '@shared/lib'
 
 export const links: Route.LinksFunction = () => [
@@ -130,14 +131,16 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <NuqsAdapter>
-        <AppContext.Provider value={ctx}>
+        <AuthProvider>
+          <AppContext.Provider value={ctx}>
           <TooltipProvider>
             <Header />
             <Outlet />
             <Toaster />
             <Footer />
           </TooltipProvider>
-        </AppContext.Provider>
+          </AppContext.Provider>
+        </AuthProvider>
       </NuqsAdapter>
     </QueryClientProvider>
   )

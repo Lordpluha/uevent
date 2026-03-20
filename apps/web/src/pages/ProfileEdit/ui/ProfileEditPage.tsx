@@ -1,5 +1,5 @@
 import type { ChangeEvent, FormEvent } from 'react';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Camera, ChevronLeft, Eye, EyeOff, Save, Shield, ShieldCheck } from 'lucide-react';
 import {
@@ -21,34 +21,43 @@ import {
   buttonVariants,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
-import { MOCK_CURRENT_USER } from '@shared/mocks/mock-users';
+import { useMe } from '@entities/User';
 
 export function ProfileEditPage() {
-  const user = MOCK_CURRENT_USER;
-
+  const { data: user } = useMe();
   const [form, setForm] = useState({
-    name: user.name,
-    username: user.username,
-    bio: user.bio ?? '',
-    location: user.location ?? '',
-    website: user.website ?? '',
+    name: '',
+    username: '',
+    bio: '',
+    location: '',
+    website: '',
   });
-
   const [passwordForm, setPasswordForm] = useState({
     current: '',
     next: '',
     confirm: '',
   });
-
   const [showPassword, setShowPassword] = useState({
     current: false,
     next: false,
     confirm: false,
   });
-
   const [twoFaEnabled, setTwoFaEnabled] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // hydrate form when user loads
+  useEffect(() => {
+    if (user) {
+      setForm({
+        name: user.name,
+        username: user.username,
+        bio: user.bio ?? '',
+        location: user.location ?? '',
+        website: user.website ?? '',
+      });
+    }
+  }, [user]);
 
   const set =
     (field: keyof typeof form) =>
@@ -90,6 +99,10 @@ export function ProfileEditPage() {
       setPasswordForm({ current: '', next: '', confirm: '' });
     }
   };
+
+  if (!user) {
+    return <main className="flex min-h-[60vh] items-center justify-center text-center">Пользователь не найден</main>;
+  }
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">

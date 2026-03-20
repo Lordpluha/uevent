@@ -17,8 +17,8 @@ import {
 } from '@shared/components';
 import {
   FORMAT_OPTIONS,
-  ALL_TAGS,
-  ALL_CITIES,
+  useAllTags,
+  useAllCities,
   type Format,
 } from '../model/useEventsFilters';
 
@@ -40,15 +40,18 @@ interface Props {
   locToAnchor: RefObject<HTMLDivElement | null>;
 }
 
-export function EventsFilterBar({
-  query, onQueryChange,
-  format, onFormatChange,
-  selectedTags, onTagsChange,
-  dateRange, onDateRangeChange,
-  locFrom, onLocFromChange,
-  locTo, onLocToChange,
-  tagsAnchor, locFromAnchor, locToAnchor,
-}: Props) {
+export function EventsFilterBar(props: Props) {
+  const {
+    query, onQueryChange,
+    format, onFormatChange,
+    selectedTags, onTagsChange,
+    dateRange, onDateRangeChange,
+    locFrom, onLocFromChange,
+    locTo, onLocToChange,
+    tagsAnchor, locFromAnchor, locToAnchor,
+  } = props;
+  const allTags = useAllTags();
+  const allCities = useAllCities();
   return (
     <div className="mb-8 hidden flex-wrap items-center gap-3 sm:flex">
       {/* Format pills */}
@@ -104,7 +107,7 @@ export function EventsFilterBar({
           <ComboboxContent anchor={tagsAnchor} align="start">
             <ComboboxInput placeholder="Search tags…" showTrigger={false} />
             <ComboboxList>
-              {ALL_TAGS.map((tag) => (
+              {allTags.map((tag) => (
                 <ComboboxItem key={tag} value={tag}>
                   {tag}
                 </ComboboxItem>
@@ -169,7 +172,7 @@ export function EventsFilterBar({
           </div>
           <ComboboxContent anchor={locFromAnchor} align="start">
             <ComboboxList>
-              {ALL_CITIES.map((city) => (
+              {allCities.map((city) => (
                 <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
               ))}
               <ComboboxEmpty>No cities found</ComboboxEmpty>
@@ -195,7 +198,7 @@ export function EventsFilterBar({
           </div>
           <ComboboxContent anchor={locToAnchor} align="start">
             <ComboboxList>
-              {ALL_CITIES.map((city) => (
+              {allCities.map((city) => (
                 <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
               ))}
               <ComboboxEmpty>No cities found</ComboboxEmpty>

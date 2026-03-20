@@ -1,5 +1,5 @@
 import type { ChangeEvent, FormEvent } from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { Camera, ChevronLeft, ImagePlus, Save } from 'lucide-react';
 import {
@@ -17,23 +17,39 @@ import {
   buttonVariants,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
-import { MOCK_ORGS } from '@shared/mocks/mock-orgs';
+import { useOrg } from '@entities/Organization';
 
 export function OrgEditPage() {
   const { id } = useParams();
-  const org = MOCK_ORGS.find((o) => o.id === id);
+  const { data: org, isLoading } = useOrg(id ?? '');
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
-    title: org?.title ?? '',
-    description: org?.description ?? '',
-    location: org?.location ?? '',
-    website: org?.website ?? '',
-    category: org?.category ?? '',
+    title: '',
+    description: '',
+    location: '',
+    website: '',
+    category: '',
   });
 
+  // hydrate form when org loads
+  useEffect(() => {
+    if (org) {
+      setForm({
+        title: org.title ?? '',
+        description: org.description ?? '',
+        location: org.location ?? '',
+        website: org.website ?? '',
+        category: org.category ?? '',
+      });
+    }
+  }, [org]);
+
+  if (isLoading) {
+    return <main className="flex min-h-[60vh] items-center justify-center text-center">Загрузка...</main>;
+  }
   if (!org) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">

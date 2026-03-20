@@ -1,12 +1,13 @@
 import type { Route } from './+types/event';
-import { MOCK_EVENTS } from '@shared/mocks/mock-events';
+
 import { EventPage } from '@pages/Event';
 
+
 export function meta({ params }: Route.MetaArgs) {
-  const event = MOCK_EVENTS.find((e) => e.id === params.id);
+  // SSR meta не может быть асинхронным, поэтому используем только id
   return [
-    { title: event ? `${event.title} — uevent` : 'Event — uevent' },
-    { name: 'description', content: event?.description ?? '' },
+    { title: `Event — uevent` },
+    { name: 'description', content: '' },
   ];
 }
 

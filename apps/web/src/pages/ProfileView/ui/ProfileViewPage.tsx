@@ -16,13 +16,14 @@ import {
   buttonVariants,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
-import { MOCK_EVENTS } from '@shared/mocks/mock-events';
-import { MOCK_CURRENT_USER } from '@shared/mocks/mock-users';
+
+import { useMe } from '@entities/User/hooks';
+import { useEvents } from '@entities/Event/hooks';
 
 export function ProfileViewPage() {
-  const user = MOCK_CURRENT_USER;
-  const myEvents = MOCK_EVENTS.slice(0, 4);
-
+  const { data: user } = useMe();
+  const { data: events = [] } = useEvents();
+  const myEvents = events.slice(0, 4); // TODO: фильтрация по userId, если появится
   const [twoFaEnabled, setTwoFaEnabled] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -34,6 +35,10 @@ export function ProfileViewPage() {
       console.log('Avatar file selected:', file.name);
     }
   };
+
+  if (!user) {
+    return <main className="flex min-h-[60vh] items-center justify-center text-center">Пользователь не найден</main>;
+  }
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
