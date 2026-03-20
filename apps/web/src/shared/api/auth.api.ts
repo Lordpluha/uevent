@@ -35,4 +35,8 @@ export const authApi = {
     password: string;
     slogan?: string;
   }) => api.post<AuthResult>('/auth/organizations/register', payload).then((r) => r.data),
+
+  // Google Calendar
+  addToGoogleCalendar: (eventId: string) =>
+    api.post<{ calendarEventId: string; htmlLink: string }>(`/auth/google/calendar/${eventId}`).then((r) => r.data),
 };

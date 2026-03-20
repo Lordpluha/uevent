@@ -75,8 +75,9 @@ export function useEventsFilters() {
     ...(query ? { search: query } : {}),
     ...(format !== 'all' ? { format } : {}),
     ...(selectedTags.length > 0 ? { tags: selectedTags } : {}),
-    ...(dateFrom ? { dateFrom: dateFrom.toISOString() } : {}),
-    ...(dateTo ? { dateTo: dateTo.toISOString() } : {}),
+    ...(dateFrom ? { date_from: dateFrom.toISOString() } : {}),
+    ...(dateTo ? { date_to: dateTo.toISOString() } : {}),
+    ...(locFrom ? { location: locFrom } : {}),
   };
 
   /* ── Desktop combobox anchors ───────────────────────────────────── */

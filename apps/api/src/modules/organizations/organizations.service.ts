@@ -23,13 +23,29 @@ export class OrganizationsService {
     return await this.orgsRepo.save(org)
   }
 
-  async findAll({ page, limit }: GetOrganizationsParams) {
+  async findAll({ page, limit, category, verified, search, tags, city }: GetOrganizationsParams) {
+    const qb = this.orgsRepo.createQueryBuilder('org')
+      .leftJoinAndSelect('org.sessions', 'session')
+      .skip((page - 1) * limit)
+      .take(limit)
 
-    const [data, total] = await this.orgsRepo.findAndCount({
-      relations: ['sessions'],
-      skip: (page - 1) * limit,
-      take: limit,
-    })
+    if (category) {
+      qb.andWhere('org.category = :category', { category })
+    }
+    if (typeof verified === 'boolean') {
+      qb.andWhere('org.verified = :verified', { verified })
+    }
+    if (search) {
+      qb.andWhere('(org.name ILIKE :search OR org.description ILIKE :search)', { search: `%${search}%` })
+    }
+    if (city) {
+      qb.andWhere('org.city ILIKE :city', { city: `%${city}%` })
+    }
+    if (tags && tags.length) {
+      qb.andWhere('org.tags && ARRAY[:...tags]', { tags })
+    }
+
+    const [data, total] = await qb.getManyAndCount()
 
     return {
       data,

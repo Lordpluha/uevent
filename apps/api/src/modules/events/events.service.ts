@@ -26,23 +26,32 @@ export class EventsService {
   }
 
   async findAll(query: GetEventsParams) {
-    const { page, limit, tags, date_from, date_to, location } = query
+    const { page, limit, search, format, tags, date_from, date_to, location, organization_id } = query
 
     const qb = this.eventsRepo
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.tags', 'tag')
       .leftJoinAndSelect('event.tickets', 'ticket')
 
+    if (search) {
+      qb.andWhere('(event.name ILIKE :search OR event.description ILIKE :search)', { search: `%${search}%` })
+    }
+
+    if (format === 'offline') {
+      qb.andWhere('event.location IS NOT NULL')
+    } else if (format === 'online') {
+      qb.andWhere('event.location IS NULL')
+    }
+
     if (tags?.length) {
-      qb.andWhere((sub) => {
-        const sq = sub
-          .subQuery()
-          .select('et.event_id')
-          .from('event_tags', 'et')
-          .where('et.tag_id IN (:...tags)', { tags })
-          .getQuery()
-        return 'event.id IN ' + sq
-      })
+      const subQb = this.eventsRepo
+        .createQueryBuilder('filterEv')
+        .select('filterEv.id')
+        .innerJoin('filterEv.tags', 'filterTag')
+        .where('filterTag.name IN (:...filterTags)', { filterTags: tags })
+
+      qb.andWhere(`event.id IN (${subQb.getQuery()})`)
+      qb.setParameters(subQb.getParameters())
     }
 
     if (date_from) {
@@ -55,6 +64,10 @@ export class EventsService {
 
     if (location) {
       qb.andWhere('event.location ILIKE :location', { location: `%${location}%` })
+    }
+
+    if (organization_id) {
+      qb.andWhere('event.organization_id = :organization_id', { organization_id })
     }
 
     const total = await qb.getCount()

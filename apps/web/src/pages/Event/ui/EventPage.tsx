@@ -1,17 +1,31 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { Bookmark, CalendarDays, ChevronLeft, Clock, Images, MapPin, Share2, Star, Users, Video } from 'lucide-react';
+import { Bookmark, CalendarDays, CalendarPlus, ChevronLeft, Clock, Images, MapPin, Share2, Star, Users, Video } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { EventLightbox } from '@entities/Event';
 import { TicketCard } from '@entities/Ticket';
-import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Button, Separator } from '@shared/components';
 import { useEvent } from '@entities/Event';
+import { useAuth } from '@shared/lib/auth-context';
+import { authApi } from '@shared/api/auth.api';
 
 export function EventPage() {
   const { id } = useParams();
   const { data: event, isLoading, error } = useEvent(id!);
+  const { isAuthenticated, accountType } = useAuth();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+
+  const calendarMutation = useMutation({
+    mutationFn: () => authApi.addToGoogleCalendar(id!),
+    onSuccess: (data) => {
+      toast.success('Added to Google Calendar!');
+      if (data.htmlLink) window.open(data.htmlLink, '_blank');
+    },
+    onError: () => toast.error('Failed to add to Google Calendar. Make sure your Google account is linked.'),
+  });
 
   const hasGallery = Boolean(event?.gallery && event.gallery.length > 0);
 
@@ -113,6 +127,18 @@ export function EventPage() {
           <div className="mb-6 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">{event.title}</h1>
         <div className="flex shrink-0 items-center gap-2">
+          {isAuthenticated && accountType === 'user' && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5"
+              disabled={calendarMutation.isPending}
+              onClick={() => calendarMutation.mutate()}
+            >
+              <CalendarPlus className="h-4 w-4" />
+              Google Calendar
+            </Button>
+          )}
           <button
             type="button"
             aria-label="Share"

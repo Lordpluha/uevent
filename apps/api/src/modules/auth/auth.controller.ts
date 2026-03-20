@@ -1,8 +1,9 @@
-import { Controller, Post, Delete, Body, UseGuards, Res, Req, UnauthorizedException } from '@nestjs/common'
+import { Controller, Post, Delete, Get, Body, UseGuards, Res, Req, Param, Query, UnauthorizedException } from '@nestjs/common'
 import { ZodValidationPipe } from 'nestjs-zod'
 import { Request, Response } from 'express'
 import { UsersAuthService } from './users-auth.service'
 import { OrgsAuthService } from './orgs-auth.service'
+import { GoogleAuthService } from './google-auth.service'
 import { LoginDto, LoginDtoSchema } from './dto/login.dto'
 import { JwtGuard } from './guards/jwt.guard'
 import { CurrentUser } from './decorators/current-user.decorator'
@@ -16,6 +17,7 @@ export class AuthController {
   constructor(
     private readonly usersAuthService: UsersAuthService,
     private readonly orgsAuthService: OrgsAuthService,
+    private readonly googleAuthService: GoogleAuthService,
   ) {}
 
   // Users
@@ -106,5 +108,42 @@ export class AuthController {
     await this.orgsAuthService.logout(user.session_id as string)
     clearAuthCookies(res)
     return { message: 'Logged out' }
+  }
+
+  // Google OAuth
+
+  @Get('google')
+  async googleRedirect(@Res() res: Response) {
+    const url = this.googleAuthService.getConsentUrl()
+    res.redirect(url)
+  }
+
+  @Get('google/callback')
+  async googleCallback(
+    @Query('code') code: string,
+    @Res() res: Response,
+  ) {
+    if (!code) {
+      const clientUrl = process.env.CLIENT_URL ?? 'http://localhost:5173'
+      res.redirect(`${clientUrl}?auth_error=no_code`)
+      return
+    }
+
+    const tokens = await this.googleAuthService.handleCallback(code)
+    setAuthCookies(res, tokens)
+
+    const clientUrl = process.env.CLIENT_URL ?? 'http://localhost:5173'
+    res.redirect(`${clientUrl}?auth=google`)
+  }
+
+  // Google Calendar
+
+  @Post('google/calendar/:eventId')
+  @UseGuards(JwtGuard)
+  async addToGoogleCalendar(
+    @CurrentUser() user: JwtPayload,
+    @Param('eventId') eventId: string,
+  ) {
+    return this.googleAuthService.addEventToCalendar(user.sub as number, eventId)
   }
 }

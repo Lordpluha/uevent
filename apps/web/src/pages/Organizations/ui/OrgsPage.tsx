@@ -10,21 +10,21 @@ export function OrgsPage() {
   const [category, setCategory] = useQueryState('category', parseAsString.withDefault('All'));
   const [verifiedOnly, setVerifiedOnly] = useQueryState('verified', parseAsBoolean.withDefault(false));
 
-  const { data: allOrgs = [] } = useOrgs({
+
+  // Ensure allOrgs is always an array
+  const { data } = useOrgs({
     ...(query ? { search: query } : {}),
     ...(category !== 'All' ? { category } : {}),
+    ...(verifiedOnly ? { verified: true } : {}),
   });
+  const allOrgs = Array.isArray(data) ? data : [];
 
   const ALL_CATEGORIES = useMemo(() => [
     'All',
     ...Array.from(new Set(allOrgs.map((o) => o.category).filter(Boolean)))
   ].sort((a, b) => (a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b))), [allOrgs]);
 
-  /* client-side verified filter (not in OrganizationListParams) */
-  const filtered = useMemo(
-    () => (verifiedOnly ? allOrgs.filter((o) => o.verified) : allOrgs),
-    [allOrgs, verifiedOnly],
-  );
+  const filtered = allOrgs;
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

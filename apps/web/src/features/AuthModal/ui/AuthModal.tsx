@@ -167,7 +167,7 @@ const GoogleButton = ({ label }: { label: string }) => (
   <button
     type="button"
     onClick={() => {
-      window.location.href = '/auth/google';
+      window.location.href = '/api/auth/google';
     }}
     className="flex w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
   >

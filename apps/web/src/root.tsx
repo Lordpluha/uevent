@@ -11,7 +11,7 @@ import {
 
 import type { Route } from './+types/root'
 import type { PropsWithChildren } from 'react'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/react'
 
@@ -23,7 +23,7 @@ import { ErrorBoundary as ErrorBoundaryWidget } from '@widgets/Error'
 import { TooltipProvider } from '@shared/components'
 import { Toaster } from 'sonner'
 import { AppContext, type AppContextValue, fetchLocale } from '@shared/lib'
-import { AuthProvider } from '@shared/lib/auth-context'
+import { AuthProvider, useAuth } from '@shared/lib/auth-context'
 import type { Dictionary, Locale } from '@shared/lib'
 
 export const links: Route.LinksFunction = () => [
@@ -100,6 +100,24 @@ const queryClient = new QueryClient()
 
 type Win = Window & { __THEME__?: string }
 
+/** Picks up ?auth=google after the OAuth redirect and syncs auth state. */
+function GoogleAuthHandler() {
+  const { setAuthenticated } = useAuth()
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('auth') === 'google') {
+      setAuthenticated('user')
+      // Clean the URL
+      params.delete('auth')
+      const clean = params.toString()
+      const newUrl = window.location.pathname + (clean ? `?${clean}` : '')
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [setAuthenticated])
+  return null
+}
+
 export default function App() {
   const { initialLocale, initialTheme, initialDict } = useLoaderData<typeof loader>()
 
@@ -132,6 +150,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <NuqsAdapter>
         <AuthProvider>
+          <GoogleAuthHandler />
           <AppContext.Provider value={ctx}>
           <TooltipProvider>
             <Header />
