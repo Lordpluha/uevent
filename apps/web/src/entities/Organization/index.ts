@@ -1,4 +1,5 @@
 export * from './api/organization.api';
+export * from './hooks/index';
 export * from './model/dtos';
 export * from './model/organizationEntity';
 export * from './ui/OrgCard';

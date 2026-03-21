@@ -17,9 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@shared/components';
+
 import { createEventSchema, type CreateEventDto } from '@entities/Event';
-import { MOCK_ORGS } from '@entities/Organization';
 import { eventsApi } from '@entities/Event';
+import { useOrgs } from '@entities/Organization';
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -32,8 +33,10 @@ interface EventCreateProps {
 
 /* ── Component ────────────────────────────────────────────────────────── */
 
+
 export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreateProps) {
   const [tagInput, setTagInput] = useState('');
+  const { data: orgs = [] } = useOrgs();
 
   const {
     register,
@@ -41,7 +44,6 @@ export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreatePro
     handleSubmit,
     watch,
     setValue,
-    getValues,
     formState: { errors, isSubmitting },
   } = useForm<CreateEventDto>({
     resolver: zodResolver(createEventSchema),
@@ -185,7 +187,7 @@ export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreatePro
                   <SelectValue placeholder="Select organization" />
                 </SelectTrigger>
                 <SelectContent>
-                  {MOCK_ORGS.map((org) => (
+                  {orgs.map((org) => (
                     <SelectItem key={org.id} value={org.id}>
                       {org.title}
                     </SelectItem>

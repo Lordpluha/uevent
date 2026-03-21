@@ -7,7 +7,8 @@ import { EventsGrid } from './EventsGrid';
 
 export function EventsPage() {
   const f = useEventsFilters();
-  const { data: allEvents = [] } = useEvents(f.apiParams);
+  const { data: allEventsRaw } = useEvents(f.apiParams);
+  const allEvents = Array.isArray(allEventsRaw) ? allEventsRaw : [];
 
   /* client-side location filter (not yet in EventListParams) */
   const events = useMemo(

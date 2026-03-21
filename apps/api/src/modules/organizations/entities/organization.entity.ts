@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm'
 import { OrganizationSession } from './organization-session.entity'
 import { OrganizationOtp } from './organization-otp.entity'
+import { Event } from '../../events/entities/event.entity'
 
 @Entity('organizations')
 export class Organization {
@@ -16,6 +17,7 @@ export class Organization {
   @Column({ type: 'text', nullable: true })
   description: string
 
+
   @Column({ nullable: true })
   avatar: string
 
@@ -27,6 +29,19 @@ export class Organization {
 
   @Column()
   password: string
+
+
+  @Column({ nullable: true })
+  category: string
+
+  @Column({ default: false })
+  verified: boolean
+
+  @Column('text', { array: true, nullable: true })
+  tags: string[]
+
+  @Column({ nullable: true })
+  city: string
 
   // relations
 
@@ -41,4 +56,10 @@ export class Organization {
     (otp) => otp.organization,
   )
   otps: OrganizationOtp[]
+
+  @OneToMany(
+    () => Event,
+    (event) => event.organization,
+  )
+  events: Event[]
 }

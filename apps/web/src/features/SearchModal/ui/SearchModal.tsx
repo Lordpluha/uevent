@@ -12,13 +12,31 @@ import {
   CommandSeparator,
 } from '@shared/components';
 import { useAppContext } from '@shared/lib';
-import { MOCK_EVENTS, MOCK_ORGS } from '@shared/mocks';
+import { useEvents } from '@entities/Event';
+import { useOrgs } from '@entities/Organization';
 
-const SEARCH_EVENTS = MOCK_EVENTS.map((e) => ({
-  id: e.id,
-  title: e.title,
-  href: `/events/${e.id}`,
-}));
+
+
+function useSearchEvents() {
+  const { data } = useEvents();
+  const events = Array.isArray(data) ? data : [];
+  return events.map((e) => ({
+    id: e.id,
+    title: e.title,
+    href: `/events/${e.id}`,
+  }));
+}
+
+
+function useSearchOrgs() {
+  const { data } = useOrgs();
+  const orgs = Array.isArray(data) ? data : [];
+  return orgs.map((o) => ({
+    id: o.id,
+    title: o.title,
+    href: `/organizations/${o.id}`,
+  }));
+}
 
 /* ──────────────────────────────────────────────────────────── */
 /*  Component                                                    */
@@ -34,6 +52,8 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
   const { t } = useAppContext();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const searchEvents = useSearchEvents();
+  const searchOrgs = useSearchOrgs();
 
   // Ctrl+K / ⌘+K shortcut
   useEffect(() => {
@@ -76,7 +96,7 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
             <CommandEmpty>{t.header.search.empty}</CommandEmpty>
 
             <CommandGroup heading={t.header.search.groups.events}>
-              {SEARCH_EVENTS.map((event) => (
+              {searchEvents.map((event) => (
                 <CommandItem key={event.id} value={event.title} onSelect={() => handleSelect(event.href)}>
                   <CalendarDays className="text-muted-foreground" />
                   {event.title}
@@ -87,7 +107,7 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
             <CommandSeparator />
 
             <CommandGroup heading={t.header.search.groups.organizations}>
-              {MOCK_ORGS.map((org) => (
+              {searchOrgs.map((org) => (
                 <CommandItem key={org.id} value={org.title} onSelect={() => handleSelect(org.href)}>
                   <Users className="text-muted-foreground" />
                   {org.title}

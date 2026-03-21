@@ -8,6 +8,7 @@ import { TagsModule } from './modules/tags/tags.module'
 import { EventsModule } from './modules/events/events.module'
 import { OrganizationsModule } from './modules/organizations/organizations.module'
 import { PaymentsModule } from './modules/payments/payments.module'
+import { AuthModule } from './modules/auth/auth.module'
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { PaymentsModule } from './modules/payments/payments.module'
     EventsModule,
     OrganizationsModule,
     PaymentsModule,
+    AuthModule,
   ],
   controllers: [AppController],
 })

@@ -12,15 +12,22 @@
     "dev": "nest start --watch",
     "debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "pnpx @biomejs/biome lint --write"
+    "lint": "pnpx @biomejs/biome lint --write",
+    "seed:all": "ts-node --swc scripts/seed-all.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/typeorm": "^11.0.0",
     "nestjs-stripe": "^1.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "argon2": "^0.44.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.3.1",
+    "googleapis": "^171.4.0",
     "nestjs-zod": "^5.1.1",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
@@ -32,6 +39,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",
+    "@faker-js/faker": "^10.3.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@swc/cli": "^0.6.0",

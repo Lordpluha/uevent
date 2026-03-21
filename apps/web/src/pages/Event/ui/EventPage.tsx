@@ -1,17 +1,31 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { Bookmark, CalendarDays, ChevronLeft, Clock, Images, MapPin, Share2, Star, Users, Video } from 'lucide-react';
+import { Bookmark, CalendarDays, CalendarPlus, ChevronLeft, Clock, Images, MapPin, Share2, Star, Users, Video } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { EventLightbox } from '@entities/Event';
 import { TicketCard } from '@entities/Ticket';
-import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
-import { MOCK_EVENTS } from '@shared/mocks/mock-events';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Button, Separator } from '@shared/components';
+import { useEvent } from '@entities/Event';
+import { useAuth } from '@shared/lib/auth-context';
+import { authApi } from '@shared/api/auth.api';
 
 export function EventPage() {
   const { id } = useParams();
-  const event = MOCK_EVENTS.find((e) => e.id === id);
-  const [isBookmarked, setIsBookmarked] = useState(event?.isBookmarked ?? false);
+  const { data: event, isLoading, error } = useEvent(id!);
+  const { isAuthenticated, accountType } = useAuth();
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+
+  const calendarMutation = useMutation({
+    mutationFn: () => authApi.addToGoogleCalendar(id!),
+    onSuccess: (data) => {
+      toast.success('Added to Google Calendar!');
+      if (data.htmlLink) window.open(data.htmlLink, '_blank');
+    },
+    onError: () => toast.error('Failed to add to Google Calendar. Make sure your Google account is linked.'),
+  });
 
   const hasGallery = Boolean(event?.gallery && event.gallery.length > 0);
 
@@ -25,7 +39,10 @@ export function EventPage() {
     if (!open) setGalleryIndex(null);
   };
 
-  if (!event) {
+  if (isLoading) {
+    return <main className="flex min-h-[60vh] items-center justify-center text-center">Загрузка...</main>;
+  }
+  if (error || !event) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="text-5xl">📭</p>
@@ -39,6 +56,7 @@ export function EventPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+
       <Link
         to="/events"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -47,47 +65,80 @@ export function EventPage() {
         All events
       </Link>
 
-      <div
-        className={`relative mb-8 h-64 w-full overflow-hidden rounded-2xl bg-muted sm:h-80 ${
-          hasGallery ? 'cursor-pointer' : ''
-        }`}
-        onClick={hasGallery ? () => openGallery(0) : undefined}
-        role={hasGallery ? 'button' : undefined}
-        aria-label={hasGallery ? 'Open photo gallery' : undefined}
-        tabIndex={hasGallery ? 0 : undefined}
-        onKeyDown={hasGallery ? (e) => e.key === 'Enter' && openGallery(0) : undefined}
-      >
-        {event.imageUrl ? (
-          <img
-            src={event.imageUrl}
-            alt={event.title}
-            className={`h-full w-full object-cover transition-opacity ${
-              hasGallery ? 'hover:opacity-90' : ''
-            }`}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No image</div>
-        )}
-        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
-        <div className="absolute bottom-4 left-4">
-          <Badge variant="secondary" className="flex items-center gap-1.5 backdrop-blur-sm">
-            {event.format === 'online' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
-            {event.format === 'online' ? 'Online' : 'Offline'}
-          </Badge>
-        </div>
-        {hasGallery && (
+      {hasGallery ? (
+        <button
+          type="button"
+          className="relative mb-8 h-64 w-full overflow-hidden rounded-2xl bg-muted sm:h-80 cursor-pointer"
+          onClick={() => openGallery(0)}
+          aria-label="Open photo gallery"
+        >
+          {event.imageUrl ? (
+            <img
+              src={event.imageUrl}
+              alt={event.title}
+              className="h-full w-full object-cover transition-opacity hover:opacity-90"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No image</div>
+          )}
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute bottom-4 left-4">
+            <Badge variant="secondary" className="flex items-center gap-1.5 backdrop-blur-sm">
+              {event.format === 'online' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+              {event.format === 'online' ? 'Online' : 'Offline'}
+            </Badge>
+          </div>
           <div className="absolute bottom-4 right-4">
             <Badge variant="secondary" className="flex items-center gap-1.5 backdrop-blur-sm">
               <Images className="h-3 w-3" />
               {event.gallery!.length} photos
             </Badge>
           </div>
-        )}
-      </div>
+        </button>
+      ) : (
+        <div className="relative mb-8 h-64 w-full overflow-hidden rounded-2xl bg-muted sm:h-80">
+          {event.imageUrl ? (
+            <img
+              src={event.imageUrl}
+              alt={event.title}
+              className="h-full w-full object-cover transition-opacity"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No image</div>
+          )}
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute bottom-4 left-4">
+            <Badge variant="secondary" className="flex items-center gap-1.5 backdrop-blur-sm">
+              {event.format === 'online' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+              {event.format === 'online' ? 'Online' : 'Offline'}
+            </Badge>
+          </div>
+          {hasGallery && (
+            <div className="absolute bottom-4 right-4">
+              <Badge variant="secondary" className="flex items-center gap-1.5 backdrop-blur-sm">
+                <Images className="h-3 w-3" />
+                {event.gallery!.length} photos
+              </Badge>
+            </div>
+          )}
+        </div>
+      )}
 
-      <div className="mb-6 flex items-start justify-between gap-4">
+          <div className="mb-6 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">{event.title}</h1>
         <div className="flex shrink-0 items-center gap-2">
+          {isAuthenticated && accountType === 'user' && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5"
+              disabled={calendarMutation.isPending}
+              onClick={() => calendarMutation.mutate()}
+            >
+              <CalendarPlus className="h-4 w-4" />
+              Google Calendar
+            </Button>
+          )}
           <button
             type="button"
             aria-label="Share"
