@@ -16,6 +16,7 @@ export type Dictionary = {
       searchEvents: string;
       startGroup: string;
       login: string;
+      logout: string;
     };
     search: {
       placeholder: string;

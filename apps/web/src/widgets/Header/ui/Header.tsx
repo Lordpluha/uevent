@@ -1,7 +1,9 @@
-import { Menu, X } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from '@shared/components';
 import { useAppContext } from '@shared/lib';
+import { useAuth } from '@shared/lib/auth-context';
+import { authApi } from '@shared/api/auth.api';
 import { AuthModal } from '@features/AuthModal';
 import { LocaleSwitcher } from '@features/LocaleSwitcher';
 import { ThemeSwitcher } from '@features/ThemeSwitcher';
@@ -9,14 +11,43 @@ import { SearchModal } from '@features/SearchModal';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { locale, t } = useAppContext();
+  const { t } = useAppContext();
+  const { isAuthenticated, accountType, logout } = useAuth();
 
   const closeMenu = () => setIsMenuOpen(false);
+
+  const handleLogout = async () => {
+    try {
+      if (accountType === 'organization') await authApi.logoutOrg();
+      else await authApi.logoutUser();
+    } catch {
+      // ignore — token may be expired; logout locally regardless
+    }
+    logout();
+  };
 
   const navigationLinks = [
     { label: t.header.nav.events, href: '/events' },
     { label: t.header.nav.organizations, href: '/organizations' },
   ];
+
+  const AuthActions = ({ variant }: { variant: 'pill' | 'block' }) =>
+    isAuthenticated ? (
+      <button
+        type="button"
+        onClick={handleLogout}
+        className={
+          variant === 'pill'
+            ? 'inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent'
+            : 'flex w-full items-center justify-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent'
+        }
+      >
+        <LogOut className="h-3.5 w-3.5" />
+        {t.header.actions.logout}
+      </button>
+    ) : (
+      <AuthModal variant={variant} />
+    );
 
   return (
     <header className="sticky top-0 z-40 overflow-x-clip border-b border-border/60 bg-background/95 backdrop-blur">
@@ -44,7 +75,7 @@ export const Header = () => {
           <LocaleSwitcher />
           <ThemeSwitcher variant="pill" />
           <SearchModal variant="pill" />
-          <AuthModal variant="pill" />
+          <AuthActions variant="pill" />
         </div>
 
         <button
@@ -90,7 +121,7 @@ export const Header = () => {
               <LocaleSwitcher />
               <ThemeSwitcher variant="block" />
               <SearchModal variant="block" />
-              <AuthModal variant="block" />
+              <AuthActions variant="block" />
             </div>
           </aside>
         </div>

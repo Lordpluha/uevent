@@ -12,7 +12,9 @@
       "lightTheme": "Світла тема",
       "searchEvents": "Шукати події",
       "startGroup": "Створити групу",
-      "login": "Увійти"
+      "login": "Увійти",
+      "logout": "Вийти",
+      "myAccount": "Мій акаунт"
     },
     "search": {
       "placeholder": "Пошук подій, організацій…",

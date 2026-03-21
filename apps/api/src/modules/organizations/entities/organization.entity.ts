@@ -16,6 +16,7 @@ export class Organization {
   @Column({ type: 'text', nullable: true })
   description: string
 
+
   @Column({ nullable: true })
   avatar: string
 
@@ -27,6 +28,19 @@ export class Organization {
 
   @Column()
   password: string
+
+
+  @Column({ nullable: true })
+  category: string
+
+  @Column({ default: false })
+  verified: boolean
+
+  @Column('text', { array: true, nullable: true })
+  tags: string[]
+
+  @Column({ nullable: true })
+  city: string
 
   // relations
 

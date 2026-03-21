@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router';
-import { CalendarDays, ChevronLeft, Globe, MapPin, Star, Users } from 'lucide-react';
+import { CalendarDays, ChevronLeft, Globe, MapPin, Star } from 'lucide-react';
 import { EventCard, useEvents } from '@entities/Event';
 import { useUser } from '@entities/User';
 import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
@@ -39,7 +39,6 @@ export function UserProfilePage() {
         Back
       </Link>
 
-      {/* Header */}
       <div className="mb-8 flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
         <Avatar className="h-24 w-24 border-4 border-background ring-2 ring-primary/20">
           <AvatarImage src={user.avatarUrl} alt={user.name} />
@@ -75,7 +74,6 @@ export function UserProfilePage() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: 'Events attended', value: user.eventsAttended },
@@ -90,7 +88,6 @@ export function UserProfilePage() {
         ))}
       </div>
 
-      {/* Interests */}
       <section className="mb-8">
         <h2 className="mb-3 text-base font-semibold">Interests</h2>
         <div className="flex flex-wrap gap-2">
@@ -104,7 +101,6 @@ export function UserProfilePage() {
 
       <Separator className="mb-8" />
 
-      {/* Recent events */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">Recent events</h2>

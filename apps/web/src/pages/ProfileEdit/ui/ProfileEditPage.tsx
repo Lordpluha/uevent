@@ -1,7 +1,9 @@
 import type { ChangeEvent, FormEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Camera, ChevronLeft, Eye, EyeOff, Save, Shield, ShieldCheck } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   Avatar,
   AvatarFallback,
@@ -21,10 +23,11 @@ import {
   buttonVariants,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
-import { useMe } from '@entities/User';
+import { usersApi, useMe } from '@entities/User';
 
 export function ProfileEditPage() {
   const { data: user, isLoading, isError } = useMe();
+  const queryClient = useQueryClient();
 
   const [form, setForm] = useState({
     name: '',
@@ -50,16 +53,48 @@ export function ProfileEditPage() {
     next: '',
     confirm: '',
   });
-
   const [showPassword, setShowPassword] = useState({
     current: false,
     next: false,
     confirm: false,
   });
-
   const [twoFaEnabled, setTwoFaEnabled] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const saveProfileMutation = useMutation({
+    mutationFn: () =>
+      usersApi.updateMe({
+        name: form.name.trim() || undefined,
+        username: form.username.trim() || undefined,
+        bio: form.bio.trim() || undefined,
+        location: form.location.trim() || undefined,
+        website: form.website.trim() || undefined,
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['me'] }),
+        queryClient.invalidateQueries({ queryKey: ['users'] }),
+      ]);
+      toast.success('Profile updated');
+    },
+    onError: () => {
+      toast.error('Failed to save profile');
+    },
+  });
+
+  // hydrate form when user loads
+  useEffect(() => {
+    if (user) {
+      setForm({
+        name: user.name,
+        username: user.username,
+        bio: user.bio ?? '',
+        location: user.location ?? '',
+        website: user.website ?? '',
+      });
+    }
+  }, [user]);
 
   const set =
     (field: keyof typeof form) =>
@@ -84,8 +119,7 @@ export function ProfileEditPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    // TODO: api.patch('/users/me', form)
-    alert('Profile saved!');
+    saveProfileMutation.mutate();
   };
 
   const handlePasswordSubmit = (e: FormEvent) => {
@@ -96,8 +130,7 @@ export function ProfileEditPage() {
     if (passwordForm.next !== passwordForm.confirm) errs.confirm = 'Passwords do not match.';
     setPasswordErrors(errs);
     if (Object.keys(errs).length === 0) {
-      // TODO: api.post('/users/me/change-password', passwordForm)
-      alert('Password changed!');
+      toast.info('Password change endpoint is not available on backend yet.');
       setPasswordForm({ current: '', next: '', confirm: '' });
     }
   };
@@ -222,9 +255,9 @@ export function ProfileEditPage() {
           <Link to="/profile" className={cn(buttonVariants({ variant: 'ghost' }))}>
             Cancel
           </Link>
-          <Button type="submit" className="gap-1.5">
+          <Button type="submit" className="gap-1.5" disabled={saveProfileMutation.isPending}>
             <Save className="h-3.5 w-3.5" />
-            Save changes
+            {saveProfileMutation.isPending ? 'Saving...' : 'Save changes'}
           </Button>
         </div>
       </form>

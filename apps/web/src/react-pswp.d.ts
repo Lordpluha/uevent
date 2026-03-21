@@ -36,5 +36,6 @@ declare module 'react-pswp' {
 
 declare module 'react-pswp/dist/index.css' {
   const content: unknown;
+  // biome-ignore lint/style/noDefaultExport: dts
   export default content;
 }
