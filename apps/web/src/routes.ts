@@ -7,6 +7,10 @@ export default [
   route('/events', 'app/events.tsx'),
   route('/events/:id', 'app/event.tsx'),
 
+  // Checkout & Payment
+  route('/checkout', 'app/checkout.tsx'),
+  route('/payment-success', 'app/payment-success.tsx'),
+
   // Organizations
   route('/organizations', 'app/organizations.tsx'),
   route('/organizations/:id', 'app/organization.tsx'),

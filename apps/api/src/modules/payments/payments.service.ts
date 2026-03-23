@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import Stripe from 'stripe'
 import { Payment, PaymentStatus } from './entities/payment.entity'
+import { EmailService } from '../notifications/email.service'
 import { v4 as uuidv4 } from 'uuid'
 
 @Injectable()
@@ -13,6 +14,7 @@ export class PaymentsService {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
+    private readonly emailService: EmailService,
   ) {}
 
   private getStripe(): Stripe {
@@ -29,7 +31,7 @@ export class PaymentsService {
   async createPaymentIntent(amount: number, currency: string = 'usd', metadata?: Record<string, string>) {
     try {
       const paymentIntent = await this.getStripe().paymentIntents.create({
-        amount: Math.round(amount * 100), // convert dollars to cents
+        amount: Math.round(amount),
         currency,
         metadata: metadata || {},
       })
@@ -69,13 +71,15 @@ export class PaymentsService {
 
   private async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
     try {
-      this.logger.log(`Payment succeeded: ${paymentIntent.id}`)
+      this.logger.log(`WEBHOOK RECEIVED: Payment succeeded: ${paymentIntent.id}`)
+      this.logger.log(`Payment metadata:`, JSON.stringify(paymentIntent.metadata))
 
       let payment = await this.paymentRepository.findOne({
         where: { stripePaymentIntentId: paymentIntent.id },
       })
 
       if(!payment) {
+        this.logger.log(`Creating new payment record...`)
         payment = this.paymentRepository.create({
           id: uuidv4(),
           stripePaymentIntentId: paymentIntent.id,
@@ -84,7 +88,7 @@ export class PaymentsService {
           status: PaymentStatus.SUCCEEDED,
           metadata: paymentIntent.metadata,
         })
-      } else {
+      }else {
         payment.status = PaymentStatus.SUCCEEDED
         payment.metadata = paymentIntent.metadata
       }
@@ -93,10 +97,42 @@ export class PaymentsService {
 
       this.logger.log(`Payment ${paymentIntent.id} saved to database`)
 
-      // TODO: EMAIL CONFIRMATION -> NotificationsService
-      // await this.notificationsService.sendPaymentConfirmation(payment.userId, payment) ??
+      // payment confirmation email
+      if(paymentIntent.metadata) {
+        this.logger.log(`📧 Sending email to: ${paymentIntent.metadata.userEmail}`)
+        await this.sendPaymentConfirmationEmail(paymentIntent)
+      }else {
+        this.logger.warn(`⚠️ No metadata found - skipping email`)
+      }
     } catch(error) {
-      this.logger.error(`Error handling payment success: ${error.message}`)
+      this.logger.error(`❌ Error handling payment success: ${error.message}`)
+    }
+  }
+
+  private async sendPaymentConfirmationEmail(paymentIntent: Stripe.PaymentIntent) {
+    try {
+      const metadata = paymentIntent.metadata
+
+      if(!metadata?.userEmail || !metadata?.userName) {
+        this.logger.warn(`Missing required email data for payment ${paymentIntent.id}`)
+        return
+      }
+
+      await this.emailService.sendPaymentConfirmation({
+        userEmail: metadata.userEmail,
+        userName: metadata.userName,
+        eventTitle: metadata.eventTitle || 'Ticket Purchase',
+        ticketName: metadata.ticketName || 'Ticket',
+        price: paymentIntent.amount / 100,
+        eventDate: metadata.eventDate || '',
+        eventLocation: metadata.eventLocation || '',
+        organizationName: metadata.organizationName || '',
+        paymentIntentId: paymentIntent.id,
+      })
+
+      this.logger.log(`Payment confirmation email sent to ${metadata.userEmail}`)
+    } catch(error) {
+      this.logger.error(`Failed to send payment confirmation email: ${error.message}`)
     }
   }
 
@@ -120,7 +156,7 @@ export class PaymentsService {
           failureReason,
           metadata: paymentIntent.metadata,
         })
-      } else {
+      }else {
         payment.status = PaymentStatus.FAILED
         payment.failureReason = failureReason
       }
@@ -162,7 +198,7 @@ export class PaymentsService {
           // TODO: EMAIL REFUND NOTIFICATION -> NotificationsService
           // await this.notificationsService.sendRefundNotification(payment.userId, payment) ??
         }
-      } else {
+      }else {
         this.logger.warn(`Could not find payment for charge ${charge.id}`)
       }
     } catch(error) {

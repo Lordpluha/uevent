@@ -29,6 +29,7 @@ function mapEvent(raw: BackendEvent): EventModel {
     description: raw.description ?? '',
     tags: (raw.tags ?? []).map((t: BackendTag) => t.name),
     tickets: (raw.tickets ?? []).map((t: BackendTicket) => ({
+      id: t.id,
       ticketType: (t.ticketType ?? 'standard') as 'free' | 'standard' | 'vip',
       price: Number(t.price ?? 0),
       currency: t.currency ?? '$',

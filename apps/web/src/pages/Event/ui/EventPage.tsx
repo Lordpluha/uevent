@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage, Badge, Button, Separator } from '@
 import { useEvent } from '@entities/Event';
 import { useAuth } from '@shared/lib/auth-context';
 import { authApi } from '@shared/api/auth.api';
+import { PaymentModal } from '@features/PaymentModal';
 
 export function EventPage() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ export function EventPage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<{ id: number; name: string; price: number } | null>(null);
 
   const calendarMutation = useMutation({
     mutationFn: () => authApi.addToGoogleCalendar(id!),
@@ -169,8 +171,8 @@ export function EventPage() {
             value: event.location ?? 'Online',
           },
           { icon: Users, label: 'Attendees', value: event.attendeeCount.toLocaleString() },
-        ].map(({ icon: Icon, label, value }) => (
-          <div key={label} className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card p-3">
+        ].map(({ icon: Icon, label, value }, idx) => (
+          <div key={idx} className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card p-3">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Icon className="h-3.5 w-3.5" />
               {label}
@@ -181,8 +183,8 @@ export function EventPage() {
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        {event.tags.map((tag) => (
-          <Badge key={tag} variant="secondary" className="text-xs">
+        {event.tags.map((tag, idx) => (
+          <Badge key={`${tag}-${idx}`} variant="secondary" className="text-xs">
             {tag}
           </Badge>
         ))}
@@ -243,14 +245,24 @@ export function EventPage() {
         <div className="flex flex-col gap-3">
           {event.tickets.map((ticket) => (
             <TicketCard
-              key={ticket.ticketType}
+              key={ticket.id}
               {...ticket}
               eventTitle={event.title}
               eventDate={event.date}
               eventTime={event.time}
               location={event.location ?? 'Online'}
               format={event.format}
-              onSelect={() => alert(`Ticket "${ticket.ticketType}" selected!`)}
+              onSelect={() => {
+                if(!isAuthenticated) {
+                  toast.error('Please log in to purchase a ticket');
+                  return;
+                }
+                setSelectedTicket({
+                  id: ticket.id,
+                  name: ticket.ticketType,
+                  price: ticket.price,
+                });
+              }}
             />
           ))}
         </div>
@@ -263,6 +275,17 @@ export function EventPage() {
           open={galleryOpen}
           onIndexChange={setGalleryIndex}
           onOpenChange={handleLightboxOpenChange}
+        />
+      )}
+
+      {selectedTicket && (
+        <PaymentModal
+          ticketId={selectedTicket.id}
+          ticketName={selectedTicket.name}
+          price={selectedTicket.price}
+          eventId={id!}
+          eventTitle={event?.title || ''}
+          onClose={() => setSelectedTicket(null)}
         />
       )}
     </main>
