@@ -169,19 +169,29 @@ export class PaymentsService {
 
       this.logger.log(`Payment ${paymentIntent.id} marked as failed in database`)
 
-      // Send failed payment email
-      if(paymentIntent.metadata) {
+      // send failed payment email
+      if(paymentIntent.metadata?.userEmail) {
         this.logger.log(`Sending failed payment email to: ${paymentIntent.metadata.userEmail}`)
         await this.emailService.sendPaymentFailedEmail(
           paymentIntent.metadata.userEmail,
-          paymentIntent.metadata.userName,
+          paymentIntent.metadata.userName || 'Valued Customer',
           paymentIntent.metadata.eventTitle || 'Ticket Purchase',
           paymentIntent.metadata.ticketName || 'Ticket',
           failureReason,
           paymentIntent.id
         )
+      }else if(payment?.metadata?.userEmail) {
+        this.logger.log(`Using metadata from database record. Sending failed payment email to: ${payment.metadata.userEmail}`)
+        await this.emailService.sendPaymentFailedEmail(
+          payment.metadata.userEmail,
+          payment.metadata.userName || 'Valued Customer',
+          payment.metadata.eventTitle || 'Ticket Purchase',
+          payment.metadata.ticketName || 'Ticket',
+          failureReason,
+          paymentIntent.id
+        )
       }else {
-        this.logger.warn(`No metadata found - skipping failed payment email`)
+        this.logger.warn(`No email found in webhook metadata or database - skipping failed payment email`)
       }
     } catch(error) {
       this.logger.error(`Error handling payment failure: ${error.message}`)
@@ -211,7 +221,7 @@ export class PaymentsService {
 
           this.logger.log(`Payment ${paymentIntentId} marked as refunded`)
 
-          // Send refund email
+          // send refund email
           if(payment.metadata) {
             this.logger.log(`Sending refund email to: ${payment.metadata.userEmail}`)
             await this.emailService.sendRefundEmail(

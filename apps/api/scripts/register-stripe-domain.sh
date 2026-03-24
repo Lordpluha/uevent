@@ -35,7 +35,7 @@ if [ $? -eq 0 ] && [ -n "$NGROK_RESPONSE" ]; then
   DOMAIN=$(echo "$NGROK_RESPONSE" | grep -o '"public_url":"https://[^"]*' | head -1 | cut -d '"' -f 4 | sed 's|https://||')
   
   if [ -n "$DOMAIN" ]; then
-    echo -e "${GREEN}✅ Found ngrok domain: ${BLUE}$DOMAIN${NC}"
+    echo -e "${GREEN}! Found ngrok domain: ${BLUE}$DOMAIN${NC}"
   fi
 fi
 
@@ -52,7 +52,7 @@ fi
 
 echo ""
 echo -e "${BLUE}Registering domain with Stripe...${NC}"
-echo -e "${BLUE}Domain: ${YELLOW}$DOMAIN${NC}"
+echo -e "${BLUE}! Domain: ${YELLOW}$DOMAIN${NC}"
 echo ""
 
 RESPONSE=$(curl -s -X POST https://api.stripe.com/v1/payment_method_domains \
