@@ -1,19 +1,38 @@
-import { useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
-import { ChevronLeft, CreditCard, ShieldCheck, Ticket } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
+import { ChevronLeft, CreditCard, Minus, Plus, ShieldCheck, Ticket } from 'lucide-react';
 import { useEvent } from '@entities/Event';
-import { Badge, Button, Input } from '@shared/components';
+import { Badge, Button, PromoCodeSection } from '@shared/components';
+
+const VALID_PROMO_CODES: Record<string, number> = {
+  UEVENT15: 15,
+  UEVENT20: 20,
+  UEVENT10: 10,
+  SUMMER25: 25,
+  EARLY30: 30,
+};
 
 export function CheckoutReviewPage() {
   const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const ticketType = searchParams.get('ticketType') ?? 'standard';
+  const promoFromQuery = (searchParams.get('promo') ?? '').toUpperCase();
 
   const { data: event, isLoading } = useEvent(eventId ?? '');
 
-  const [promo, setPromo] = useState('');
-  const [isPromoApplied, setIsPromoApplied] = useState(false);
-  const quantity = 1;
+  const [appliedPromoCode, setAppliedPromoCode] = useState<string | undefined>();
+  const [appliedPromoDiscount, setAppliedPromoDiscount] = useState<number | undefined>();
+  const [quantity, setQuantity] = useState(1);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  useEffect(() => {
+    if (!promoFromQuery) return;
+    const discount = VALID_PROMO_CODES[promoFromQuery];
+    if (!discount) return;
+    setAppliedPromoCode(promoFromQuery);
+    setAppliedPromoDiscount(discount);
+  }, [promoFromQuery]);
 
   const selectedTicket = useMemo(() => {
     if (!event) return null;
@@ -21,11 +40,33 @@ export function CheckoutReviewPage() {
   }, [event, ticketType]);
 
   const subtotal = (selectedTicket?.price ?? 0) * quantity;
-  const discountRate = isPromoApplied ? 0.15 : 0;
+  const discountRate = (appliedPromoDiscount ?? 0) / 100;
   const discount = subtotal * discountRate;
   const total = Math.max(0, subtotal - discount);
 
   const currency = selectedTicket?.currency ?? '$';
+
+  const handleProceedToPayment = () => {
+    if (!eventId || !selectedTicket) return;
+
+    setIsProcessingPayment(true);
+
+    const params = new URLSearchParams({
+      ticketType: selectedTicket.ticketType,
+      qty: String(quantity),
+      total: total.toFixed(2),
+      currency,
+      order: `DEMO-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+    });
+
+    if (appliedPromoCode) {
+      params.set('promo', appliedPromoCode);
+    }
+
+    window.setTimeout(() => {
+      navigate(`/checkout/${eventId}/success?${params.toString()}`);
+    }, 700);
+  };
 
   if (isLoading) {
     return (
@@ -67,42 +108,52 @@ export function CheckoutReviewPage() {
             <Ticket className="h-3.5 w-3.5" />
             Selected ticket
           </div>
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold capitalize text-foreground">{selectedTicket?.ticketType ?? ticketType}</p>
-              <p className="text-xs text-muted-foreground">Qty: {quantity}</p>
+              <p className="text-xs text-muted-foreground">Unit price: {currency}{(selectedTicket?.price ?? 0).toFixed(2)}</p>
+              <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-border/60 px-2 py-1">
+                <button
+                  type="button"
+                  aria-label="Decrease quantity"
+                  className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={quantity <= 1}
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </button>
+                <span className="w-6 text-center text-sm font-semibold text-foreground">{quantity}</span>
+                <button
+                  type="button"
+                  aria-label="Increase quantity"
+                  className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+                  onClick={() => setQuantity((q) => Math.min(10, q + 1))}
+                  disabled={quantity >= 10}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
-            <Badge variant="secondary">{currency}{(selectedTicket?.price ?? 0).toFixed(2)}</Badge>
+            <Badge variant="secondary">Qty: {quantity}</Badge>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="promo" className="text-xs text-muted-foreground">Promo code</label>
-          <div className="flex gap-2">
-            <Input
-              id="promo"
-              value={promo}
-              onChange={(e) => setPromo(e.target.value.toUpperCase())}
-              placeholder="UEVENT15"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsPromoApplied(promo.trim() === 'UEVENT15')}
-            >
-              Apply
-            </Button>
-          </div>
-          {promo.trim().length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {isPromoApplied ? 'Promo applied: 15% discount' : 'Use UEVENT15 for demo discount'}
-            </p>
-          )}
-        </div>
+        <PromoCodeSection
+          onApplyPromo={(code, discountPercent) => {
+            setAppliedPromoCode(code);
+            setAppliedPromoDiscount(discountPercent);
+          }}
+          onRemovePromo={() => {
+            setAppliedPromoCode(undefined);
+            setAppliedPromoDiscount(undefined);
+          }}
+          appliedCode={appliedPromoCode}
+          appliedDiscount={appliedPromoDiscount}
+        />
 
         <div className="rounded-lg border border-border/60 bg-background/40 p-4 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Subtotal</span>
+            <span className="text-muted-foreground">Subtotal ({quantity} x ticket)</span>
             <span>{currency}{subtotal.toFixed(2)}</span>
           </div>
           <div className="mt-1 flex items-center justify-between">
@@ -116,9 +167,9 @@ export function CheckoutReviewPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button className="gap-1.5" disabled>
+          <Button className="gap-1.5" onClick={handleProceedToPayment} disabled={isProcessingPayment || !selectedTicket}>
             <CreditCard className="h-4 w-4" />
-            Proceed to payment
+            {isProcessingPayment ? 'Processing...' : 'Proceed to payment'}
           </Button>
           <Link to={eventId ? `/events/${eventId}` : '/events'} className="text-sm text-primary hover:underline">
             Edit selection
