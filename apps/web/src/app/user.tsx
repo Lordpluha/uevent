@@ -1,10 +1,11 @@
-
+import type { Route } from './+types/user';
 import { UserProfilePage } from '@pages/UserProfile';
 
-// SSR meta не может быть асинхронным, поэтому используем только id
-export const meta = [
-  { title: 'User — uevent' },
-  { name: 'description', content: '' },
-];
+export function meta(_: Route.MetaArgs) {
+  return [
+    { title: 'User — uevent' },
+    { name: 'description', content: 'Public user profile' },
+  ];
+}
 
 export default UserProfilePage;

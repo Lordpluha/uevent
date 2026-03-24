@@ -1,10 +1,11 @@
-
+import type { Route } from './+types/organization';
 import { OrgProfilePage } from '@pages/OrgProfile';
 
-// SSR meta не может быть асинхронным, поэтому используем только id
-export const meta = [
-  { title: `Organization — uevent` },
-  { name: 'description', content: '' },
-];
+export function meta(_: Route.MetaArgs) {
+  return [
+    { title: 'Organization — uevent' },
+    { name: 'description', content: 'Organization profile and events.' },
+  ];
+}
 
 export default OrgProfilePage;

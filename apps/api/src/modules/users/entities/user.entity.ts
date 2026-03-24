@@ -39,12 +39,6 @@ export class User {
   @Column({ default: false })
   two_fa: boolean
 
-  @Column({ nullable: true })
-  google_id: string
-
-  @Column({ nullable: true })
-  google_refresh_token: string
-
   // relations
 
   @OneToMany(

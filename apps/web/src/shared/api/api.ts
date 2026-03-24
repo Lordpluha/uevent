@@ -1,77 +1,41 @@
 import axios from 'axios';
-import { getAuthState } from '@shared/lib/auth-context';
-
-// In the browser: use Vite proxy (/api → localhost:3000) so cookies are same-origin.
-// In SSR: connect directly to the API server.
-const baseURL =
-  typeof window === 'undefined'
-    ? (import.meta.env.VITE_API_URL ?? 'http://localhost:3000')
-    : '/api';
 
 export const api = axios.create({
-  baseURL,
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-/* ── Token queue for concurrent 401 handling ─────────────── */
-let isRefreshing = false;
-let refreshQueue: Array<() => void> = [];
+/* ── request interceptor ─────────────────────────────────── */
+// Attach access token from localStorage if present (client-only)
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
 
-const drainQueue = () => {
-  for (const cb of refreshQueue) cb();
-  refreshQueue = [];
-};
-
-/* ── Response interceptor ────────────────────────────────── */
-// Cookies (httpOnly) are sent automatically by the browser — no manual token injection needed.
+/* ── response interceptor ────────────────────────────────── */
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config as typeof error.config & { _retry?: boolean };
+  (error) => {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
 
-    if (!axios.isAxiosError(error) || error.response?.status !== 401 || originalRequest._retry) {
-      return Promise.reject(error);
+      if (status === 401) {
+        localStorage.removeItem('access_token');
+        // Redirect to home so AuthModal can handle re-login
+        if (typeof window !== 'undefined') {
+          window.location.href = '/';
+        }
+      }
     }
 
-    const { accountType, isAuthenticated, setAuthenticated, logout } = getAuthState();
-
-    if (!isAuthenticated) {
-      logout();
-      return Promise.reject(error);
-    }
-
-    if (isRefreshing) {
-      return new Promise((resolve) => {
-        refreshQueue.push(() => resolve(api(originalRequest)));
-      });
-    }
-
-    originalRequest._retry = true;
-    isRefreshing = true;
-
-    const endpoint =
-      accountType === 'organization'
-        ? '/auth/organizations/refresh'
-        : '/auth/users/refresh';
-
-    try {
-      // No body — refresh_token cookie is sent automatically via withCredentials
-      await api.post(endpoint, {});
-
-      setAuthenticated(accountType ?? 'user');
-      drainQueue();
-
-      return api(originalRequest);
-    } catch {
-      logout();
-      refreshQueue = [];
-      if (typeof window !== 'undefined') window.location.href = '/';
-      return Promise.reject(error);
-    } finally {
-      isRefreshing = false;
-    }
+    return Promise.reject(error);
   },
 );

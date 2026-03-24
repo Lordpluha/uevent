@@ -1,12 +1,12 @@
 import { Link } from 'react-router';
 import { ArrowRight, Briefcase, Camera, Code2, Globe, Landmark, MonitorPlay, Music2, Users } from 'lucide-react';
-import { EventCard } from '@entities/Event';
-import { useEvents } from '@entities/Event';
+import { EventCard, useEvents } from '@entities/Event';
 import { useOrgs } from '@entities/Organization';
 import { useAppContext } from '@shared/lib';
 import { Badge, buttonVariants } from '@shared/components';
 import { cn } from '@shared/lib/utils';
 import { useCountUp } from '@shared/hooks/useCountUp';
+
 /* ── static data ──────────────────────────────────────────── */
 
 const CATEGORIES = [
@@ -19,8 +19,6 @@ const CATEGORIES = [
   { label: 'Culture', icon: Landmark, color: 'text-orange-400' },
   { label: 'Online', icon: Globe, color: 'text-cyan-400' },
 ] as const;
-
-
 
 /* ── animated stat counter ──────────────────────────────────── */
 
@@ -41,21 +39,18 @@ function StatCounter({ value, label, suffix = '' }: { value: number; label: stri
   );
 }
 
-export { HomePage };
+/* ── component ────────────────────────────────────────────── */
 
-function HomePage() {
+export function HomePage() {
   const { t } = useAppContext();
   const h = t.home;
-  const { data: eventsRaw, isLoading: eventsLoading } = useEvents();
-  const events = Array.isArray(eventsRaw) ? eventsRaw : [];
-
-  const { data: orgsRaw, isLoading: orgsLoading } = useOrgs();
-  const orgs = Array.isArray(orgsRaw) ? orgsRaw : [];
+  const { data: events = [] } = useEvents({ page: 1, limit: 20 });
+  const { data: organizations = [] } = useOrgs({ page: 1, limit: 20 });
 
   const stats = {
     events: events.length,
-    organizations: orgs.length,
-    members: orgs.reduce((sum, o) => sum + (o.membersCount || 0), 0),
+    organizations: organizations.length,
+    members: organizations.reduce((sum, org) => sum + org.membersCount, 0),
   };
 
   return (
@@ -98,15 +93,9 @@ function HomePage() {
       {/* ── STATS ────────────────────────────────────────────── */}
       <section className="border-y border-border/50 bg-card/40 px-6 py-12">
         <div className="mx-auto flex max-w-3xl flex-wrap justify-around gap-8">
-          {eventsLoading || orgsLoading ? (
-            <div className="w-full text-center">Загрузка...</div>
-          ) : (
-            <>
-              <StatCounter value={stats.events} suffix="+" label={h.stats.events} />
-              <StatCounter value={stats.organizations} suffix="+" label={h.stats.organizations} />
-              <StatCounter value={stats.members} suffix="+" label={h.stats.attendees} />
-            </>
-          )}
+          <StatCounter value={stats.events} suffix="+" label={h.stats.events} />
+          <StatCounter value={stats.organizations} suffix="+" label={h.stats.organizations} />
+          <StatCounter value={stats.members} suffix="+" label={h.stats.attendees} />
         </div>
       </section>
 
@@ -123,15 +112,11 @@ function HomePage() {
 
           {/* horizontal scroll row */}
           <div className="flex gap-4 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
-            {eventsLoading ? (
-              <div className="w-full text-center">Загрузка...</div>
-            ) : (
-              events.slice(0, 5).map((event) => (
-                <Link key={event.id} to={`/events/${event.id}`} className="shrink-0">
-                  <EventCard {...event} size="compact" />
-                </Link>
-              ))
-            )}
+            {events.slice(0, 5).map((event) => (
+              <Link key={event.id} to={`/events/${event.id}`} className="shrink-0">
+                <EventCard {...event} size="compact" />
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -177,7 +162,3 @@ function HomePage() {
     </main>
   );
 }
-
-
-
-

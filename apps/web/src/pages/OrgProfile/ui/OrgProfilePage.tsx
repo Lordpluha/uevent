@@ -24,7 +24,7 @@ export function OrgProfilePage() {
   const { id } = useParams<{ id: string }>();
   const { data: org, isLoading } = useOrg(id ?? '');
   const { data: orgEvents = [] } = useEvents(
-    org ? { organization_id: Number(org.id) } : undefined,
+    org ? { organizationId: org.id } : undefined,
   );
   if (isLoading) {
     return (

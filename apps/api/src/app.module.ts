@@ -6,7 +6,6 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { TagsModule } from './modules/tags/tags.module'
 import { EventsModule } from './modules/events/events.module'
 import { OrganizationsModule } from './modules/organizations/organizations.module'
-import { AuthModule } from './modules/auth/auth.module'
 
 @Module({
   imports: [
@@ -25,7 +24,6 @@ import { AuthModule } from './modules/auth/auth.module'
     TagsModule,
     EventsModule,
     OrganizationsModule,
-    AuthModule,
   ],
   controllers: [AppController],
 })

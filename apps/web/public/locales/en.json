@@ -12,9 +12,7 @@
       "lightTheme": "Light theme",
       "searchEvents": "Search events",
       "startGroup": "Start a group",
-      "login": "Log in",
-      "logout": "Log out",
-      "myAccount": "My account"
+      "login": "Log in"
     },
     "search": {
       "placeholder": "Search events, organizations…",

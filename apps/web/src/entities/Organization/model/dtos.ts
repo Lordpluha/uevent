@@ -21,7 +21,6 @@ export const updateOrganizationSchema = z.object({
 export const organizationListParamsSchema = z.object({
   search: z.string().optional(),
   category: z.string().optional(),
-  verified: z.boolean().optional(),
   page: z.number().int().positive().optional(),
   limit: z.number().int().positive().optional(),
 });

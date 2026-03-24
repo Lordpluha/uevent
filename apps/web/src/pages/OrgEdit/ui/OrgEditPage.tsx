@@ -2,8 +2,6 @@ import type { ChangeEvent, FormEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { Camera, ChevronLeft, ImagePlus, Save } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import {
   Avatar,
   AvatarFallback,
@@ -19,65 +17,43 @@ import {
   buttonVariants,
 } from '@shared/components';
 import { useOrg } from '@entities/Organization';
-import { organizationsApi } from '@entities/Organization';
 import { cn } from '@shared/lib/utils';
 
 export function OrgEditPage() {
   const { id } = useParams();
-  const { data: org, isLoading } = useOrg(id ?? '');
-  const queryClient = useQueryClient();
+  const { data: org, isLoading, isError } = useOrg(id ?? '');
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
-    title: '',
-    description: '',
-    location: '',
-    website: '',
-    category: '',
+    title: org?.title ?? '',
+    description: org?.description ?? '',
+    location: org?.location ?? '',
+    website: org?.website ?? '',
+    category: org?.category ?? '',
   });
 
-  const saveOrgMutation = useMutation({
-    mutationFn: () => {
-      if (!id) throw new Error('Organization id is missing');
-      return organizationsApi.update(id, {
-        title: form.title.trim() || undefined,
-        description: form.description.trim() || undefined,
-        location: form.location.trim() || undefined,
-        website: form.website.trim() || undefined,
-        category: form.category.trim() || undefined,
-      });
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['organizations'] }),
-        queryClient.invalidateQueries({ queryKey: ['events'] }),
-      ]);
-      toast.success('Organization updated');
-    },
-    onError: () => {
-      toast.error('Failed to update organization');
-    },
-  });
-
-  // hydrate form when org loads
   useEffect(() => {
-    if (org) {
-      setForm({
-        title: org.title ?? '',
-        description: org.description ?? '',
-        location: org.location ?? '',
-        website: org.website ?? '',
-        category: org.category ?? '',
-      });
-    }
+    if (!org) return;
+    setForm({
+      title: org.title ?? '',
+      description: org.description ?? '',
+      location: org.location ?? '',
+      website: org.website ?? '',
+      category: org.category ?? '',
+    });
   }, [org]);
 
   if (isLoading) {
-    return <main className="flex min-h-[60vh] items-center justify-center text-center">Загрузка...</main>;
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading organization...</p>
+      </main>
+    );
   }
-  if (!org) {
+
+  if (!org || isError) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="text-5xl">🏢</p>
@@ -105,7 +81,8 @@ export function OrgEditPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    saveOrgMutation.mutate();
+    // TODO: api.patch(`/organizations/${id}`, form)
+    alert('Saved!');
   };
 
   return (
@@ -237,9 +214,9 @@ export function OrgEditPage() {
           <Link to={`/organizations/${id}`} className={cn(buttonVariants({ variant: 'ghost' }))}>
             Cancel
           </Link>
-          <Button type="submit" className="gap-1.5" disabled={saveOrgMutation.isPending || !id}>
+          <Button type="submit" className="gap-1.5">
             <Save className="h-3.5 w-3.5" />
-            {saveOrgMutation.isPending ? 'Saving...' : 'Save changes'}
+            Save changes
           </Button>
         </div>
       </form>

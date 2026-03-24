@@ -22,7 +22,6 @@ import {
   REMOVE_LIST_COMMAND,
 } from '@lexical/list';
 import { AutoLinkNode, LinkNode } from '@lexical/link';
-import { CodeNode } from '@lexical/code';
 import {
   $createParagraphNode,
   $getSelection,
@@ -240,7 +239,7 @@ const EDITOR_THEME = {
   paragraph: 'mb-1',
 };
 
-const EDITOR_NODES = [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode, CodeNode];
+const EDITOR_NODES = [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode];
 
 /* ── Main component ───────────────────────────────────────────────────── */
 

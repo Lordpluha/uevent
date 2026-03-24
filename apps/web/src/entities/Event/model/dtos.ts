@@ -27,11 +27,10 @@ export const updateEventSchema = z.object({
 export const eventListParamsSchema = z.object({
   search: z.string().optional(),
   format: eventFormatSchema.optional(),
-  organization_id: z.number().optional(),
+  organizationId: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  date_from: z.string().optional(),
-  date_to: z.string().optional(),
-  location: z.string().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
   page: z.number().int().positive().optional(),
   limit: z.number().int().positive().optional(),
 });

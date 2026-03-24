@@ -3,8 +3,6 @@ import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
 import { BadgeCheck, Search } from 'lucide-react';
 import { OrgCard, useOrgs } from '@entities/Organization';
 
-
-
 export function OrgsPage() {
   const [query, setQuery] = useQueryState('q', parseAsString.withDefault(''));
   const [category, setCategory] = useQueryState('category', parseAsString.withDefault('All'));
@@ -24,8 +22,9 @@ export function OrgsPage() {
     [catalogOrgs],
   );
 
+  /* client-side verified filter (not in OrganizationListParams) */
   const filtered = useMemo(
-    () => (verifiedOnly ? allOrgs.filter((org) => org.verified) : allOrgs),
+    () => (verifiedOnly ? allOrgs.filter((o) => o.verified) : allOrgs),
     [allOrgs, verifiedOnly],
   );
 

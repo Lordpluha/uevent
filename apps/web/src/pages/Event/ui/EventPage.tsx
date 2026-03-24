@@ -1,20 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
-import { Bookmark, CalendarDays, CalendarPlus, ChevronLeft, Clock, Images, MapPin, Share2, Star, Users, Video } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { EventCard, EventLightbox, useEvent, useEvents } from '@entities/Event';
+import { Link, useParams } from 'react-router';
+import { Bookmark, CalendarDays, ChevronLeft, Clock, Images, MapPin, Share2, Star, Users, Video } from 'lucide-react';
+import { EventLightbox, useEvent } from '@entities/Event';
 import { TicketCard } from '@entities/Ticket';
-import { Avatar, AvatarFallback, AvatarImage, Badge, Button, Separator } from '@shared/components';
-import { useAuth } from '@shared/lib/auth-context';
-import { authApi } from '@shared/api/auth.api';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
 
 export function EventPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { data: event, isLoading, isError } = useEvent(id ?? '');
-  const { data: allEvents = [] } = useEvents({ page: 1, limit: 100 });
-  const { isAuthenticated, accountType } = useAuth();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -22,18 +15,6 @@ export function EventPage() {
   useEffect(() => {
     setIsBookmarked(event?.isBookmarked ?? false);
   }, [event?.isBookmarked]);
-
-  const calendarMutation = useMutation({
-    mutationFn: () => {
-      if (!id) throw new Error('Event id is missing');
-      return authApi.addToGoogleCalendar(id);
-    },
-    onSuccess: (data) => {
-      toast.success('Added to Google Calendar!');
-      if (data.htmlLink) window.open(data.htmlLink, '_blank');
-    },
-    onError: () => toast.error('Failed to add to Google Calendar. Make sure your Google account is linked.'),
-  });
 
   const hasGallery = Boolean(event?.gallery && event.gallery.length > 0);
 
@@ -66,19 +47,6 @@ export function EventPage() {
       </main>
     );
   }
-
-  const organizerEvents = allEvents
-    .filter((item) => item.id !== event.id && item.organizer === event.organizer)
-    .slice(0, 4);
-
-  const similarEvents = allEvents
-    .filter((item) => {
-      if (item.id === event.id) return false;
-      const hasSameTag = item.tags.some((tag) => event.tags.includes(tag));
-      if (!hasSameTag) return false;
-      return !organizerEvents.some((organizerEvent) => organizerEvent.id === item.id);
-    })
-    .slice(0, 4);
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
@@ -130,18 +98,6 @@ export function EventPage() {
       <div className="mb-6 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">{event.title}</h1>
         <div className="flex shrink-0 items-center gap-2">
-          {isAuthenticated && accountType === 'user' && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1.5"
-              disabled={calendarMutation.isPending || !id}
-              onClick={() => calendarMutation.mutate()}
-            >
-              <CalendarPlus className="h-4 w-4" />
-              Google Calendar
-            </Button>
-          )}
           <button
             type="button"
             aria-label="Share"
@@ -253,57 +209,11 @@ export function EventPage() {
               eventTime={event.time}
               location={event.location ?? 'Online'}
               format={event.format}
-              onSelect={() => navigate(`/checkout/${event.id}/review?ticketType=${ticket.ticketType}`)}
+              onSelect={() => alert(`Ticket "${ticket.ticketType}" selected!`)}
             />
           ))}
         </div>
       </div>
-
-      <Separator className="my-8" />
-
-      <section className="mb-8">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Other events by organizer</h2>
-          {organizerEvents.length > 0 && (
-            <Link to="/events" className="text-xs text-primary hover:underline">
-              See all
-            </Link>
-          )}
-        </div>
-        {organizerEvents.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No other events from this organizer yet.</p>
-        ) : (
-          <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-            {organizerEvents.map((item) => (
-              <Link key={item.id} to={`/events/${item.id}`} className="shrink-0">
-                <EventCard {...item} size="compact" />
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Similar events</h2>
-          {similarEvents.length > 0 && (
-            <Link to="/events" className="text-xs text-primary hover:underline">
-              Discover more
-            </Link>
-          )}
-        </div>
-        {similarEvents.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No similar events found right now.</p>
-        ) : (
-          <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-            {similarEvents.map((item) => (
-              <Link key={item.id} to={`/events/${item.id}`} className="shrink-0">
-                <EventCard {...item} size="compact" />
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
 
       {event.gallery && event.gallery.length > 0 && (
         <EventLightbox

@@ -8,7 +8,6 @@ import {
 } from 'nuqs';
 import type { DateRange } from 'react-day-picker';
 import { useComboboxAnchor } from '@shared/components';
-import { useEvents } from '@entities/Event';
 import type { EventListParams } from '@entities/Event';
 
 const FORMAT_VALUES = ['all', 'online', 'offline'] as const;
@@ -20,25 +19,6 @@ export const FORMAT_OPTIONS: { label: string; value: Format }[] = [
   { label: 'Online', value: 'online' },
   { label: 'Offline', value: 'offline' },
 ];
-
-
-
-export function useAllTags() {
-  const { data } = useEvents();
-  const events = Array.isArray(data) ? data : [];
-  return [...new Set(events.flatMap((e) => e.tags))].sort();
-}
-
-
-export function useAllCities() {
-  const { data } = useEvents();
-  const events = Array.isArray(data) ? data : [];
-  return [
-    ...new Set(
-      events.flatMap((e) => [e.locationFrom, e.locationTo].filter(Boolean) as string[]),
-    ),
-  ].sort();
-}
 
 export function useEventsFilters() {
   /* ── URL state via nuqs ─────────────────────────────────────────── */
@@ -75,9 +55,8 @@ export function useEventsFilters() {
     ...(query ? { search: query } : {}),
     ...(format !== 'all' ? { format } : {}),
     ...(selectedTags.length > 0 ? { tags: selectedTags } : {}),
-    ...(dateFrom ? { date_from: dateFrom.toISOString() } : {}),
-    ...(dateTo ? { date_to: dateTo.toISOString() } : {}),
-    ...(locFrom ? { location: locFrom } : {}),
+    ...(dateFrom ? { dateFrom: dateFrom.toISOString() } : {}),
+    ...(dateTo ? { dateTo: dateTo.toISOString() } : {}),
   };
 
   /* ── Desktop combobox anchors ───────────────────────────────────── */
