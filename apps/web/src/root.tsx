@@ -158,12 +158,12 @@ export default function App() {
         <AuthProvider>
           <GoogleAuthHandler />
           <AppContext.Provider value={ctx}>
-            <TooltipProvider>
-              <Header />
-              <Outlet />
-              <Toaster />
-              <Footer />
-            </TooltipProvider>
+          <TooltipProvider>
+            <Header />
+            <Outlet />
+            <Toaster />
+            <Footer />
+          </TooltipProvider>
           </AppContext.Provider>
         </AuthProvider>
       </NuqsAdapter>

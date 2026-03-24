@@ -7,8 +7,25 @@ import { EventsGrid } from './EventsGrid';
 
 export function EventsPage() {
   const f = useEventsFilters();
-  const { data: allEventsRaw } = useEvents(f.apiParams);
-  const allEvents = Array.isArray(allEventsRaw) ? allEventsRaw : [];
+  const { data: eventsCatalog = [] } = useEvents({ limit: 100 });
+  const { data: allEvents = [] } = useEvents(f.apiParams);
+
+  const filterTags = useMemo(
+    () => [...new Set(eventsCatalog.flatMap((event) => event.tags))].sort(),
+    [eventsCatalog],
+  );
+
+  const filterCities = useMemo(
+    () =>
+      [
+        ...new Set(
+          eventsCatalog.flatMap((event) =>
+            [event.locationFrom, event.locationTo, event.location].filter(Boolean) as string[],
+          ),
+        ),
+      ].sort(),
+    [eventsCatalog],
+  );
 
   /* client-side location filter (not yet in EventListParams) */
   const events = useMemo(
@@ -46,6 +63,8 @@ export function EventsPage() {
         tagsAnchor={f.tagsAnchor}
         locFromAnchor={f.locFromAnchor}
         locToAnchor={f.locToAnchor}
+        tags={filterTags}
+        cities={filterCities}
       />
 
       <EventsMobileFilters
@@ -61,6 +80,8 @@ export function EventsPage() {
         tagsAnchor={f.sheetTagsAnchor}
         locFromAnchor={f.sheetLocFromAnchor}
         locToAnchor={f.sheetLocToAnchor}
+        tags={filterTags}
+        cities={filterCities}
       />
 
       <EventsGrid

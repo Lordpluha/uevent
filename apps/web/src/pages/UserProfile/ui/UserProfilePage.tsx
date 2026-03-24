@@ -1,19 +1,23 @@
 import { Link, useParams } from 'react-router';
-import { CalendarDays, ChevronLeft, Globe, MapPin, Star, Users } from 'lucide-react';
-import { EventCard } from '@entities/Event';
-import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
+import { CalendarDays, ChevronLeft, Globe, MapPin, Star } from 'lucide-react';
+import { EventCard, useEvents } from '@entities/Event';
 import { useUser } from '@entities/User';
-import { useEvents } from '@entities/Event';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
 
 export function UserProfilePage() {
   const { id } = useParams();
-  const { data: user, isLoading } = useUser(id ?? '');
-  const { data: userEvents = [] } = useEvents();
+  const { data: user, isLoading, isError } = useUser(id ?? '');
+  const { data: userEvents = [] } = useEvents({ page: 1, limit: 3 });
 
   if (isLoading) {
-    return <main className="flex min-h-[60vh] items-center justify-center text-center">Загрузка...</main>;
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading user...</p>
+      </main>
+    );
   }
-  if (!user) {
+
+  if (!user || isError) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="text-5xl">👤</p>
@@ -25,9 +29,6 @@ export function UserProfilePage() {
     );
   }
 
-  // TODO: фильтрация событий пользователя, если появится userId в Event
-  const displayEvents = userEvents.slice(0, 3);
-
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
       <Link
@@ -38,7 +39,6 @@ export function UserProfilePage() {
         Back
       </Link>
 
-      {/* Header */}
       <div className="mb-8 flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
         <Avatar className="h-24 w-24 border-4 border-background ring-2 ring-primary/20">
           <AvatarImage src={user.avatarUrl} alt={user.name} />
@@ -74,7 +74,6 @@ export function UserProfilePage() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: 'Events attended', value: user.eventsAttended },
@@ -89,7 +88,6 @@ export function UserProfilePage() {
         ))}
       </div>
 
-      {/* Interests */}
       <section className="mb-8">
         <h2 className="mb-3 text-base font-semibold">Interests</h2>
         <div className="flex flex-wrap gap-2">
@@ -103,7 +101,6 @@ export function UserProfilePage() {
 
       <Separator className="mb-8" />
 
-      {/* Recent events */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">Recent events</h2>

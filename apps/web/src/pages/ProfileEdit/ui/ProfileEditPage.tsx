@@ -2,6 +2,8 @@ import type { ChangeEvent, FormEvent } from 'react';
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Camera, ChevronLeft, Eye, EyeOff, Save, Shield, ShieldCheck } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   Avatar,
   AvatarFallback,
@@ -21,10 +23,12 @@ import {
   buttonVariants,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
-import { useMe } from '@entities/User';
+import { usersApi, useMe } from '@entities/User';
 
 export function ProfileEditPage() {
-  const { data: user } = useMe();
+  const { data: user, isLoading, isError } = useMe();
+  const queryClient = useQueryClient();
+
   const [form, setForm] = useState({
     name: '',
     username: '',
@@ -32,6 +36,18 @@ export function ProfileEditPage() {
     location: '',
     website: '',
   });
+
+  useEffect(() => {
+    if (!user) return;
+    setForm({
+      name: user.name ?? '',
+      username: user.username ?? '',
+      bio: user.bio ?? '',
+      location: user.location ?? '',
+      website: user.website ?? '',
+    });
+  }, [user]);
+
   const [passwordForm, setPasswordForm] = useState({
     current: '',
     next: '',
@@ -45,6 +61,27 @@ export function ProfileEditPage() {
   const [twoFaEnabled, setTwoFaEnabled] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const saveProfileMutation = useMutation({
+    mutationFn: () =>
+      usersApi.updateMe({
+        name: form.name.trim() || undefined,
+        username: form.username.trim() || undefined,
+        bio: form.bio.trim() || undefined,
+        location: form.location.trim() || undefined,
+        website: form.website.trim() || undefined,
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['me'] }),
+        queryClient.invalidateQueries({ queryKey: ['users'] }),
+      ]);
+      toast.success('Profile updated');
+    },
+    onError: () => {
+      toast.error('Failed to save profile');
+    },
+  });
 
   // hydrate form when user loads
   useEffect(() => {
@@ -82,8 +119,7 @@ export function ProfileEditPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    // TODO: api.patch('/users/me', form)
-    alert('Profile saved!');
+    saveProfileMutation.mutate();
   };
 
   const handlePasswordSubmit = (e: FormEvent) => {
@@ -94,14 +130,27 @@ export function ProfileEditPage() {
     if (passwordForm.next !== passwordForm.confirm) errs.confirm = 'Passwords do not match.';
     setPasswordErrors(errs);
     if (Object.keys(errs).length === 0) {
-      // TODO: api.post('/users/me/change-password', passwordForm)
-      alert('Password changed!');
+      toast.info('Password change endpoint is not available on backend yet.');
       setPasswordForm({ current: '', next: '', confirm: '' });
     }
   };
 
-  if (!user) {
-    return <main className="flex min-h-[60vh] items-center justify-center text-center">Пользователь не найден</main>;
+  if (isLoading) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading profile...</p>
+      </main>
+    );
+  }
+
+  if (isError) {
+    return (
+      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <p className="text-5xl">⚠️</p>
+        <h1 className="text-xl font-semibold">Failed to load profile</h1>
+        <Link to="/" className="text-sm text-primary hover:underline">← Back to home</Link>
+      </main>
+    );
   }
 
   return (
@@ -123,8 +172,8 @@ export function ProfileEditPage() {
         <div className="flex items-center gap-4">
           <div className="relative">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={user.avatarUrl} alt={user.name} />
-              <AvatarFallback className="text-xl">{user.name[0]}</AvatarFallback>
+              <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+              <AvatarFallback className="text-xl">{user?.name?.[0] ?? '?'}</AvatarFallback>
             </Avatar>
             <button
               type="button"
@@ -206,9 +255,9 @@ export function ProfileEditPage() {
           <Link to="/profile" className={cn(buttonVariants({ variant: 'ghost' }))}>
             Cancel
           </Link>
-          <Button type="submit" className="gap-1.5">
+          <Button type="submit" className="gap-1.5" disabled={saveProfileMutation.isPending}>
             <Save className="h-3.5 w-3.5" />
-            Save changes
+            {saveProfileMutation.isPending ? 'Saving...' : 'Save changes'}
           </Button>
         </div>
       </form>

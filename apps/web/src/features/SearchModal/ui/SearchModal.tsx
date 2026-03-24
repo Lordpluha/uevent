@@ -52,8 +52,18 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
   const { t } = useAppContext();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const searchEvents = useSearchEvents();
-  const searchOrgs = useSearchOrgs();
+  const { data: events = [], isLoading: eventsLoading, isError: eventsError } = useEvents({ page: 1, limit: 100 });
+  const {
+    data: organizations = [],
+    isLoading: organizationsLoading,
+    isError: organizationsError,
+  } = useOrgs({ page: 1, limit: 100 });
+
+  const searchEvents = events.map((event) => ({
+    id: event.id,
+    title: event.title,
+    href: `/events/${event.id}`,
+  }));
 
   // Ctrl+K / ⌘+K shortcut
   useEffect(() => {
@@ -96,7 +106,9 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
             <CommandEmpty>{t.header.search.empty}</CommandEmpty>
 
             <CommandGroup heading={t.header.search.groups.events}>
-              {searchEvents.map((event) => (
+              {eventsLoading && <CommandItem disabled>Loading events...</CommandItem>}
+              {eventsError && <CommandItem disabled>Failed to load events</CommandItem>}
+              {!eventsLoading && !eventsError && searchEvents.map((event) => (
                 <CommandItem key={event.id} value={event.title} onSelect={() => handleSelect(event.href)}>
                   <CalendarDays className="text-muted-foreground" />
                   {event.title}
@@ -107,7 +119,9 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
             <CommandSeparator />
 
             <CommandGroup heading={t.header.search.groups.organizations}>
-              {searchOrgs.map((org) => (
+              {organizationsLoading && <CommandItem disabled>Loading organizations...</CommandItem>}
+              {organizationsError && <CommandItem disabled>Failed to load organizations</CommandItem>}
+              {!organizationsLoading && !organizationsError && organizations.map((org) => (
                 <CommandItem key={org.id} value={org.title} onSelect={() => handleSelect(org.href)}>
                   <Users className="text-muted-foreground" />
                   {org.title}

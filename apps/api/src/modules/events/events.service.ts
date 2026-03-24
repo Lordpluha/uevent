@@ -44,6 +44,16 @@ export class EventsService {
       qb.andWhere('event.location IS NULL')
     }
 
+    if (search) {
+      qb.andWhere('(event.name ILIKE :search OR event.description ILIKE :search)', { search: `%${search}%` })
+    }
+
+    if (format === 'offline') {
+      qb.andWhere('event.location IS NOT NULL')
+    } else if (format === 'online') {
+      qb.andWhere('event.location IS NULL')
+    }
+
     if (tags?.length) {
       const subQb = this.eventsRepo
         .createQueryBuilder('filterEv')

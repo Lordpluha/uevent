@@ -2,45 +2,123 @@ import { BasicClientApi } from '@shared/api';
 import type { User, UserList } from '../model/userEntity';
 import type { CreateUserDto, UpdateUserDto, UserListParams } from '../model/dtos';
 
-class UserApi extends BasicClientApi {
-  /* ── READ ─────────────────────────────────────────────── */
+type ApiListResponse<T> = {
+  data: T[];
+};
 
+type ApiUser = {
+  id: string | number;
+  name?: string | null;
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  avatar?: string | null;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  website?: string | null;
+  joinedAt?: string | null;
+  createdAt?: string | null;
+  ticketsCount?: number | null;
+  eventsAttended?: number | null;
+  followers?: number | null;
+  following?: number | null;
+  interests?: string[] | null;
+};
+
+const toBackendUserUpdate = (body: UpdateUserDto) => {
+  const fullName = (body.name ?? '').trim();
+  const [firstName, ...rest] = fullName.split(/\s+/).filter(Boolean);
+  const lastName = rest.join(' ');
+
+  return {
+    username: body.username,
+    first_name: firstName || undefined,
+    last_name: lastName || undefined,
+    location: body.location,
+    avatar: body.avatarUrl,
+  };
+};
+
+const formatJoinedAt = (value?: string | null): string => {
+  if (!value) return 'Recently';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Recently';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const mapApiUser = (raw: ApiUser): User => {
+  const id = String(raw.id);
+  const composedName = [raw.first_name, raw.last_name].filter(Boolean).join(' ').trim();
+  const name = raw.name?.trim() || composedName || `User ${id}`;
+  const username = raw.username?.trim() || `user${id}`;
+
+  return {
+    id,
+    name,
+    username,
+    avatarUrl: raw.avatarUrl ?? raw.avatar ?? undefined,
+    bio: raw.bio ?? undefined,
+    location: raw.location ?? undefined,
+    website: raw.website ?? undefined,
+    joinedAt: formatJoinedAt(raw.joinedAt ?? raw.createdAt),
+    ticketsCount: raw.ticketsCount ?? 0,
+    eventsAttended: raw.eventsAttended ?? 0,
+    followers: raw.followers ?? 0,
+    following: raw.following ?? 0,
+    interests: raw.interests ?? [],
+  };
+};
+
+class UserApi extends BasicClientApi {
   async getAll(params?: UserListParams): Promise<UserList> {
-    return (await this.http.get<UserList>(this.basePath, { params })).data;
+    const response = await this.http.get<ApiListResponse<ApiUser>>(this.basePath, { params });
+    return response.data.data.map(mapApiUser);
   }
 
   async getOne(id: string): Promise<User> {
-    return (await this.http.get<User>(`${this.basePath}/${id}`)).data;
+    const response = await this.http.get<ApiUser>(`${this.basePath}/${id}`);
+    return mapApiUser(response.data);
   }
 
-  /* ── WRITE ────────────────────────────────────────────── */
-
   async create(body: CreateUserDto): Promise<User> {
-    return (await this.http.post<User>(this.basePath, body)).data;
+    const response = await this.http.post<ApiUser>(this.basePath, body);
+    return mapApiUser(response.data);
   }
 
   async update(id: string, body: UpdateUserDto): Promise<User> {
-    return (await this.http.put<User>(`${this.basePath}/${id}`, body)).data;
+    const response = await this.http.patch<ApiUser>(`${this.basePath}/${id}`, toBackendUserUpdate(body));
+    return mapApiUser(response.data);
   }
 
   async patch(id: string, body: Partial<UpdateUserDto>): Promise<User> {
-    return (await this.http.patch<User>(`${this.basePath}/${id}`, body)).data;
+    const response = await this.http.patch<ApiUser>(`${this.basePath}/${id}`, toBackendUserUpdate(body as UpdateUserDto));
+    return mapApiUser(response.data);
   }
-
-  /* ── DELETE ───────────────────────────────────────────── */
 
   async remove(id: string): Promise<void> {
     await this.http.delete(`${this.basePath}/${id}`);
   }
 
-  /* ── CUSTOM ───────────────────────────────────────────── */
-
   async getMe(): Promise<User> {
-    return (await this.http.get<User>(`${this.basePath}/me`)).data;
+    try {
+      const response = await this.http.get<ApiUser>(`${this.basePath}/me`);
+      return mapApiUser(response.data);
+    } catch {
+      const users = await this.getAll({ page: 1, limit: 1 });
+      if (users.length > 0) return users[0];
+      throw new Error('Current user is not available');
+    }
   }
 
   async updateMe(body: UpdateUserDto): Promise<User> {
-    return (await this.http.patch<User>(`${this.basePath}/me`, body)).data;
+    const me = await this.getMe();
+    const response = await this.http.patch<ApiUser>(`${this.basePath}/${me.id}`, toBackendUserUpdate(body));
+    return mapApiUser(response.data);
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {

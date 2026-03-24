@@ -3,28 +3,30 @@ import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
 import { BadgeCheck, Search } from 'lucide-react';
 import { OrgCard, useOrgs } from '@entities/Organization';
 
-
-
 export function OrgsPage() {
   const [query, setQuery] = useQueryState('q', parseAsString.withDefault(''));
   const [category, setCategory] = useQueryState('category', parseAsString.withDefault('All'));
   const [verifiedOnly, setVerifiedOnly] = useQueryState('verified', parseAsBoolean.withDefault(false));
 
-
-  // Ensure allOrgs is always an array
-  const { data } = useOrgs({
+  const { data: catalogOrgs = [] } = useOrgs();
+  const { data: allOrgs = [] } = useOrgs({
     ...(query ? { search: query } : {}),
     ...(category !== 'All' ? { category } : {}),
     ...(verifiedOnly ? { verified: true } : {}),
   });
-  const allOrgs = Array.isArray(data) ? data : [];
 
-  const ALL_CATEGORIES = useMemo(() => [
-    'All',
-    ...Array.from(new Set(allOrgs.map((o) => o.category).filter(Boolean)))
-  ].sort((a, b) => (a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b))), [allOrgs]);
+  const allCategories = useMemo(
+    () =>
+      ['All', ...new Set(catalogOrgs.map((org) => org.category).filter(Boolean))].sort((a, b) =>
+        a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b),
+      ),
+    [catalogOrgs],
+  );
 
-  const filtered = allOrgs;
+  const filtered = useMemo(
+    () => (verifiedOnly ? allOrgs.filter((org) => org.verified) : allOrgs),
+    [allOrgs, verifiedOnly],
+  );
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -52,7 +54,7 @@ export function OrgsPage() {
 
         {/* Category pills — scrollable on mobile */}
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0" style={{ scrollbarWidth: 'none' }}>
-          {ALL_CATEGORIES.map((cat) => (
+          {allCategories.map((cat) => (
             <button
               key={cat}
               type="button"

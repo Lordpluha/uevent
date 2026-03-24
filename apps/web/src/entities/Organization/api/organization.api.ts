@@ -1,14 +1,38 @@
 import { BasicClientApi } from '@shared/api';
 import type { Organization, OrganizationList } from '../model/organizationEntity';
 import type { CreateOrganizationDto, UpdateOrganizationDto, OrganizationListParams } from '../model/dtos';
-import type { BackendOrganization, BackendOrgListResponse } from '../model/responses';
+import type { BackendOrganization } from '../model/responses';
 
-/* ── Map raw backend org to frontend Organization ────────── */
-function mapOrg(raw: BackendOrganization): Organization {
+type ApiListResponse<T> = {
+  data: T[];
+};
+
+type ApiOrganization = BackendOrganization;
+
+const toBackendOrgUpdate = (body: UpdateOrganizationDto) => {
   return {
-    id: raw.id,
+    name: body.title,
+    description: body.description,
+    category: body.category,
+    city: body.location,
+    avatar: body.avatarUrl,
+  };
+};
+
+const toBackendOrgCreate = (body: CreateOrganizationDto) => {
+  return {
+    name: body.title,
+    description: body.description,
+    category: body.category,
+    city: body.location,
+  };
+};
+
+const mapApiOrganization = (raw: ApiOrganization): Organization => {
+  return {
+    id: String(raw.id),
     title: raw.name ?? '',
-    href: raw.href ?? `/organizations/${raw.id}`,
+    href: raw.href ?? `/organizations/${String(raw.id)}`,
     avatarUrl: raw.avatar ?? undefined,
     coverUrl: raw.coverUrl ?? undefined,
     description: raw.description ?? undefined,
@@ -21,33 +45,56 @@ function mapOrg(raw: BackendOrganization): Organization {
     followers: raw.followers ?? 0,
     verified: raw.verified ?? false,
   };
-}
+};
 
 class OrganizationApi extends BasicClientApi {
   /* ── READ ─────────────────────────────────────────────── */
 
   async getAll(params?: OrganizationListParams): Promise<OrganizationList> {
-    const res = await this.http.get<BackendOrgListResponse>(this.basePath, { params });
-    return (res.data.data ?? []).map(mapOrg);
+    const response = await this.http.get<ApiListResponse<ApiOrganization>>(this.basePath, { params });
+
+    let results = response.data.data.map(mapApiOrganization);
+
+    if (params?.search) {
+      const query = params.search.toLowerCase();
+      results = results.filter(
+        (org) =>
+          org.title.toLowerCase().includes(query) ||
+          org.description?.toLowerCase().includes(query),
+      );
+    }
+
+    if (params?.category) {
+      results = results.filter((org) => org.category === params.category);
+    }
+
+    if (params?.verified !== undefined) {
+      results = results.filter((org) => org.verified === params.verified);
+    }
+
+    return results;
   }
 
   async getOne(id: string): Promise<Organization> {
-    const res = await this.http.get<BackendOrganization>(`${this.basePath}/${id}`);
-    return mapOrg(res.data);
+    const response = await this.http.get<BackendOrganization>(`${this.basePath}/${id}`);
+    return mapApiOrganization(response.data);
   }
 
   /* ── WRITE ────────────────────────────────────────────── */
 
   async create(body: CreateOrganizationDto): Promise<Organization> {
-    return (await this.http.post<Organization>(this.basePath, body)).data;
+    const response = await this.http.post<ApiOrganization>(this.basePath, toBackendOrgCreate(body));
+    return mapApiOrganization(response.data);
   }
 
   async update(id: string, body: UpdateOrganizationDto): Promise<Organization> {
-    return (await this.http.put<Organization>(`${this.basePath}/${id}`, body)).data;
+    const response = await this.http.patch<ApiOrganization>(`${this.basePath}/${id}`, toBackendOrgUpdate(body));
+    return mapApiOrganization(response.data);
   }
 
   async patch(id: string, body: Partial<UpdateOrganizationDto>): Promise<Organization> {
-    return (await this.http.patch<Organization>(`${this.basePath}/${id}`, body)).data;
+    const response = await this.http.patch<ApiOrganization>(`${this.basePath}/${id}`, toBackendOrgUpdate(body as UpdateOrganizationDto));
+    return mapApiOrganization(response.data);
   }
 
   /* ── DELETE ───────────────────────────────────────────── */
@@ -83,7 +130,8 @@ class OrganizationApi extends BasicClientApi {
   }
 
   async getMe(): Promise<Organization> {
-    return (await this.http.get<Organization>(`${this.basePath}/me`)).data;
+    const response = await this.http.get<ApiOrganization>(`${this.basePath}/me`);
+    return mapApiOrganization(response.data);
   }
 }
 

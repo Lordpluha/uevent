@@ -13,6 +13,7 @@
   "dependencies": {
     "@base-ui/react": "^1.2.0",
     "@hookform/resolvers": "^5.2.2",
+    "@lexical/code": "^0.41.0",
     "@lexical/history": "^0.41.0",
     "@lexical/link": "^0.41.0",
     "@lexical/list": "^0.41.0",

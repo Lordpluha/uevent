@@ -22,6 +22,15 @@ export default [
   // Private: own profile
   route('/profile', 'app/profile.tsx'),
   route('/profile/edit', 'app/profile-edit.tsx'),
+  route('/profile/organization/:id', 'app/organization-profile.tsx'),
+
+  // Organizer flows
+  route('/events/create', 'app/event-create.tsx'),
+  route('/events/:id/tickets/create', 'app/ticket-create.tsx'),
+
+  // Purchase flow
+  route('/checkout/:eventId/review', 'app/checkout-review.tsx'),
+  route('/checkout/:eventId/success', 'app/checkout-success.tsx'),
 
   // Private: org management
   route('/organizations/:id/edit', 'app/organization-edit.tsx'),

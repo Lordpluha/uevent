@@ -2,6 +2,8 @@ import type { ChangeEvent, FormEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { Camera, ChevronLeft, ImagePlus, Save } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   Avatar,
   AvatarFallback,
@@ -16,12 +18,14 @@ import {
   Input,
   buttonVariants,
 } from '@shared/components';
-import { cn } from '@shared/lib/utils';
 import { useOrg } from '@entities/Organization';
+import { organizationsApi } from '@entities/Organization';
+import { cn } from '@shared/lib/utils';
 
 export function OrgEditPage() {
   const { id } = useParams();
   const { data: org, isLoading } = useOrg(id ?? '');
+  const queryClient = useQueryClient();
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -32,6 +36,29 @@ export function OrgEditPage() {
     location: '',
     website: '',
     category: '',
+  });
+
+  const saveOrgMutation = useMutation({
+    mutationFn: () => {
+      if (!id) throw new Error('Organization id is missing');
+      return organizationsApi.update(id, {
+        title: form.title.trim() || undefined,
+        description: form.description.trim() || undefined,
+        location: form.location.trim() || undefined,
+        website: form.website.trim() || undefined,
+        category: form.category.trim() || undefined,
+      });
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['organizations'] }),
+        queryClient.invalidateQueries({ queryKey: ['events'] }),
+      ]);
+      toast.success('Organization updated');
+    },
+    onError: () => {
+      toast.error('Failed to update organization');
+    },
   });
 
   // hydrate form when org loads
@@ -78,8 +105,7 @@ export function OrgEditPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    // TODO: api.patch(`/organizations/${id}`, form)
-    alert('Saved!');
+    saveOrgMutation.mutate();
   };
 
   return (
@@ -211,9 +237,9 @@ export function OrgEditPage() {
           <Link to={`/organizations/${id}`} className={cn(buttonVariants({ variant: 'ghost' }))}>
             Cancel
           </Link>
-          <Button type="submit" className="gap-1.5">
+          <Button type="submit" className="gap-1.5" disabled={saveOrgMutation.isPending || !id}>
             <Save className="h-3.5 w-3.5" />
-            Save changes
+            {saveOrgMutation.isPending ? 'Saving...' : 'Save changes'}
           </Button>
         </div>
       </form>

@@ -23,8 +23,6 @@ import {
 } from '@shared/components';
 import {
   FORMAT_OPTIONS,
-  useAllTags,
-  useAllCities,
   type Format,
 } from '../model/useEventsFilters';
 
@@ -47,22 +45,23 @@ interface Props {
   tagsAnchor: RefObject<HTMLDivElement | null>;
   locFromAnchor: RefObject<HTMLDivElement | null>;
   locToAnchor: RefObject<HTMLDivElement | null>;
+  tags: string[];
+  cities: string[];
 }
 
-export function EventsMobileFilters(props: Props) {
-  const {
-    query, onQueryChange,
-    format, onFormatChange,
-    selectedTags, onTagsChange,
-    dateRange, onDateRangeChange,
-    locFrom, onLocFromChange,
-    locTo, onLocToChange,
-    activeFilterCount, onClearAll,
-    resultCount,
-    tagsAnchor, locFromAnchor, locToAnchor,
-  } = props;
-  const allTags = useAllTags();
-  const allCities = useAllCities();
+export function EventsMobileFilters({
+  query, onQueryChange,
+  format, onFormatChange,
+  selectedTags, onTagsChange,
+  dateRange, onDateRangeChange,
+  locFrom, onLocFromChange,
+  locTo, onLocToChange,
+  activeFilterCount, onClearAll,
+  resultCount,
+  tagsAnchor, locFromAnchor, locToAnchor,
+  tags,
+  cities,
+}: Props) {
   return (
     <div className="mb-6 flex items-center gap-3 sm:hidden">
       {/* Search */}
@@ -168,7 +167,7 @@ export function EventsMobileFilters(props: Props) {
                 <ComboboxContent anchor={tagsAnchor} align="start">
                   <ComboboxInput placeholder="Search tags…" showTrigger={false} />
                   <ComboboxList>
-                    {allTags.map((tag) => (
+                    {tags.map((tag) => (
                       <ComboboxItem key={tag} value={tag}>
                         {tag}
                       </ComboboxItem>
@@ -239,7 +238,7 @@ export function EventsMobileFilters(props: Props) {
                     </div>
                     <ComboboxContent anchor={locFromAnchor} align="start">
                       <ComboboxList>
-                        {allCities.map((city) => (
+                        {cities.map((city) => (
                           <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
                         ))}
                         <ComboboxEmpty>No cities found</ComboboxEmpty>
@@ -265,7 +264,7 @@ export function EventsMobileFilters(props: Props) {
                     </div>
                     <ComboboxContent anchor={locToAnchor} align="start">
                       <ComboboxList>
-                        {allCities.map((city) => (
+                        {cities.map((city) => (
                           <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
                         ))}
                         <ComboboxEmpty>No cities found</ComboboxEmpty>
