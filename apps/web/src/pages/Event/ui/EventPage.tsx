@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { EventCard, EventLightbox, useEvent, useEvents } from '@entities/Event';
 import { TicketCard } from '@entities/Ticket';
 import { Avatar, AvatarFallback, AvatarImage, Badge, Button, Separator } from '@shared/components';
-import { EventLocationMap, PromoCodeSection } from '@shared/components';
 import { useAuth } from '@shared/lib/auth-context';
 import { authApi } from '@shared/api/auth.api';
 
@@ -19,8 +18,6 @@ export function EventPage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const [appliedPromoCode, setAppliedPromoCode] = useState<string | undefined>();
-  const [appliedPromoDiscount, setAppliedPromoDiscount] = useState<number | undefined>();
 
   useEffect(() => {
     setIsBookmarked(event?.isBookmarked ?? false);
@@ -256,40 +253,11 @@ export function EventPage() {
               eventTime={event.time}
               location={event.location ?? 'Online'}
               format={event.format}
-              onSelect={() => {
-                const params = new URLSearchParams({ ticketType: ticket.ticketType });
-                if (appliedPromoCode) params.set('promo', appliedPromoCode);
-                navigate(`/checkout/${event.id}/review?${params.toString()}`);
-              }}
+              onSelect={() => navigate(`/checkout/${event.id}/review?ticketType=${ticket.ticketType}`)}
             />
           ))}
         </div>
       </div>
-
-      <Separator className="my-8" />
-
-      {event.location && event.location !== 'Online' && (
-        <section className="mb-8">
-          <EventLocationMap location={event.location} eventTitle={event.title} />
-        </section>
-      )}
-
-      <section className="mb-8">
-        <PromoCodeSection
-          onApplyPromo={(code, discount) => {
-            setAppliedPromoCode(code);
-            setAppliedPromoDiscount(discount);
-            toast.success(`Promo code ${code} applied! ${discount}% discount.`);
-          }}
-          onRemovePromo={() => {
-            setAppliedPromoCode(undefined);
-            setAppliedPromoDiscount(undefined);
-            toast.info('Promo code removed');
-          }}
-          appliedCode={appliedPromoCode}
-          appliedDiscount={appliedPromoDiscount}
-        />
-      </section>
 
       <Separator className="my-8" />
 

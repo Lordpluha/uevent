@@ -25,7 +25,6 @@ export default [
 
   // Purchase flow
   route('/checkout/:eventId/review', 'app/checkout-review.tsx'),
-  route('/checkout/:eventId/success', 'app/checkout-success.tsx'),
 
   // Private: org management
   route('/organizations/:id/edit', 'app/organization-edit.tsx'),
