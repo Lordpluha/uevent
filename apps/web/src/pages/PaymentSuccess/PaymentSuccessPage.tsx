@@ -10,6 +10,7 @@ export function PaymentSuccessPage() {
   const paymentIntentId = searchParams.get('paymentIntentId');
 
   useEffect(() => {
+    
     if(!paymentIntentId) {
       toast.error('Invalid success link');
       navigate('/');

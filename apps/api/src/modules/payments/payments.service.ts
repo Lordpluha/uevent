@@ -34,6 +34,9 @@ export class PaymentsService {
         amount: Math.round(amount),
         currency,
         metadata: metadata || {},
+        automatic_payment_methods: {
+          enabled: true,
+        },
       })
 
       this.logger.log(`Payment Intent created: ${paymentIntent.id}`)
@@ -73,6 +76,7 @@ export class PaymentsService {
     try {
       this.logger.log(`WEBHOOK RECEIVED: Payment succeeded: ${paymentIntent.id}`)
       this.logger.log(`Payment metadata:`, JSON.stringify(paymentIntent.metadata))
+      this.logger.log(`Payment method type: ${paymentIntent.payment_method_types[0] || 'unknown'}`)
 
       let payment = await this.paymentRepository.findOne({
         where: { stripePaymentIntentId: paymentIntent.id },
@@ -99,13 +103,13 @@ export class PaymentsService {
 
       // payment confirmation email
       if(paymentIntent.metadata) {
-        this.logger.log(`📧 Sending email to: ${paymentIntent.metadata.userEmail}`)
+        this.logger.log(`Sending email to: ${paymentIntent.metadata.userEmail}`)
         await this.sendPaymentConfirmationEmail(paymentIntent)
       }else {
-        this.logger.warn(`⚠️ No metadata found - skipping email`)
+        this.logger.warn(`No metadata found - skipping email`)
       }
     } catch(error) {
-      this.logger.error(`❌ Error handling payment success: ${error.message}`)
+      this.logger.error(`Error handling payment success: ${error.message}`)
     }
   }
 
@@ -165,8 +169,20 @@ export class PaymentsService {
 
       this.logger.log(`Payment ${paymentIntent.id} marked as failed in database`)
 
-      // TODO: EMAIL FAILED PAYMENT -> NotificationsService
-      // await this.notificationsService.sendPaymentFailed(payment.userId, payment, failureReason) ??
+      // Send failed payment email
+      if(paymentIntent.metadata) {
+        this.logger.log(`Sending failed payment email to: ${paymentIntent.metadata.userEmail}`)
+        await this.emailService.sendPaymentFailedEmail(
+          paymentIntent.metadata.userEmail,
+          paymentIntent.metadata.userName,
+          paymentIntent.metadata.eventTitle || 'Ticket Purchase',
+          paymentIntent.metadata.ticketName || 'Ticket',
+          failureReason,
+          paymentIntent.id
+        )
+      }else {
+        this.logger.warn(`No metadata found - skipping failed payment email`)
+      }
     } catch(error) {
       this.logger.error(`Error handling payment failure: ${error.message}`)
     }
@@ -195,8 +211,20 @@ export class PaymentsService {
 
           this.logger.log(`Payment ${paymentIntentId} marked as refunded`)
 
-          // TODO: EMAIL REFUND NOTIFICATION -> NotificationsService
-          // await this.notificationsService.sendRefundNotification(payment.userId, payment) ??
+          // Send refund email
+          if(payment.metadata) {
+            this.logger.log(`Sending refund email to: ${payment.metadata.userEmail}`)
+            await this.emailService.sendRefundEmail(
+              payment.metadata.userEmail,
+              payment.metadata.userName,
+              payment.metadata.eventTitle || 'Ticket Purchase',
+              payment.metadata.ticketName || 'Ticket',
+              payment.amount,
+              paymentIntentId
+            )
+          }else {
+            this.logger.warn(`No metadata found - skipping refund email`)
+          }
         }
       }else {
         this.logger.warn(`Could not find payment for charge ${charge.id}`)

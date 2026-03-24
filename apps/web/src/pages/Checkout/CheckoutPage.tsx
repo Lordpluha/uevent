@@ -177,7 +177,14 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
                 business: {
                   name: 'UEVENT',
                 },
-                paymentMethodOrder: ['card', 'google_pay', 'apple_pay'],
+                paymentMethodOrder: ['card', 'apple_pay', 'google_pay', 'cashapp', 'paypal', 'klarna', 'affirm'],
+                terms: {
+                  bancontact: 'auto',
+                  card: 'auto',
+                  ideal: 'auto',
+                  sepa_debit: 'auto',
+                  sofort: 'auto',
+                },
               } as StripePaymentElementOptions}
             />
 
@@ -189,10 +196,13 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
             )}
 
             {/* Security */}
-            <div className="pt-2 pb-4">
+            <div className="pt-2 pb-4 space-y-2">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Your payment information is encrypted and secure. Stripe handles all transactions
+                🔒 Your payment information is encrypted and secure. Stripe handles all transactions
                 with industry-standard PCI DSS Level 1 compliance.
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                💳 Some payment methods (PayPal, Apple Pay, Google Pay, etc.) will redirect you to securely complete authentication on their platform. You'll be automatically returned after successful verification.
               </p>
             </div>
 
