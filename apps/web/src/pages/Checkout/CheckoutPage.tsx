@@ -93,6 +93,12 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
       setMessage(errorMessage);
       toast.error(errorMessage);
       setIsProcessing(false);
+      
+      // redirect to payment-failed page
+      setTimeout(() => {
+        const reason = encodeURIComponent(errorMessage);
+        navigate(`/payment-failed?paymentIntentId=${clientSecret}&reason=${reason}`);
+      }, 2000);
     },
   });
 

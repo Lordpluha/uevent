@@ -10,6 +10,7 @@ export default [
   // Checkout & Payment
   route('/checkout', 'app/checkout.tsx'),
   route('/payment-success', 'app/payment-success.tsx'),
+  route('/payment-failed', 'app/payment-failed.tsx'),
 
   // Organizations
   route('/organizations', 'app/organizations.tsx'),
