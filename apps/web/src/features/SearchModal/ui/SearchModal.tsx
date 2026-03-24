@@ -15,6 +15,29 @@ import { useAppContext } from '@shared/lib';
 import { useEvents } from '@entities/Event';
 import { useOrgs } from '@entities/Organization';
 
+
+
+function useSearchEvents() {
+  const { data } = useEvents();
+  const events = Array.isArray(data) ? data : [];
+  return events.map((e) => ({
+    id: e.id,
+    title: e.title,
+    href: `/events/${e.id}`,
+  }));
+}
+
+
+function useSearchOrgs() {
+  const { data } = useOrgs();
+  const orgs = Array.isArray(data) ? data : [];
+  return orgs.map((o) => ({
+    id: o.id,
+    title: o.title,
+    href: `/organizations/${o.id}`,
+  }));
+}
+
 /* ──────────────────────────────────────────────────────────── */
 /*  Component                                                    */
 /* ──────────────────────────────────────────────────────────── */

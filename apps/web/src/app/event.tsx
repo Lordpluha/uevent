@@ -1,10 +1,13 @@
 import type { Route } from './+types/event';
+
 import { EventPage } from '@pages/Event';
 
-export function meta(_: Route.MetaArgs) {
+
+export function meta({ params }: Route.MetaArgs) {
+  // SSR meta не может быть асинхронным, поэтому используем только id
   return [
-    { title: 'Event — uevent' },
-    { name: 'description', content: 'Event details and ticket options.' },
+    { title: `Event — uevent` },
+    { name: 'description', content: '' },
   ];
 }
 

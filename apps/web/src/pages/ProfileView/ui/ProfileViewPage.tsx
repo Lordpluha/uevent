@@ -56,9 +56,7 @@ export function ProfileViewPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
-      {/* Header */}
       <div className="mb-8 flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-        {/* Avatar with upload overlay */}
         <div className="relative shrink-0">
           <Avatar className="h-28 w-28 border-4 border-background ring-2 ring-primary/20">
             <AvatarImage src={user.avatarUrl} alt={user.name} />
@@ -123,7 +121,6 @@ export function ProfileViewPage() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: 'Events attended', value: user.eventsAttended, icon: CalendarDays },
@@ -142,7 +139,6 @@ export function ProfileViewPage() {
         ))}
       </div>
 
-      {/* Interests */}
       <section className="mb-8">
         <h2 className="mb-3 text-base font-semibold">Interests</h2>
         <div className="flex flex-wrap gap-2">
@@ -156,7 +152,6 @@ export function ProfileViewPage() {
 
       <Separator className="mb-8" />
 
-      {/* Security & Account settings */}
       <section className="mb-8">
         <h2 className="mb-1 text-base font-semibold">Security &amp; Account</h2>
         <p className="mb-5 text-xs text-muted-foreground">
@@ -164,7 +159,6 @@ export function ProfileViewPage() {
         </p>
 
         <div className="space-y-3 rounded-xl border border-border/60 bg-card p-5">
-          {/* 2FA */}
           <Field orientation="horizontal" className="items-center justify-between py-1">
             <div>
               <FieldTitle className="gap-1.5">
@@ -190,7 +184,6 @@ export function ProfileViewPage() {
 
           <Separator />
 
-          {/* Email notifications */}
           <Field orientation="horizontal" className="items-center justify-between py-1">
             <div>
               <FieldTitle>Email notifications</FieldTitle>
@@ -207,7 +200,6 @@ export function ProfileViewPage() {
 
           <Separator />
 
-          {/* Change password */}
           <Field orientation="horizontal" className="items-center justify-between py-1">
             <div>
               <FieldTitle className="gap-1.5">
@@ -230,7 +222,6 @@ export function ProfileViewPage() {
 
       <Separator className="mb-8" />
 
-      {/* My events */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">My events</h2>

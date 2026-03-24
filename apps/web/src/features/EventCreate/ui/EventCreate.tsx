@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@shared/components';
+
 import { createEventSchema, type CreateEventDto } from '@entities/Event';
 import { useOrgs } from '@entities/Organization';
 import { eventsApi } from '@entities/Event';
@@ -42,7 +43,6 @@ export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreatePro
     handleSubmit,
     watch,
     setValue,
-    getValues,
     formState: { errors, isSubmitting },
   } = useForm<CreateEventDto>({
     resolver: zodResolver(createEventSchema),
