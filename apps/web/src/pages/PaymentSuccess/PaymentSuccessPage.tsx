@@ -21,7 +21,7 @@ export function PaymentSuccessPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/50 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
         
-        {/* Success Icon */}
+        {/* Success */}
         <div className="mb-6">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
             <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />

@@ -26,7 +26,7 @@ export function PaymentFailedPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/50 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
         
-        {/* Error Icon */}
+        {/* Failed */}
         <div className="mb-6">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
             <AlertCircle className="h-10 w-10 text-red-600 dark:text-red-400" />
