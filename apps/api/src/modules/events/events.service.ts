@@ -32,6 +32,27 @@ export class EventsService {
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.tags', 'tag')
       .leftJoinAndSelect('event.tickets', 'ticket')
+      .leftJoinAndSelect('event.organization', 'organization')
+
+    if (search) {
+      qb.andWhere('(event.name ILIKE :search OR event.description ILIKE :search)', { search: `%${search}%` })
+    }
+
+    if (format === 'offline') {
+      qb.andWhere('event.location IS NOT NULL')
+    } else if (format === 'online') {
+      qb.andWhere('event.location IS NULL')
+    }
+
+    if (search) {
+      qb.andWhere('(event.name ILIKE :search OR event.description ILIKE :search)', { search: `%${search}%` })
+    }
+
+    if (format === 'offline') {
+      qb.andWhere('event.location IS NOT NULL')
+    } else if (format === 'online') {
+      qb.andWhere('event.location IS NULL')
+    }
 
     if (search) {
       qb.andWhere('(event.name ILIKE :search OR event.description ILIKE :search)', { search: `%${search}%` })
@@ -90,7 +111,7 @@ export class EventsService {
   async findOne(id: string) {
     const event = await this.eventsRepo.findOne({
       where: { id },
-      relations: ['tags', 'tickets', 'recurrence', 'recurrence.overrides'],
+      relations: ['tags', 'tickets', 'organization', 'recurrence', 'recurrence.overrides'],
     })
 
     if (!event) throw new NotFoundException(`Event with id #${id} not found`)

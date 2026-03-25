@@ -5,12 +5,14 @@ import {
   ManyToMany,
   OneToMany,
   OneToOne,
+  ManyToOne,
   JoinColumn,
   JoinTable,
 } from 'typeorm'
 import { Tag } from '../../tags/entities/tag.entity'
 import { Recurrence } from './recurrence.entity'
 import { Ticket } from '../../users/entities/ticket.entity'
+import { Organization } from '../../organizations/entities/organization.entity'
 
 @Entity('events')
 export class Event {
@@ -56,6 +58,13 @@ export class Event {
     (ticket) => ticket.event,
   )
   tickets: Ticket[]
+
+  @ManyToOne(
+    () => Organization,
+    (organization) => organization.events,
+  )
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization
 
   @Column({ nullable: true })
   organization_id: number

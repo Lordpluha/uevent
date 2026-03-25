@@ -19,8 +19,8 @@ import {
 } from '@shared/components';
 
 import { createEventSchema, type CreateEventDto } from '@entities/Event';
-import { useOrgs } from '@entities/Organization';
 import { eventsApi } from '@entities/Event';
+import { useOrgs } from '@entities/Organization';
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -32,6 +32,7 @@ interface EventCreateProps {
 }
 
 /* ── Component ────────────────────────────────────────────────────────── */
+
 
 export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreateProps) {
   const [tagInput, setTagInput] = useState('');

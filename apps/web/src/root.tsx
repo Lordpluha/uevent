@@ -14,6 +14,8 @@ import type { PropsWithChildren } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/react'
+import { Elements } from '@stripe/react-stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
 
 import '@app/styles/global.css'
 import { Header } from '@widgets/Header'
@@ -97,6 +99,10 @@ export function Layout({ children }: PropsWithChildren) {
 }
 
 const queryClient = new QueryClient()
+
+const stripePromise = loadStripe(
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder'
+)
 
 type Win = Window & { __THEME__?: string }
 

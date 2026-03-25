@@ -19,6 +19,7 @@ export const eventAttendeeSchema = z.object({
 });
 
 export const eventTicketOptionSchema = z.object({
+  id: z.number(),
   ticketType: ticketTypeSchema,
   price: z.number(),
   currency: z.string().optional(),

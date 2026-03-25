@@ -7,6 +7,7 @@ import type { TicketStatus, TicketType } from '../model/ticket';
 export type { TicketStatus, TicketType } from '../model/ticket';
 
 export type TicketCardProps = {
+  id: number;
   ticketType: TicketType;
   price: number;
   currency?: string;

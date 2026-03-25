@@ -3,8 +3,6 @@ import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
 import { BadgeCheck, Search } from 'lucide-react';
 import { OrgCard, useOrgs } from '@entities/Organization';
 
-
-
 export function OrgsPage() {
   const [query, setQuery] = useQueryState('q', parseAsString.withDefault(''));
   const [category, setCategory] = useQueryState('category', parseAsString.withDefault('All'));
@@ -14,6 +12,7 @@ export function OrgsPage() {
   const { data: allOrgs = [] } = useOrgs({
     ...(query ? { search: query } : {}),
     ...(category !== 'All' ? { category } : {}),
+    ...(verifiedOnly ? { verified: true } : {}),
   });
 
   const allCategories = useMemo(

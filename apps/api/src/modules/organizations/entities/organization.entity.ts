@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm'
 import { OrganizationSession } from './organization-session.entity'
 import { OrganizationOtp } from './organization-otp.entity'
+import { Event } from '../../events/entities/event.entity'
 
 @Entity('organizations')
 export class Organization {
@@ -55,4 +56,10 @@ export class Organization {
     (otp) => otp.organization,
   )
   otps: OrganizationOtp[]
+
+  @OneToMany(
+    () => Event,
+    (event) => event.organization,
+  )
+  events: Event[]
 }

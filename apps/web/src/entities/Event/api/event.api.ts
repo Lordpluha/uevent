@@ -1,6 +1,7 @@
 import { BasicClientApi } from '@shared/api';
 import type { EventModel, EventList, EventFormat } from '../model/eventEntity';
 import type { CreateEventDto, UpdateEventDto, EventListParams } from '../model/dtos';
+import type { BackendEvent, BackendEventListResponse, BackendTag, BackendTicket } from '../model/responses';
 
 type ApiListResponse<T> = {
   data: T[];

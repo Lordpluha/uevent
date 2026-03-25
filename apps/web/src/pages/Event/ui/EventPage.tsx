@@ -85,6 +85,7 @@ export function EventPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+
       <Link
         to="/events"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -130,7 +131,7 @@ export function EventPage() {
         )}
       </button>
 
-      <div className="mb-6 flex items-start justify-between gap-4">
+          <div className="mb-6 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">{event.title}</h1>
         <div className="flex shrink-0 items-center gap-2">
           {isAuthenticated && accountType === 'user' && (
@@ -175,8 +176,8 @@ export function EventPage() {
             value: event.location ?? 'Online',
           },
           { icon: Users, label: 'Attendees', value: event.attendeeCount.toLocaleString() },
-        ].map(({ icon: Icon, label, value }) => (
-          <div key={label} className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card p-3">
+        ].map(({ icon: Icon, label, value }, idx) => (
+          <div key={idx} className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card p-3">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Icon className="h-3.5 w-3.5" />
               {label}
@@ -187,8 +188,8 @@ export function EventPage() {
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        {event.tags.map((tag) => (
-          <Badge key={tag} variant="secondary" className="text-xs">
+        {event.tags.map((tag, idx) => (
+          <Badge key={`${tag}-${idx}`} variant="secondary" className="text-xs">
             {tag}
           </Badge>
         ))}
@@ -249,7 +250,7 @@ export function EventPage() {
         <div className="flex flex-col gap-3">
           {event.tickets.map((ticket) => (
             <TicketCard
-              key={ticket.ticketType}
+              key={ticket.id}
               {...ticket}
               eventTitle={event.title}
               eventDate={event.date}
