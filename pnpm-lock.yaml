@@ -3551,10 +3551,13 @@ packages:
     resolution: {integrity: sha512-IWqP2SCPhyVFTBtRcgMHdzlf9ul25NwaFx4wCEH/KjAXuuHY4yNjvPXsBokp8jCB936PyWRaPKUNh8NvylLp2Q==}
     engines: {node: '>=6.11.5'}
 
+<<<<<<< HEAD
   locate-path@5.0.0:
     resolution: {integrity: sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g==}
     engines: {node: '>=8'}
 
+=======
+>>>>>>> 8a091eb16111bd1febda1dc640c2839e46cb6148
   lodash.includes@4.3.0:
     resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
 
@@ -8502,10 +8505,13 @@ snapshots:
 
   loader-runner@4.3.1: {}
 
+<<<<<<< HEAD
   locate-path@5.0.0:
     dependencies:
       p-locate: 4.1.0
 
+=======
+>>>>>>> 8a091eb16111bd1febda1dc640c2839e46cb6148
   lodash.includes@4.3.0: {}
 
   lodash.isboolean@3.0.3: {}
