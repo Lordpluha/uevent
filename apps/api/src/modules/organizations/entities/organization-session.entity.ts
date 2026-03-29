@@ -1,10 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm'
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
 import { Organization } from './organization.entity'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('organization_sessions')
-export class OrganizationSession {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+export class OrganizationSession extends UuidEntity {
 
   @Column()
   access: string

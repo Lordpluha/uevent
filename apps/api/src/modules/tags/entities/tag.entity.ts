@@ -1,9 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany } from 'typeorm'
+import { Entity, Column, ManyToMany } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('tags')
-export class Tag {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+export class Tag extends UuidEntity {
 
   @Column({ unique: true })
   name: string

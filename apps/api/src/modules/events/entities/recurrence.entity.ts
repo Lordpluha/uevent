@@ -1,10 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm'
+import { Entity, Column, OneToMany } from 'typeorm'
 import { Override } from './override.entity'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('recurrences')
-export class Recurrence {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+export class Recurrence extends UuidEntity {
 
   @Column()
   rule: string

@@ -33,13 +33,13 @@ export class EmailService implements OnModuleInit {
     const smtpFrom = process.env.SMTP_FROM_EMAIL
 
     if(!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom) {
-      this.logger.error('Missing SMTP configuration!')
-      this.logger.error(`   SMTP_HOST: ${smtpHost ? 'Y' : 'N'}`)
-      this.logger.error(`   SMTP_PORT: ${smtpPort ? 'Y' : 'N'}`)
-      this.logger.error(`   SMTP_USER: ${smtpUser ? 'Y' : 'N'}`)
-      this.logger.error(`   SMTP_PASS: ${smtpPass ? 'Y' : 'N'}`)
-      this.logger.error(`   SMTP_FROM_EMAIL: ${smtpFrom ? 'Y' : 'N'}`)
-      throw new Error('Email service not properly configured')
+      this.logger.warn('Missing SMTP configuration — email sending disabled.')
+      this.logger.warn(`   SMTP_HOST: ${smtpHost ? 'Y' : 'N'}`)
+      this.logger.warn(`   SMTP_PORT: ${smtpPort ? 'Y' : 'N'}`)
+      this.logger.warn(`   SMTP_USER: ${smtpUser ? 'Y' : 'N'}`)
+      this.logger.warn(`   SMTP_PASS: ${smtpPass ? 'Y' : 'N'}`)
+      this.logger.warn(`   SMTP_FROM_EMAIL: ${smtpFrom ? 'Y' : 'N'}`)
+      return
     }
 
     try {
@@ -72,6 +72,10 @@ export class EmailService implements OnModuleInit {
   }
 
   async sendPaymentConfirmation(data: PaymentConfirmationData) {
+    if (!this.transporter) {
+      this.logger.warn('Email transporter not configured — skipping payment confirmation email.')
+      return null
+    }
     try {
 
       // generating QR code with info
@@ -155,26 +159,26 @@ export class EmailService implements OnModuleInit {
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body { 
-      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
-      background-color: #0a0a0a; 
+    body {
+      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0a0a0a;
       color: #f5f5f5;
       line-height: 1.6;
     }
 
     .wrapper { background-color: #0a0a0a; padding: 20px; }
 
-    .container { 
-      max-width: 600px; 
-      margin: 0 auto; 
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      border-radius: 12px; 
-      overflow: hidden; 
+      border-radius: 12px;
+      overflow: hidden;
       border: 1px solid #2d2d44;
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
 
-    .header { 
+    .header {
       background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
       padding: 40px 30px;
       text-align: center;
@@ -193,8 +197,8 @@ export class EmailService implements OnModuleInit {
       pointer-events: none;
     }
 
-    .header h1 { 
-      font-size: 32px; 
+    .header h1 {
+      font-size: 32px;
       font-weight: 700;
       color: #fff;
       position: relative;
@@ -210,7 +214,7 @@ export class EmailService implements OnModuleInit {
       z-index: 1;
     }
 
-    .content { 
+    .content {
       padding: 40px 30px;
     }
 
@@ -270,15 +274,15 @@ export class EmailService implements OnModuleInit {
       margin-top: 12px;
     }
 
-    .section { 
+    .section {
       margin-bottom: 28px;
     }
 
-    .section-title { 
-      font-size: 12px; 
-      color: #9ca3af; 
-      text-transform: uppercase; 
-      letter-spacing: 1.2px; 
+    .section-title {
+      font-size: 12px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
       font-weight: 700;
       margin-bottom: 12px;
       display: flex;
@@ -295,14 +299,14 @@ export class EmailService implements OnModuleInit {
       margin-right: 8px;
     }
 
-    .info-box { 
+    .info-box {
       background-color: #242835;
       padding: 18px;
       border-radius: 8px;
       border: 1px solid #3d3d52;
     }
 
-    .info-row { 
+    .info-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -311,7 +315,7 @@ export class EmailService implements OnModuleInit {
       font-size: 14px;
     }
 
-    .info-row:last-child { 
+    .info-row:last-child {
       border-bottom: none;
       padding-bottom: 0;
     }
@@ -320,12 +324,12 @@ export class EmailService implements OnModuleInit {
       padding-top: 0;
     }
 
-    .info-label { 
+    .info-label {
       color: #9ca3af;
       font-weight: 500;
     }
 
-    .info-value { 
+    .info-value {
       color: #f5f5f5;
       font-weight: 600;
     }
@@ -339,8 +343,8 @@ export class EmailService implements OnModuleInit {
       margin-bottom: 28px;
     }
 
-    .price-label { 
-      font-size: 12px; 
+    .price-label {
+      font-size: 12px;
       color: #a0a0b0;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -348,21 +352,21 @@ export class EmailService implements OnModuleInit {
       font-weight: 600;
     }
 
-    .price { 
-      font-size: 42px; 
-      font-weight: 700; 
+    .price {
+      font-size: 42px;
+      font-weight: 700;
       color: #7c3aed;
       margin: 12px 0;
       line-height: 1;
     }
 
-    .currency { 
-      font-size: 18px; 
+    .currency {
+      font-size: 18px;
       color: #a0a0b0;
     }
 
-    .divider { 
-      height: 1px; 
+    .divider {
+      height: 1px;
       background: linear-gradient(90deg, transparent, #3d3d52, transparent);
       margin: 24px 0;
     }
@@ -379,7 +383,7 @@ export class EmailService implements OnModuleInit {
 
     .next-steps strong { color: #7c3aed; }
 
-    .footer { 
+    .footer {
       background-color: #0f0f1a;
       padding: 24px 30px;
       text-align: center;
@@ -432,14 +436,14 @@ export class EmailService implements OnModuleInit {
         <h1>! Payment Confirmed !</h1>
         <p class="header-subtitle">Your ticket is ready!</p>
       </div>
-      
+
       <div class="content">
         <p class="greeting">Hey <strong>${data.userName}</strong>,</p>
-        
+
         <div class="success-message">
           Your payment has been successfully processed. Your ticket is now confirmed!
         </div>
-        
+
         <div class="section">
           <div class="section-title">📍 Your Ticket QR Code</div>
           <div class="qr-section">
@@ -452,7 +456,7 @@ export class EmailService implements OnModuleInit {
             </div>
           </div>
         </div>
-        
+
         <div class="section">
           <div class="section-title">🎫 Event Details</div>
           <div class="info-box">
@@ -494,7 +498,7 @@ export class EmailService implements OnModuleInit {
 
           </div>
         </div>
-        
+
         <div class="section">
           <div class="section-title">💳 Payment Summary</div>
           <div class="price-section">
@@ -505,9 +509,9 @@ export class EmailService implements OnModuleInit {
             </div>
           </div>
         </div>
-        
+
         <div class="divider"></div>
-        
+
         <div class="next-steps">
           <strong>What's Next?</strong><br><br>
           1. Save or screenshot your QR code<br>
@@ -516,13 +520,13 @@ export class EmailService implements OnModuleInit {
           For any questions, visit our support center.
         </div>
       </div>
-      
+
       <div class="footer">
         <div class="footer-brand">UEVENT</div>
         <div class="footer-tagline">Event Management Platform</div>
         <div class="footer-links">
-          <a href="https://uevent.app">Website</a> | 
-          <a href="https://uevent.app/support">Support</a> | 
+          <a href="https://uevent.app">Website</a> |
+          <a href="https://uevent.app/support">Support</a> |
           <a href="https://uevent.app/faq">FAQ</a>
         </div>
         <div class="footer-disclaimer">
@@ -630,26 +634,26 @@ Event Management Platform
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body { 
-      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
-      background-color: #0a0a0a; 
+    body {
+      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0a0a0a;
       color: #f5f5f5;
       line-height: 1.6;
     }
 
     .wrapper { background-color: #0a0a0a; padding: 20px; }
 
-    .container { 
-      max-width: 600px; 
-      margin: 0 auto; 
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      border-radius: 12px; 
-      overflow: hidden; 
+      border-radius: 12px;
+      overflow: hidden;
       border: 1px solid #2d2d44;
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
 
-    .header { 
+    .header {
       background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
       padding: 40px 30px;
       text-align: center;
@@ -668,8 +672,8 @@ Event Management Platform
       pointer-events: none;
     }
 
-    .header h1 { 
-      font-size: 32px; 
+    .header h1 {
+      font-size: 32px;
       font-weight: 700;
       color: #fff;
       position: relative;
@@ -685,7 +689,7 @@ Event Management Platform
       z-index: 1;
     }
 
-    .content { 
+    .content {
       padding: 40px 30px;
     }
 
@@ -706,15 +710,15 @@ Event Management Platform
       color: #fca5a5;
     }
 
-    .section { 
+    .section {
       margin-bottom: 28px;
     }
 
-    .section-title { 
-      font-size: 12px; 
-      color: #9ca3af; 
-      text-transform: uppercase; 
-      letter-spacing: 1.2px; 
+    .section-title {
+      font-size: 12px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
       font-weight: 700;
       margin-bottom: 12px;
       display: flex;
@@ -731,14 +735,14 @@ Event Management Platform
       margin-right: 8px;
     }
 
-    .info-box { 
+    .info-box {
       background-color: #242835;
       padding: 18px;
       border-radius: 8px;
       border: 1px solid #3d3d52;
     }
 
-    .info-row { 
+    .info-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -747,7 +751,7 @@ Event Management Platform
       font-size: 14px;
     }
 
-    .info-row:last-child { 
+    .info-row:last-child {
       border-bottom: none;
       padding-bottom: 0;
     }
@@ -756,12 +760,12 @@ Event Management Platform
       padding-top: 0;
     }
 
-    .info-label { 
+    .info-label {
       color: #9ca3af;
       font-weight: 500;
     }
 
-    .info-value { 
+    .info-value {
       color: #f5f5f5;
       font-weight: 600;
     }
@@ -774,8 +778,8 @@ Event Management Platform
       margin: 20px 0;
     }
 
-    .failure-label { 
-      font-size: 12px; 
+    .failure-label {
+      font-size: 12px;
       color: #fca5a5;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -783,14 +787,14 @@ Event Management Platform
       font-weight: 600;
     }
 
-    .failure-reason { 
+    .failure-reason {
       font-size: 14px;
       color: #fecaca;
       line-height: 1.6;
     }
 
-    .divider { 
-      height: 1px; 
+    .divider {
+      height: 1px;
       background: linear-gradient(90deg, transparent, #3d3d52, transparent);
       margin: 24px 0;
     }
@@ -816,7 +820,7 @@ Event Management Platform
       margin-top: 12px;
     }
 
-    .footer { 
+    .footer {
       background-color: #0f0f1a;
       padding: 24px 30px;
       text-align: center;
@@ -867,14 +871,14 @@ Event Management Platform
         <h1>✕ Payment Failed</h1>
         <p class="header-subtitle">We couldn't process your payment</p>
       </div>
-      
+
       <div class="content">
         <p class="greeting">Hi <strong>${data.userName}</strong>,</p>
-        
+
         <div class="error-message">
           Unfortunately, your payment for <strong>${data.eventTitle}</strong> could not be processed.
         </div>
-        
+
         <div class="section">
           <div class="section-title">📋 Transaction Details</div>
           <div class="info-box">
@@ -896,14 +900,14 @@ Event Management Platform
 
           </div>
         </div>
-        
+
         <div class="failure-box">
           <div class="failure-label">Failure Reason</div>
           <div class="failure-reason">${data.failureReason}</div>
         </div>
-        
+
         <div class="divider"></div>
-        
+
         <div class="action-box">
           <strong>What Now?</strong><br><br>
             Check your payment method details<br>
@@ -913,13 +917,13 @@ Event Management Platform
           <a href="https://uevent.app/checkout" class="cta-button">Try Again</a>
         </div>
       </div>
-      
+
       <div class="footer">
         <div class="footer-brand">UEVENT</div>
         <div class="footer-tagline">Event Management Platform</div>
         <div class="footer-links">
-          <a href="https://uevent.app">Website</a> | 
-          <a href="https://uevent.app/support">Support</a> | 
+          <a href="https://uevent.app">Website</a> |
+          <a href="https://uevent.app/support">Support</a> |
           <a href="https://uevent.app/faq">FAQ</a>
         </div>
         <div class="footer-disclaimer">
@@ -983,26 +987,26 @@ Event Management Platform
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
-      background-color: #0a0a0a; 
+    body {
+      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0a0a0a;
       color: #f5f5f5;
       line-height: 1.6;
     }
 
     .wrapper { background-color: #0a0a0a; padding: 20px; }
 
-    .container { 
-      max-width: 600px; 
-      margin: 0 auto; 
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      border-radius: 12px; 
-      overflow: hidden; 
+      border-radius: 12px;
+      overflow: hidden;
       border: 1px solid #2d2d44;
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
 
-    .header { 
+    .header {
       background: linear-gradient(135deg, #059669 0%, #047857 100%);
       padding: 40px 30px;
       text-align: center;
@@ -1021,8 +1025,8 @@ Event Management Platform
       pointer-events: none;
     }
 
-    .header h1 { 
-      font-size: 32px; 
+    .header h1 {
+      font-size: 32px;
       font-weight: 700;
       color: #fff;
       position: relative;
@@ -1037,8 +1041,8 @@ Event Management Platform
       position: relative;
       z-index: 1;
     }
-      
-    .content { 
+
+    .content {
       padding: 40px 30px;
     }
 
@@ -1060,15 +1064,15 @@ Event Management Platform
       color: #a0f4c3;
     }
 
-    .section { 
+    .section {
       margin-bottom: 28px;
     }
 
-    .section-title { 
-      font-size: 12px; 
-      color: #9ca3af; 
-      text-transform: uppercase; 
-      letter-spacing: 1.2px; 
+    .section-title {
+      font-size: 12px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
       font-weight: 700;
       margin-bottom: 12px;
       display: flex;
@@ -1085,14 +1089,14 @@ Event Management Platform
       margin-right: 8px;
     }
 
-    .info-box { 
+    .info-box {
       background-color: #242835;
       padding: 18px;
       border-radius: 8px;
       border: 1px solid #3d3d52;
     }
 
-    .info-row { 
+    .info-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -1101,7 +1105,7 @@ Event Management Platform
       font-size: 14px;
     }
 
-    .info-row:last-child { 
+    .info-row:last-child {
       border-bottom: none;
       padding-bottom: 0;
     }
@@ -1110,12 +1114,12 @@ Event Management Platform
       padding-top: 0;
     }
 
-    .info-label { 
+    .info-label {
       color: #9ca3af;
       font-weight: 500;
     }
 
-    .info-value { 
+    .info-value {
       color: #f5f5f5;
       font-weight: 600;
     }
@@ -1129,8 +1133,8 @@ Event Management Platform
       margin: 20px 0;
     }
 
-    .refund-label { 
-      font-size: 12px; 
+    .refund-label {
+      font-size: 12px;
       color: #86efac;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -1138,9 +1142,9 @@ Event Management Platform
       font-weight: 600;
     }
 
-    .refund-amount { 
-      font-size: 42px; 
-      font-weight: 700; 
+    .refund-amount {
+      font-size: 42px;
+      font-weight: 700;
       color: #10b981;
       margin: 12px 0;
       line-height: 1;
@@ -1152,8 +1156,8 @@ Event Management Platform
       margin-top: 12px;
     }
 
-    .divider { 
-      height: 1px; 
+    .divider {
+      height: 1px;
       background: linear-gradient(90deg, transparent, #3d3d52, transparent);
       margin: 24px 0;
     }
@@ -1168,7 +1172,7 @@ Event Management Platform
       line-height: 1.8;
     }
 
-    .footer { 
+    .footer {
       background-color: #0f0f1a;
       padding: 24px 30px;
       text-align: center;
@@ -1218,14 +1222,14 @@ Event Management Platform
         <h1>✓ Refund Processed</h1>
         <p class="header-subtitle">Your refund has been approved</p>
       </div>
-      
+
       <div class="content">
         <p class="greeting">Hi <strong>${data.userName}</strong>,</p>
-        
+
         <div class="success-message">
           Your refund for <strong>${data.eventTitle}</strong> has been successfully processed.
         </div>
-        
+
         <div class="section">
           <div class="section-title">📋 Refund Details</div>
           <div class="info-box">
@@ -1247,28 +1251,28 @@ Event Management Platform
 
           </div>
         </div>
-        
+
         <div class="refund-box">
           <div class="refund-label">Refund Amount</div>
           <div class="refund-amount">$${data.amount.toFixed(2)}</div>
           <div class="refund-info">Will appear in your account within 3-5 business days</div>
         </div>
-        
+
         <div class="divider"></div>
-        
+
         <div class="info-text">
           <strong>What happens next?</strong><br><br>
           The refund has been initiated and will return to your original payment method within 3-5 business days. Some banks may take longer to process the refund.<br><br>
           If you have any questions, please contact our support team.
         </div>
       </div>
-      
+
       <div class="footer">
         <div class="footer-brand">UEVENT</div>
         <div class="footer-tagline">Event Management Platform</div>
         <div class="footer-links">
-          <a href="https://uevent.app">Website</a> | 
-          <a href="https://uevent.app/support">Support</a> | 
+          <a href="https://uevent.app">Website</a> |
+          <a href="https://uevent.app/support">Support</a> |
           <a href="https://uevent.app/faq">FAQ</a>
         </div>
         <div class="footer-disclaimer">
@@ -1312,5 +1316,107 @@ This is an automated email. Please do not reply to this message.
 UEVENT Team
 Event Management Platform
     `
+  }
+
+  async sendLoginNotification(
+    userEmail: string,
+    userName: string,
+    ipAddress: string,
+    userAgent: string,
+    loginTime: Date,
+  ) {
+    try {
+      const formattedTime = loginTime.toLocaleString('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      })
+
+      const htmlTemplate = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+  <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
+    <h1 style="color: #1a1a1a; margin: 0;">UEVENT</h1>
+  </div>
+  <div style="padding: 30px 0;">
+    <h2 style="color: #1a1a1a;">New Login Detected</h2>
+    <p>Hello ${userName},</p>
+    <p>A new login to your account was detected:</p>
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <p style="margin: 4px 0;"><strong>Time:</strong> ${formattedTime}</p>
+      <p style="margin: 4px 0;"><strong>IP Address:</strong> ${ipAddress}</p>
+      <p style="margin: 4px 0;"><strong>Device:</strong> ${userAgent}</p>
+    </div>
+    <p>If this was you, no action is needed. If you don't recognize this login, please change your password immediately.</p>
+  </div>
+  <div style="text-align: center; padding: 20px 0; border-top: 2px solid #f0f0f0; color: #666; font-size: 12px;">
+    <p>UEVENT Team &bull; Event Management Platform</p>
+  </div>
+</body>
+</html>`
+
+      const mailOptions = {
+        from: process.env.SMTP_FROM_EMAIL || 'noreply@uevent.app',
+        to: userEmail,
+        subject: 'New Login to Your UEVENT Account',
+        html: htmlTemplate,
+        text: `Hello ${userName},\n\nA new login to your account was detected:\n\nTime: ${formattedTime}\nIP Address: ${ipAddress}\nDevice: ${userAgent}\n\nIf this was you, no action is needed. If you don't recognize this login, please change your password immediately.\n\nUEVENT Team`,
+      }
+
+      this.logger.log(`Sending login notification email to ${userEmail}`)
+      const result = await this.transporter.sendMail(mailOptions)
+      this.logger.log(`Login notification email sent to ${userEmail}`)
+      return result
+    } catch(error) {
+      this.logger.error(`Failed to send login notification email: ${error.message}`)
+    }
+  }
+
+  async sendPasswordResetEmail(userEmail: string, userName: string, code: string) {
+    if (!this.transporter) {
+      this.logger.warn('Email transporter not configured — skipping password reset email.')
+      return null
+    }
+    try {
+      const htmlTemplate = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: 'Inter', -apple-system, sans-serif; background: #f5f5f5; margin: 0; padding: 20px;">
+  <div style="max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+    <div style="background: linear-gradient(135deg, #7c3aed, #6d28d9); padding: 32px; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 24px;">Password Reset</h1>
+    </div>
+    <div style="padding: 32px;">
+      <p style="color: #374151; margin-bottom: 16px;">Hello ${userName},</p>
+      <p style="color: #374151; margin-bottom: 24px;">Use the code below to reset your password. This code expires in 15 minutes.</p>
+      <div style="background: #f3f0ff; border: 2px dashed #7c3aed; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+        <p style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #7c3aed; margin: 0;">${code}</p>
+      </div>
+      <p style="color: #6b7280; font-size: 13px;">If you didn't request this, you can safely ignore this email.</p>
+    </div>
+    <div style="text-align: center; padding: 20px; border-top: 1px solid #f0f0f0; color: #9ca3af; font-size: 12px;">
+      <p>UEVENT Team &bull; Event Management Platform</p>
+    </div>
+  </div>
+</body>
+</html>`
+
+      const mailOptions = {
+        from: process.env.SMTP_FROM_EMAIL || 'noreply@uevent.app',
+        to: userEmail,
+        subject: 'Password Reset Code — UEVENT',
+        html: htmlTemplate,
+        text: `Hello ${userName},\n\nYour password reset code is: ${code}\n\nThis code expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\nUEVENT Team`,
+      }
+
+      this.logger.log(`Sending password reset email to ${userEmail}`)
+      const result = await this.transporter.sendMail(mailOptions)
+      this.logger.log(`Password reset email sent to ${userEmail}`)
+      return result
+    } catch(error) {
+      this.logger.error(`Failed to send password reset email: ${error.message}`)
+      return null
+    }
   }
 }

@@ -17,27 +17,6 @@ import { useOrgs } from '@entities/Organization';
 
 
 
-function useSearchEvents() {
-  const { data } = useEvents();
-  const events = Array.isArray(data) ? data : [];
-  return events.map((e) => ({
-    id: e.id,
-    title: e.title,
-    href: `/events/${e.id}`,
-  }));
-}
-
-
-function useSearchOrgs() {
-  const { data } = useOrgs();
-  const orgs = Array.isArray(data) ? data : [];
-  return orgs.map((o) => ({
-    id: o.id,
-    title: o.title,
-    href: `/organizations/${o.id}`,
-  }));
-}
-
 /* ──────────────────────────────────────────────────────────── */
 /*  Component                                                    */
 /* ──────────────────────────────────────────────────────────── */
@@ -52,12 +31,14 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
   const { t } = useAppContext();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const { data: events = [], isLoading: eventsLoading, isError: eventsError } = useEvents({ page: 1, limit: 100 });
+  const { data: eventsResult, isLoading: eventsLoading, isError: eventsError } = useEvents({ page: 1, limit: 100 }, open);
   const {
-    data: organizations = [],
+    data: organizationsResult,
     isLoading: organizationsLoading,
     isError: organizationsError,
-  } = useOrgs({ page: 1, limit: 100 });
+  } = useOrgs({ page: 1, limit: 100 }, open);
+  const events = eventsResult?.data ?? [];
+  const organizations = organizationsResult?.data ?? [];
 
   const searchEvents = events.map((event) => ({
     id: event.id,
@@ -65,13 +46,15 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
     href: `/events/${event.id}`,
   }));
 
-  // Ctrl+K / ⌘+K shortcut
+  // Shift+K shortcut
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setOpen((prev) => !prev);
-      }
+      if (!e.shiftKey) return;
+      if (e.key !== 'K' && e.key !== 'k') return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+      e.preventDefault();
+      setOpen((prev) => !prev);
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
@@ -93,13 +76,18 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
         <Search className="h-4 w-4" />
         {t.header.actions.searchEvents}
         {variant === 'pill' && (
-          <kbd className="ml-2 hidden select-none rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-flex">
-            ⌘K
-          </kbd>
+          <>
+            <span className="hidden text-[10px] text-muted-foreground/70 sm:inline">
+              {t.header.actions.searchSubtitle}
+            </span>
+            <kbd className="ml-1 hidden select-none rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-flex">
+              ⇧K
+            </kbd>
+          </>
         )}
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen} title={t.header.actions.searchEvents}>
+      <CommandDialog open={open} onOpenChange={setOpen} title={t.header.actions.searchEvents + ' · ' + t.header.actions.searchSubtitle}>
         <Command>
           <CommandInput placeholder={t.header.search.placeholder} autoFocus />
           <CommandList>

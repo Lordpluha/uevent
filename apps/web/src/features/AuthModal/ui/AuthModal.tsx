@@ -1,15 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cva } from 'class-variance-authority';
-import { Building2, Loader2, User } from 'lucide-react';
+import { Building2, Loader2, User, ArrowLeft, KeyRound } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import { Dialog, DialogContent, DialogTrigger, Button, Input, Label } from '@shared/components';
+import { Dialog, DialogContent, DialogTrigger, Button, Input, Label, InputOTP, InputOTPGroup, InputOTPSlot } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { authApi } from '@shared/api/auth.api';
+import type { LoginResult } from '@shared/api/auth.api';
 import { cn } from '@shared/lib/utils';
 import { usersApi } from '@entities/User';
 import { organizationsApi } from '@entities/Organization';
@@ -33,10 +34,13 @@ const triggerVariants = cva(
 
 type AccountType = 'user' | 'organization';
 type AuthTab = 'login' | 'register';
+type AuthView = 'main' | '2fa' | 'forgot-password' | 'reset-password';
 
 type Props = {
   defaultTab?: AuthTab;
   variant?: 'pill' | 'block';
+  triggerLabel?: string;
+  triggerClassName?: string;
 };
 
 /* ── Schemas ─────────────────────────────────────────────── */
@@ -76,75 +80,115 @@ type RegisterOrgValues = z.infer<typeof registerOrgSchema>;
 
 /* ── Component ───────────────────────────────────────────── */
 
-export const AuthModal = ({ defaultTab = 'login', variant = 'pill' }: Props) => {
+export const AuthModal = ({ defaultTab = 'login', variant = 'pill', triggerLabel, triggerClassName }: Props) => {
   const { t } = useAppContext();
   const [accountType, setAccountType] = useState<AccountType>('user');
   const [tab, setTab] = useState<AuthTab>(defaultTab);
   const [open, setOpen] = useState(false);
+  const [view, setView] = useState<AuthView>('main');
+  const [tempToken, setTempToken] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
 
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    setOpen(false);
+    setView('main');
+    setTempToken('');
+    setResetEmail('');
+  };
+
+  const handle2faRequired = (token: string) => {
+    setTempToken(token);
+    setView('2fa');
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<button type="button" className={cn(triggerVariants({ variant }))} />}>
-        {t.header.actions.login}
+    <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); else setOpen(true); }}>
+      <DialogTrigger render={<button type="button" className={cn(triggerVariants({ variant }), triggerClassName)} />}>
+        {triggerLabel ?? t.header.actions.login}
       </DialogTrigger>
 
       <DialogContent className="w-full max-w-sm rounded-2xl p-8">
-        {/* Account type switcher */}
-        <div className="mb-5 grid grid-cols-2 gap-2">
-          {(['user', 'organization'] as AccountType[]).map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => setAccountType(type)}
-              className={cn(
-                'flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-colors',
-                accountType === type
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
-              )}
-            >
-              {type === 'user' ? <User className="h-3.5 w-3.5" /> : <Building2 className="h-3.5 w-3.5" />}
-              {type === 'user' ? t.auth.tabs.user : t.auth.tabs.organization}
-            </button>
-          ))}
-        </div>
-
-        {/* Login / Register sub-tabs */}
-        <div className="mb-6 grid grid-cols-2 overflow-hidden rounded-full border border-border text-sm font-medium">
-          {(['login', 'register'] as AuthTab[]).map((authTab) => (
-            <button
-              key={authTab}
-              type="button"
-              onClick={() => setTab(authTab)}
-              className={cn(
-                'px-4 py-2 text-center transition-colors',
-                tab === authTab ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {authTab === 'login'
-                ? accountType === 'user'
-                  ? t.auth.login.title
-                  : t.auth.orgLogin.title
-                : accountType === 'user'
-                  ? t.auth.register.title
-                  : t.auth.orgRegister.title}
-            </button>
-          ))}
-        </div>
-
-        {/* Forms */}
-        {accountType === 'user' ? (
-          tab === 'login' ? (
-            <LoginForm t={t.auth.login} onSwitch={() => setTab('register')} onSuccess={handleClose} />
-          ) : (
-            <RegisterForm t={t.auth.register} onSwitch={() => setTab('login')} onSuccess={handleClose} />
-          )
-        ) : tab === 'login' ? (
-          <OrgLoginForm t={t.auth.orgLogin} onSwitch={() => setTab('register')} onSuccess={handleClose} />
+        {view === '2fa' ? (
+          <TwoFaChallengeForm
+            tempToken={tempToken}
+            onSuccess={handleClose}
+            onBack={() => { setView('main'); setTempToken(''); }}
+          />
+        ) : view === 'forgot-password' ? (
+          <ForgotPasswordForm
+            onCodeSent={(email) => { setResetEmail(email); setView('reset-password'); }}
+            onBack={() => setView('main')}
+          />
+        ) : view === 'reset-password' ? (
+          <ResetPasswordForm
+            email={resetEmail}
+            onSuccess={() => { setView('main'); setTab('login'); }}
+            onBack={() => setView('forgot-password')}
+          />
         ) : (
-          <OrgRegisterForm t={t.auth.orgRegister} onSwitch={() => setTab('login')} onSuccess={handleClose} />
+          <>
+            {/* Account type switcher */}
+            <div className="mb-5 grid grid-cols-2 gap-2">
+              {(['user', 'organization'] as AccountType[]).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setAccountType(type)}
+                  className={cn(
+                    'flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-colors',
+                    accountType === type
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                  )}
+                >
+                  {type === 'user' ? <User className="h-3.5 w-3.5" /> : <Building2 className="h-3.5 w-3.5" />}
+                  {type === 'user' ? t.auth.tabs.user : t.auth.tabs.organization}
+                </button>
+              ))}
+            </div>
+
+            {/* Login / Register sub-tabs */}
+            <div className="mb-6 grid grid-cols-2 overflow-hidden rounded-full border border-border text-sm font-medium">
+              {(['login', 'register'] as AuthTab[]).map((authTab) => (
+                <button
+                  key={authTab}
+                  type="button"
+                  onClick={() => setTab(authTab)}
+                  className={cn(
+                    'px-4 py-2 text-center transition-colors',
+                    tab === authTab ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {authTab === 'login'
+                    ? accountType === 'user'
+                      ? t.auth.login.title
+                      : t.auth.orgLogin.title
+                    : accountType === 'user'
+                      ? t.auth.register.title
+                      : t.auth.orgRegister.title}
+                </button>
+              ))}
+            </div>
+
+            {/* Forms */}
+            {accountType === 'user' ? (
+              tab === 'login' ? (
+                <LoginForm
+                  t={t.auth.login}
+                  onSwitch={() => setTab('register')}
+                  onSuccess={handleClose}
+                  on2faRequired={handle2faRequired}
+                  onForgotPassword={() => setView('forgot-password')}
+                />
+              ) : (
+                <RegisterForm t={t.auth.register} onSwitch={() => setTab('login')} onSuccess={handleClose} />
+              )
+            ) : tab === 'login' ? (
+              <OrgLoginForm t={t.auth.orgLogin} onSwitch={() => setTab('register')} onSuccess={handleClose} />
+            ) : (
+              <OrgRegisterForm t={t.auth.orgRegister} onSwitch={() => setTab('login')} onSuccess={handleClose} />
+            )}
+          </>
         )}
       </DialogContent>
     </Dialog>
@@ -209,7 +253,9 @@ const LoginForm = ({
   t,
   onSwitch,
   onSuccess,
-}: { t: LoginDict; onSwitch: () => void; onSuccess: () => void }) => {
+  on2faRequired,
+  onForgotPassword,
+}: { t: LoginDict; onSwitch: () => void; onSuccess: () => void; on2faRequired: (token: string) => void; onForgotPassword: () => void }) => {
   const { setAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const { register, handleSubmit, formState: { errors } } = useForm<LoginValues>({
@@ -218,11 +264,17 @@ const LoginForm = ({
 
   const { mutate, isPending } = useMutation({
     mutationFn: (v: LoginValues) => authApi.loginUser(v.email, v.password),
-    onSuccess: (data) => {
-      setAuthenticated(data.accountType);
-      queryClient.prefetchQuery({ queryKey: ['me'], queryFn: () => usersApi.getMe() });
-      toast.success('Logged in successfully');
-      onSuccess();
+    onSuccess: (data: LoginResult) => {
+      if ('requires2fa' in data && data.requires2fa) {
+        on2faRequired(data.tempToken);
+        return;
+      }
+      if ('accountType' in data) {
+        setAuthenticated(data.accountType);
+        queryClient.prefetchQuery({ queryKey: ['me'], queryFn: () => usersApi.getMe() });
+        toast.success('Logged in successfully');
+        onSuccess();
+      }
     },
     onError: () => toast.error('Invalid email or password'),
   });
@@ -240,7 +292,12 @@ const LoginForm = ({
         <Input id="login-password" type="password" placeholder={t.passwordPlaceholder} autoComplete="current-password" {...register('password')} />
         <FieldError message={errors.password?.message} />
       </div>
-      <Button type="submit" className="mt-2 w-full" disabled={isPending}>
+      <div className="flex justify-end">
+        <button type="button" onClick={onForgotPassword} className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
+          Forgot password?
+        </button>
+      </div>
+      <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t.submit}
       </Button>
       <Divider label={t.orDivider} />
@@ -457,6 +514,183 @@ const OrgRegisterForm = ({
       </Button>
       <SwitchPrompt text={t.hasAccount} action={t.switchToLogin} onAction={onSwitch} />
     </form>
+  );
+};
+
+/* ──────────────────────────────────────────────────────────── */
+/*  2FA Challenge Form                                           */
+/* ──────────────────────────────────────────────────────────── */
+
+const TwoFaChallengeForm = ({
+  tempToken,
+  onSuccess,
+  onBack,
+}: { tempToken: string; onSuccess: () => void; onBack: () => void }) => {
+  const { setAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const [code, setCode] = useState('');
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => authApi.verify2fa(tempToken, code),
+    onSuccess: (data) => {
+      setAuthenticated(data.accountType);
+      queryClient.prefetchQuery({ queryKey: ['me'], queryFn: () => usersApi.getMe() });
+      toast.success('Logged in successfully');
+      onSuccess();
+    },
+    onError: () => { toast.error('Invalid 2FA code'); setCode(''); },
+  });
+
+  return (
+    <div className="flex flex-col items-center gap-5">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+        <KeyRound className="h-6 w-6 text-primary" />
+      </div>
+      <div className="text-center">
+        <h3 className="text-lg font-semibold">Two-factor authentication</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Enter the 6-digit code from your authenticator app.</p>
+      </div>
+      <InputOTP maxLength={6} value={code} onChange={setCode} onComplete={() => mutate()}>
+        <InputOTPGroup>
+          <InputOTPSlot index={0} />
+          <InputOTPSlot index={1} />
+          <InputOTPSlot index={2} />
+          <InputOTPSlot index={3} />
+          <InputOTPSlot index={4} />
+          <InputOTPSlot index={5} />
+        </InputOTPGroup>
+      </InputOTP>
+      <Button onClick={() => mutate()} className="w-full" disabled={isPending || code.length !== 6}>
+        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify'}
+      </Button>
+      <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-3.5 w-3.5" /> Back to login
+      </button>
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────────────────── */
+/*  Forgot Password Form                                         */
+/* ──────────────────────────────────────────────────────────── */
+
+const ForgotPasswordForm = ({
+  onCodeSent,
+  onBack,
+}: { onCodeSent: (email: string) => void; onBack: () => void }) => {
+  const [email, setEmail] = useState('');
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => authApi.forgotPassword(email),
+    onSuccess: () => {
+      toast.success('Reset code sent to your email');
+      onCodeSent(email);
+    },
+    onError: () => toast.error('Failed to send reset code'),
+  });
+
+  return (
+    <div className="flex flex-col gap-4">
+      <button type="button" onClick={onBack} className="inline-flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-3.5 w-3.5" /> Back to login
+      </button>
+      <div className="text-center">
+        <h3 className="text-lg font-semibold">Forgot password?</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Enter your email and we'll send you a reset code.</p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="forgot-email">Email</Label>
+        <Input
+          id="forgot-email"
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+        />
+      </div>
+      <Button onClick={() => mutate()} className="w-full" disabled={isPending || !email}>
+        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send reset code'}
+      </Button>
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────────────────── */
+/*  Reset Password Form                                          */
+/* ──────────────────────────────────────────────────────────── */
+
+const ResetPasswordForm = ({
+  email,
+  onSuccess,
+  onBack,
+}: { email: string; onSuccess: () => void; onBack: () => void }) => {
+  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => authApi.resetPassword(email, code, password),
+    onSuccess: () => {
+      toast.success('Password reset successfully. Please log in.');
+      onSuccess();
+    },
+    onError: () => toast.error('Invalid or expired reset code'),
+  });
+
+  const canSubmit = code.length === 6 && password.length >= 8 && password === confirmPassword;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <button type="button" onClick={onBack} className="inline-flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-3.5 w-3.5" /> Back
+      </button>
+      <div className="text-center">
+        <h3 className="text-lg font-semibold">Reset password</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Enter the code sent to <strong>{email}</strong></p>
+      </div>
+      <div className="flex flex-col items-center gap-1.5">
+        <Label>Verification code</Label>
+        <InputOTP maxLength={6} value={code} onChange={setCode}>
+          <InputOTPGroup>
+            <InputOTPSlot index={0} />
+            <InputOTPSlot index={1} />
+            <InputOTPSlot index={2} />
+            <InputOTPSlot index={3} />
+            <InputOTPSlot index={4} />
+            <InputOTPSlot index={5} />
+          </InputOTPGroup>
+        </InputOTP>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="reset-password">New password</Label>
+        <Input
+          id="reset-password"
+          type="password"
+          placeholder="At least 8 characters"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="new-password"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="reset-confirm">Confirm password</Label>
+        <Input
+          id="reset-confirm"
+          type="password"
+          placeholder="Repeat new password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          autoComplete="new-password"
+        />
+        {confirmPassword && password !== confirmPassword && (
+          <p className="text-xs text-destructive">Passwords do not match</p>
+        )}
+      </div>
+      <Button onClick={() => mutate()} className="w-full" disabled={isPending || !canSubmit}>
+        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reset password'}
+      </Button>
+    </div>
   );
 };
 

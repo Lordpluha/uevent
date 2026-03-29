@@ -62,6 +62,20 @@ export function ProfileEditPage() {
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  const uploadAvatarMutation = useMutation({
+    mutationFn: (file: File) => usersApi.uploadAvatar(file),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['me'] }),
+        queryClient.invalidateQueries({ queryKey: ['users'] }),
+      ]);
+      toast.success('Profile photo updated');
+    },
+    onError: () => {
+      toast.error('Failed to upload profile photo');
+    },
+  });
+
   const saveProfileMutation = useMutation({
     mutationFn: () =>
       usersApi.updateMe({
@@ -112,9 +126,9 @@ export function ProfileEditPage() {
   const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // TODO: upload avatar
-      console.log('Avatar file selected:', file.name);
+      uploadAvatarMutation.mutate(file);
     }
+    e.target.value = '';
   };
 
   const handleSubmit = (e: FormEvent) => {

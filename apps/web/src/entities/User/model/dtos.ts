@@ -12,8 +12,17 @@ export const updateUserSchema = z.object({
   username: z.string().min(1).optional(),
   bio: z.string().optional(),
   location: z.string().optional(),
-  website: z.string().url().optional(),
+  website: z.string().optional(),
   avatarUrl: z.string().url().optional(),
+  timezone: z.string().optional(),
+  interests: z.array(z.string()).optional(),
+  notificationsEnabled: z.boolean().optional(),
+  pushNotificationsEnabled: z.boolean().optional(),
+  paymentEmailEnabled: z.boolean().optional(),
+  subscriptionNotificationsEnabled: z.boolean().optional(),
+  loginNotificationsEnabled: z.boolean().optional(),
+  twoFa: z.boolean().optional(),
+  password: z.string().min(8).optional(),
 });
 
 export const userListParamsSchema = z.object({

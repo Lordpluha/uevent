@@ -6,6 +6,8 @@ import { Tag } from '../tags/entities/tag.entity'
 import { CreateEventDto } from './dto/create-event.dto'
 import { UpdateEventDto } from './dto/update-event.dto'
 import { GetEventsParams } from './params/get-events.params'
+import { Organization } from '../organizations/entities/organization.entity'
+import { Notification } from '../notifications/entities/notification.entity'
 
 @Injectable()
 export class EventsService {
@@ -15,18 +17,58 @@ export class EventsService {
 
     @InjectRepository(Tag)
     private readonly tagsRepo: Repository<Tag>,
+
+    @InjectRepository(Organization)
+    private readonly organizationsRepo: Repository<Organization>,
+
+    @InjectRepository(Notification)
+    private readonly notificationsRepo: Repository<Notification>,
   ) {}
 
   async create({ tags, ...rest }: CreateEventDto) {
     const event = this.eventsRepo.create(rest)
 
     if (tags?.length) event.tags = await this.tagsRepo.findBy({ id: In(tags) })
+    const savedEvent = await this.eventsRepo.save(event)
 
-    return await this.eventsRepo.save(event)
+    if (savedEvent.organization_id) {
+      const org = await this.organizationsRepo.findOne({
+        where: { id: savedEvent.organization_id },
+        relations: ['followers'],
+      })
+
+      const recipients = (org?.followers ?? []).filter((u) => u.notifications_enabled)
+      if (recipients.length > 0) {
+        const notifications = recipients.map((user) =>
+          this.notificationsRepo.create({
+            name: 'New event from organization',
+            content: `${org?.name ?? 'An organization'} published a new event: ${savedEvent.name}`,
+            user_id: user.id,
+          }),
+        )
+        await this.notificationsRepo.save(notifications)
+      }
+    }
+
+    return savedEvent
   }
 
   async findAll(query: GetEventsParams) {
-    const { page, limit, search, format, tags, date_from, date_to, location, organization_id } = query
+    const {
+      page,
+      limit,
+      search,
+      format,
+      tags,
+      date_from,
+      date_to,
+      location,
+      location_from,
+      location_to,
+      organization_id,
+      user_id,
+    } = query
+    const now = new Date()
 
     const qb = this.eventsRepo
       .createQueryBuilder('event')
@@ -34,25 +76,8 @@ export class EventsService {
       .leftJoinAndSelect('event.tickets', 'ticket')
       .leftJoinAndSelect('event.organization', 'organization')
 
-    if (search) {
-      qb.andWhere('(event.name ILIKE :search OR event.description ILIKE :search)', { search: `%${search}%` })
-    }
-
-    if (format === 'offline') {
-      qb.andWhere('event.location IS NOT NULL')
-    } else if (format === 'online') {
-      qb.andWhere('event.location IS NULL')
-    }
-
-    if (search) {
-      qb.andWhere('(event.name ILIKE :search OR event.description ILIKE :search)', { search: `%${search}%` })
-    }
-
-    if (format === 'offline') {
-      qb.andWhere('event.location IS NOT NULL')
-    } else if (format === 'online') {
-      qb.andWhere('event.location IS NULL')
-    }
+    // Show only events that have not ended yet.
+    qb.andWhere('event.datetime_end >= :now', { now })
 
     if (search) {
       qb.andWhere('(event.name ILIKE :search OR event.description ILIKE :search)', { search: `%${search}%` })
@@ -87,8 +112,20 @@ export class EventsService {
       qb.andWhere('event.location ILIKE :location', { location: `%${location}%` })
     }
 
+    if (location_from) {
+      qb.andWhere('event.location_from ILIKE :location_from', { location_from: `%${location_from}%` })
+    }
+
+    if (location_to) {
+      qb.andWhere('event.location_to ILIKE :location_to', { location_to: `%${location_to}%` })
+    }
+
     if (organization_id) {
       qb.andWhere('event.organization_id = :organization_id', { organization_id })
+    }
+
+    if (user_id) {
+      qb.andWhere('ticket.user_id = :user_id', { user_id })
     }
 
     const total = await qb.getCount()
@@ -132,5 +169,19 @@ export class EventsService {
   async remove(id: string) {
     const event = await this.findOne(id)
     await this.eventsRepo.remove(event)
+  }
+
+  async setCoverUrl(id: string, imageUrl: string) {
+    const event = await this.findOne(id)
+    event.gallery = [imageUrl, ...(event.gallery ?? []).filter((u) => u !== imageUrl)]
+    return await this.eventsRepo.save(event)
+  }
+
+  async addGalleryImages(id: string, imageUrls: string[]) {
+    const event = await this.findOne(id)
+    const existing = event.gallery ?? []
+    const newUrls = imageUrls.filter((u) => !existing.includes(u))
+    event.gallery = [...existing, ...newUrls]
+    return await this.eventsRepo.save(event)
   }
 }

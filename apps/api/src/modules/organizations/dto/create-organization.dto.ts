@@ -10,6 +10,7 @@ export const CreateOrganizationDtoSchema = z.object({
   avatar: z.string().optional(),
   phone: z.string().optional(),
   category: z.string().optional(),
+  city: z.string().optional(),
   verified: z.boolean().optional(),
 })
 

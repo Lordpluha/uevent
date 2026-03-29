@@ -253,6 +253,10 @@ export interface RichTextEditorProps {
   className?: string;
   /** Disable the editor */
   disabled?: boolean;
+  /** Render in read-only mode while preserving content styles */
+  readOnly?: boolean;
+  /** Show formatting toolbar */
+  showToolbar?: boolean;
   autoFocus?: boolean;
   'aria-invalid'?: ComponentProps<'div'>['aria-invalid'];
 }
@@ -263,6 +267,8 @@ export function RichTextEditor({
   placeholder = 'Start writing…',
   className,
   disabled = false,
+  readOnly = false,
+  showToolbar = true,
   autoFocus = false,
   'aria-invalid': ariaInvalid,
 }: RichTextEditorProps) {
@@ -283,7 +289,7 @@ export function RichTextEditor({
         theme: EDITOR_THEME,
         nodes: EDITOR_NODES,
         onError: (error: Error) => console.error('[RichTextEditor]', error),
-        editable: !disabled,
+        editable: !(disabled || readOnly),
       }}
     >
       <div
@@ -297,7 +303,7 @@ export function RichTextEditor({
           className,
         )}
       >
-        <ToolbarPlugin />
+        {showToolbar && !readOnly && <ToolbarPlugin />}
         <RichTextPlugin
           contentEditable={
             <ContentEditable
@@ -312,12 +318,12 @@ export function RichTextEditor({
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
-        <OnChangePlugin onChange={handleChange} />
-        <HistoryPlugin />
+        {!readOnly && <OnChangePlugin onChange={handleChange} />}
+        {!readOnly && <HistoryPlugin />}
         <ListPlugin />
         <LinkPlugin />
-        <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
-        {autoFocus && <AutoFocusPlugin />}
+        {!readOnly && <MarkdownShortcutPlugin transformers={TRANSFORMERS} />}
+        {autoFocus && !readOnly && <AutoFocusPlugin />}
         {defaultValue && <InitialValuePlugin value={defaultValue} />}
       </div>
     </LexicalComposer>

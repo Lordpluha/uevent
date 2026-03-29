@@ -8,9 +8,10 @@ import { Override } from './entities/override.entity'
 import { Tag } from '../tags/entities/tag.entity'
 import { Ticket } from '../users/entities/ticket.entity'
 import { Organization } from '../organizations/entities/organization.entity'
+import { Notification } from '../notifications/entities/notification.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Event, Recurrence, Override, Tag, Ticket, Organization])],
+  imports: [TypeOrmModule.forFeature([Event, Recurrence, Override, Tag, Ticket, Organization, Notification])],
   controllers: [EventsController],
   providers: [EventsService],
   exports: [EventsService, TypeOrmModule],

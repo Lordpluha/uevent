@@ -8,6 +8,7 @@ type AuthState = {
 };
 
 export type AuthContextValue = AuthState & {
+  isReady: boolean;
   setAuthenticated: (type: AuthAccountType) => void;
   logout: () => void;
 };
@@ -30,6 +31,7 @@ function readStorage(): AuthState {
  */
 const _ref: AuthContextValue = {
   ...readStorage(),
+  isReady: true,
   setAuthenticated: () => {},
   logout: () => {},
 };
@@ -42,14 +44,15 @@ const AuthContext = createContext<AuthContextValue>(_ref);
 export function AuthProvider({ children }: { children: ReactNode }) {
   // Start unauthenticated to match SSR output, then hydrate from localStorage
   const [state, setState] = useState<AuthState>({ isAuthenticated: false, accountType: null });
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const stored = readStorage();
-    if (stored.isAuthenticated) {
-      setState(stored);
-      _ref.isAuthenticated = stored.isAuthenticated;
-      _ref.accountType = stored.accountType;
-    }
+    setState(stored);
+    _ref.isAuthenticated = stored.isAuthenticated;
+    _ref.accountType = stored.accountType;
+    _ref.isReady = true;
+    setIsReady(true);
   }, []);
 
   const setAuthenticated = useCallback((accountType: AuthAccountType) => {
@@ -58,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     _ref.isAuthenticated = next.isAuthenticated;
     _ref.accountType = next.accountType;
+    _ref.isReady = true;
+    setIsReady(true);
   }, []);
 
   const logout = useCallback(() => {
@@ -66,14 +71,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
     _ref.isAuthenticated = next.isAuthenticated;
     _ref.accountType = next.accountType;
+    _ref.isReady = true;
+    setIsReady(true);
   }, []);
 
   // Keep module-level ref actions in sync (stable refs due to useCallback([]))
   _ref.setAuthenticated = setAuthenticated;
   _ref.logout = logout;
+  _ref.isReady = isReady;
 
   return (
-    <AuthContext.Provider value={{ ...state, setAuthenticated, logout }}>
+    <AuthContext.Provider value={{ ...state, isReady, setAuthenticated, logout }}>
       {children}
     </AuthContext.Provider>
   );

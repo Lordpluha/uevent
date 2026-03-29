@@ -1,10 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm'
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
 import { Ticket } from '../../users/entities/ticket.entity'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('files')
-export class File {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+export class File extends UuidEntity {
 
   @Column()
   name: string
@@ -17,13 +16,14 @@ export class File {
 
   // relations
 
-  @Column()
-  ticket_id: string
+  @Column({ type: 'uuid', nullable: true })
+  ticket_id: string | null
 
   @ManyToOne(
     () => Ticket,
     (ticket) => ticket.private_files,
+    { nullable: true },
   )
   @JoinColumn({ name: 'ticket_id' })
-  ticket: Ticket
+  ticket: Ticket | null
 }

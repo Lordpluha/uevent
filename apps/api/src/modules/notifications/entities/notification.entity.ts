@@ -1,10 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm'
+import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm'
 import { User } from '../../users/entities/user.entity'
+import { Organization } from '../../organizations/entities/organization.entity'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('notifications')
-export class Notification {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+export class Notification extends UuidEntity {
 
   @Column()
   name: string
@@ -20,13 +20,21 @@ export class Notification {
 
   // relations
 
-  @Column()
-  user_id: string
+  @Column({ nullable: true })
+  user_id: string | null
 
   @ManyToOne(
     () => User,
     (user) => user.notifications,
+    { nullable: true },
   )
   @JoinColumn({ name: 'user_id' })
-  user: User
+  user: User | null
+
+  @Column({ nullable: true })
+  organization_id: string | null
+
+  @ManyToOne(() => Organization, { nullable: true })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization | null
 }

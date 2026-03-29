@@ -1,7 +1,10 @@
-import { Controller, Post, Get, Body, Param, Headers, RawBodyRequest, Req, HttpCode, Logger } from '@nestjs/common'
+import { Controller, Post, Get, Body, Param, Headers, RawBodyRequest, Req, HttpCode, Logger, BadRequestException } from '@nestjs/common'
 import { Request } from 'express'
 import { PaymentsService } from './payments.service'
 import { EmailService } from '../notifications/email.service'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { User } from '../users/entities/user.entity'
 import Stripe from 'stripe'
 
 @Controller('payments')
@@ -11,6 +14,8 @@ export class PaymentsController {
   constructor(
     private readonly paymentsService: PaymentsService,
     private readonly emailService: EmailService,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   @Post('create-intent')
@@ -18,6 +23,8 @@ export class PaymentsController {
     amount: number
     currency?: string
     orderId?: string
+    ticketId?: string
+    quantity?: number
     userEmail?: string
     userName?: string
     eventTitle?: string
@@ -30,6 +37,8 @@ export class PaymentsController {
       amount,
       currency = 'usd',
       orderId,
+      ticketId,
+      quantity,
       userEmail,
       userName,
       eventTitle,
@@ -39,11 +48,18 @@ export class PaymentsController {
       organizationName,
     } = body
 
-    if(!amount || amount <= 0) throw new Error('Invalid amount')
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new BadRequestException('Invalid amount. Expected positive integer amount in cents.')
+    }
+    if (Math.round(amount) < 50) {
+      throw new BadRequestException('Minimum payment amount is 50 cents.')
+    }
 
     const metadata: Record<string, string> = {}
-    
+
     if(orderId) metadata.orderId = orderId
+    if(ticketId) metadata.ticketId = ticketId
+    if(quantity && quantity > 0) metadata.quantity = String(quantity)
     if(userEmail) metadata.userEmail = userEmail
     if(userName) metadata.userName = userName
     if(eventTitle) metadata.eventTitle = eventTitle
@@ -123,6 +139,16 @@ export class PaymentsController {
     paymentIntentId?: string
   }) {
     this.logger.log(`Sending payment confirmation email to: ${body.userEmail}`)
+
+    // Check user preference for payment emails
+    const user = await this.usersRepository.findOne({ where: { email: body.userEmail } })
+    if(user && !user.payment_email_enabled) {
+      this.logger.log(`Payment email disabled for user ${body.userEmail} — skipping`)
+      return {
+        success: true,
+        message: 'Payment email disabled by user preference',
+      }
+    }
 
     try {
       const result = await this.emailService.sendPaymentConfirmation({

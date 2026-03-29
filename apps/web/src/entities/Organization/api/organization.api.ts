@@ -1,100 +1,59 @@
 import { BasicClientApi } from '@shared/api';
-import type { Organization, OrganizationList } from '../model/organizationEntity';
-import type { CreateOrganizationDto, UpdateOrganizationDto, OrganizationListParams } from '../model/dtos';
-import type { BackendOrganization } from '../model/responses';
+import type { ApiOrganization, ApiOrganizationListResponse } from '../model/organizationEntity';
+import type {
+  ChangeOrganizationPasswordDto,
+  CreateOrganizationDto,
+  OrganizationListParams,
+  UpdateOrganizationDto,
+  UpdateOrganizationEmailDto,
+  UpdateOrganizationSecurityDto,
+} from '../model/dtos';
 
-type ApiListResponse<T> = {
-  data: T[];
-};
+const toBackendOrgUpdate = (body: UpdateOrganizationDto) => ({
+  name: body.title,
+  slogan: body.slogan,
+  description: body.description,
+  phone: body.phone,
+  category: body.category,
+  city: body.location,
+  avatar: body.avatarUrl,
+});
 
-type ApiOrganization = BackendOrganization;
-
-const toBackendOrgUpdate = (body: UpdateOrganizationDto) => {
-  return {
-    name: body.title,
-    description: body.description,
-    category: body.category,
-    city: body.location,
-    avatar: body.avatarUrl,
-  };
-};
-
-const toBackendOrgCreate = (body: CreateOrganizationDto) => {
-  return {
-    name: body.title,
-    description: body.description,
-    category: body.category,
-    city: body.location,
-  };
-};
-
-const mapApiOrganization = (raw: ApiOrganization): Organization => {
-  return {
-    id: String(raw.id),
-    title: raw.name ?? '',
-    href: raw.href ?? `/organizations/${String(raw.id)}`,
-    avatarUrl: raw.avatar ?? undefined,
-    coverUrl: raw.coverUrl ?? undefined,
-    description: raw.description ?? undefined,
-    location: raw.city ?? undefined,
-    website: raw.website ?? undefined,
-    category: raw.category ?? 'Other',
-    foundedAt: raw.foundedAt ?? '',
-    membersCount: raw.membersCount ?? 0,
-    eventsCount: raw.eventsCount ?? 0,
-    followers: raw.followers ?? 0,
-    verified: raw.verified ?? false,
-  };
-};
+const toBackendOrgCreate = (body: CreateOrganizationDto) => ({
+  name: body.title,
+  description: body.description,
+  category: body.category,
+  city: body.location,
+});
 
 class OrganizationApi extends BasicClientApi {
   /* ── READ ─────────────────────────────────────────────── */
 
-  async getAll(params?: OrganizationListParams): Promise<OrganizationList> {
-    const response = await this.http.get<ApiListResponse<ApiOrganization>>(this.basePath, { params });
-
-    let results = response.data.data.map(mapApiOrganization);
-
-    if (params?.search) {
-      const query = params.search.toLowerCase();
-      results = results.filter(
-        (org) =>
-          org.title.toLowerCase().includes(query) ||
-          org.description?.toLowerCase().includes(query),
-      );
-    }
-
-    if (params?.category) {
-      results = results.filter((org) => org.category === params.category);
-    }
-
-    if (params?.verified !== undefined) {
-      results = results.filter((org) => org.verified === params.verified);
-    }
-
-    return results;
+  async getAll(params?: OrganizationListParams): Promise<ApiOrganizationListResponse> {
+    const paginatedParams: OrganizationListParams = {
+      page: params?.page ?? 1,
+      limit: params?.limit ?? 20,
+      ...params,
+    };
+    return (await this.http.get<ApiOrganizationListResponse>(this.basePath, { params: paginatedParams })).data;
   }
 
-  async getOne(id: string): Promise<Organization> {
-    const response = await this.http.get<BackendOrganization>(`${this.basePath}/${id}`);
-    return mapApiOrganization(response.data);
+  async getOne(id: string): Promise<ApiOrganization> {
+    return (await this.http.get<ApiOrganization>(`${this.basePath}/${id}`)).data;
   }
 
   /* ── WRITE ────────────────────────────────────────────── */
 
-  async create(body: CreateOrganizationDto): Promise<Organization> {
-    const response = await this.http.post<ApiOrganization>(this.basePath, toBackendOrgCreate(body));
-    return mapApiOrganization(response.data);
+  async create(body: CreateOrganizationDto): Promise<ApiOrganization> {
+    return (await this.http.post<ApiOrganization>(this.basePath, toBackendOrgCreate(body))).data;
   }
 
-  async update(id: string, body: UpdateOrganizationDto): Promise<Organization> {
-    const response = await this.http.patch<ApiOrganization>(`${this.basePath}/${id}`, toBackendOrgUpdate(body));
-    return mapApiOrganization(response.data);
+  async update(id: string, body: UpdateOrganizationDto): Promise<ApiOrganization> {
+    return (await this.http.patch<ApiOrganization>(`${this.basePath}/${id}`, toBackendOrgUpdate(body))).data;
   }
 
-  async patch(id: string, body: Partial<UpdateOrganizationDto>): Promise<Organization> {
-    const response = await this.http.patch<ApiOrganization>(`${this.basePath}/${id}`, toBackendOrgUpdate(body as UpdateOrganizationDto));
-    return mapApiOrganization(response.data);
+  async patch(id: string, body: Partial<UpdateOrganizationDto>): Promise<ApiOrganization> {
+    return (await this.http.patch<ApiOrganization>(`${this.basePath}/${id}`, toBackendOrgUpdate(body as UpdateOrganizationDto))).data;
   }
 
   /* ── DELETE ───────────────────────────────────────────── */
@@ -129,10 +88,35 @@ class OrganizationApi extends BasicClientApi {
     }
   }
 
-  async getMe(): Promise<Organization> {
-    const response = await this.http.get<ApiOrganization>(`${this.basePath}/me`);
-    return mapApiOrganization(response.data);
+  async getFollowStatus(id: string): Promise<{ followed: boolean }> {
+    return (await this.http.get<{ followed: boolean }>(`${this.basePath}/${id}/following`)).data;
+  }
+
+  async getMe(): Promise<ApiOrganization> {
+    return (await this.http.get<ApiOrganization>('/auth/organizations/me')).data;
+  }
+
+  async updateMyProfile(body: UpdateOrganizationDto): Promise<ApiOrganization> {
+    return (await this.http.post<ApiOrganization>('/auth/organizations/settings/profile', toBackendOrgUpdate(body))).data;
+  }
+
+  async updateMyEmail(body: UpdateOrganizationEmailDto): Promise<ApiOrganization> {
+    return (await this.http.post<ApiOrganization>('/auth/organizations/settings/email', body)).data;
+  }
+
+  async changeMyPassword(body: ChangeOrganizationPasswordDto): Promise<{ message: string }> {
+    return (await this.http.post<{ message: string }>('/auth/organizations/settings/password', {
+      current_password: body.currentPassword,
+      new_password: body.newPassword,
+    })).data;
+  }
+
+  async updateMySecurity(body: UpdateOrganizationSecurityDto): Promise<ApiOrganization> {
+    return (await this.http.post<ApiOrganization>('/auth/organizations/settings/security', {
+      two_factor_enabled: body.twoFactorEnabled,
+    })).data;
   }
 }
 
 export const organizationsApi = new OrganizationApi('/organizations');
+

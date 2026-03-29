@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm'
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn } from 'typeorm'
 import { User } from './user.entity'
 import { File } from '../../files/entities/file.entity'
 import { Event } from '../../events/entities/event.entity'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 export enum TicketStatus {
   DRAFT = 'DRAFT',
@@ -11,9 +12,7 @@ export enum TicketStatus {
 }
 
 @Entity('tickets')
-export class Ticket {
-  @PrimaryGeneratedColumn()
-  id: number
+export class Ticket extends UuidEntity {
 
   @Column({ nullable: true })
   image: string
@@ -36,20 +35,33 @@ export class Ticket {
   @Column('decimal', { precision: 10, scale: 2 })
   price: number
 
+  @Column({ default: false })
+  quantity_limited: boolean
+
+  @Column({ type: 'int', nullable: true })
+  quantity_total: number | null
+
+  @Column({ type: 'int', default: 0 })
+  quantity_sold: number
+
   @Column({ nullable: true, type: 'text' })
   private_info: string
 
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date
+
   // relations
 
-  @Column()
-  user_id: number
+  @Column({ type: 'uuid', nullable: true })
+  user_id: string | null
 
   @ManyToOne(
     () => User,
     (user) => user.tickets,
+    { nullable: true },
   )
   @JoinColumn({ name: 'user_id' })
-  user: User
+  user: User | null
 
   @OneToMany(
     () => File,
@@ -57,8 +69,8 @@ export class Ticket {
   )
   private_files: File[]
 
-  @Column({ nullable: true })
-  event_id: number
+  @Column({ type: 'uuid', nullable: true })
+  event_id: string | null
 
   @ManyToOne(
     () => Event,

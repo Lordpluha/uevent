@@ -1,12 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm'
+import { Entity, Column, OneToMany, CreateDateColumn, ManyToMany, JoinTable } from 'typeorm'
 import { OrganizationSession } from './organization-session.entity'
 import { OrganizationOtp } from './organization-otp.entity'
 import { Event } from '../../events/entities/event.entity'
+import { User } from '../../users/entities/user.entity'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('organizations')
-export class Organization {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+export class Organization extends UuidEntity {
 
   @Column()
   name: string
@@ -20,6 +20,9 @@ export class Organization {
 
   @Column({ nullable: true })
   avatar: string
+
+  @Column({ name: 'cover_url', nullable: true })
+  coverUrl: string
 
   @Column({ nullable: true })
   phone: string
@@ -37,11 +40,17 @@ export class Organization {
   @Column({ default: false })
   verified: boolean
 
+  @Column({ default: false })
+  two_factor_enabled: boolean
+
   @Column('text', { array: true, nullable: true })
   tags: string[]
 
   @Column({ nullable: true })
   city: string
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date
 
   // relations
 
@@ -62,4 +71,15 @@ export class Organization {
     (event) => event.organization,
   )
   events: Event[]
+
+  @ManyToMany(
+    () => User,
+    (user) => user.followed_organizations,
+  )
+  @JoinTable({
+    name: 'organization_followers',
+    joinColumn: { name: 'organization_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
+  })
+  followers: User[]
 }

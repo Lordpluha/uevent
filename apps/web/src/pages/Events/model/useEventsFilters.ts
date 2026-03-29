@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import {
   parseAsArrayOf,
   parseAsIsoDate,
@@ -24,15 +24,15 @@ export const FORMAT_OPTIONS: { label: string; value: Format }[] = [
 
 
 export function useAllTags() {
-  const { data } = useEvents();
-  const events = Array.isArray(data) ? data : [];
+  const { data: result } = useEvents();
+  const events = result?.data ?? [];
   return [...new Set(events.flatMap((e) => e.tags))].sort();
 }
 
 
 export function useAllCities() {
-  const { data } = useEvents();
-  const events = Array.isArray(data) ? data : [];
+  const { data: result } = useEvents();
+  const events = result?.data ?? [];
   return [
     ...new Set(
       events.flatMap((e) => [e.locationFrom, e.locationTo].filter(Boolean) as string[]),
@@ -53,11 +53,7 @@ export function useEventsFilters() {
   );
   const [dateFrom, setDateFrom] = useQueryState('dateFrom', parseAsIsoDate);
   const [dateTo, setDateTo] = useQueryState('dateTo', parseAsIsoDate);
-  const [locFrom, setLocFrom] = useQueryState('locFrom', parseAsString.withDefault(''));
-  const [locTo, setLocTo] = useQueryState('locTo', parseAsString.withDefault(''));
-
-  /* ── Local state ────────────────────────────────────────────────── */
-  const [bookmarked, setBookmarked] = useState<Set<string>>(new Set());
+  const [location, setLocation] = useQueryState('location', parseAsString.withDefault(''));
 
   /* ── Derived: DateRange for <Calendar> ─────────────────────────── */
   const dateRange: DateRange | undefined =
@@ -77,26 +73,23 @@ export function useEventsFilters() {
     ...(selectedTags.length > 0 ? { tags: selectedTags } : {}),
     ...(dateFrom ? { date_from: dateFrom.toISOString() } : {}),
     ...(dateTo ? { date_to: dateTo.toISOString() } : {}),
-    ...(locFrom ? { location: locFrom } : {}),
+    ...(location ? { location } : {}),
   };
 
   /* ── Desktop combobox anchors ───────────────────────────────────── */
   const tagsAnchor = useComboboxAnchor();
-  const locFromAnchor = useRef<HTMLDivElement>(null);
-  const locToAnchor = useRef<HTMLDivElement>(null);
+  const locationAnchor = useRef<HTMLDivElement>(null);
 
   /* ── Mobile sheet combobox anchors ─────────────────────────────── */
   const sheetTagsAnchor = useComboboxAnchor();
-  const sheetLocFromAnchor = useRef<HTMLDivElement>(null);
-  const sheetLocToAnchor = useRef<HTMLDivElement>(null);
+  const sheetLocationAnchor = useRef<HTMLDivElement>(null);
 
   /* ── Derived: active filter badge count ─────────────────────────── */
   const activeFilterCount = [
     format !== 'all',
     selectedTags.length > 0,
     !!dateRange?.from,
-    locFrom !== '',
-    locTo !== '',
+    location !== '',
   ].filter(Boolean).length;
 
   const clearAllFilters = () => {
@@ -104,16 +97,8 @@ export function useEventsFilters() {
     setSelectedTags([]);
     setDateFrom(null);
     setDateTo(null);
-    setLocFrom('');
-    setLocTo('');
+    setLocation('');
   };
-
-  const toggleBookmark = (id: string) =>
-    setBookmarked((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
 
   return {
     /* URL state */
@@ -121,17 +106,13 @@ export function useEventsFilters() {
     format, setFormat,
     selectedTags, setSelectedTags,
     dateRange, setDateRange,
-    locFrom, setLocFrom,
-    locTo, setLocTo,
-    /* local state */
-    bookmarked,
+    location, setLocation,
     /* derived */
     apiParams,
     activeFilterCount,
     clearAllFilters,
-    toggleBookmark,
     /* anchors */
-    tagsAnchor, locFromAnchor, locToAnchor,
-    sheetTagsAnchor, sheetLocFromAnchor, sheetLocToAnchor,
+    tagsAnchor, locationAnchor,
+    sheetTagsAnchor, sheetLocationAnchor,
   };
 }

@@ -10,11 +10,13 @@
       "light": "Light",
       "darkTheme": "Dark theme",
       "lightTheme": "Light theme",
-      "searchEvents": "Search events",
+      "searchEvents": "Search",
+      "searchSubtitle": "events · orgs",
       "startGroup": "Start a group",
       "login": "Log in",
       "logout": "Log out",
-      "myAccount": "My account"
+      "myAccount": "My account",
+      "profileSettings": "Profile settings"
     },
     "search": {
       "placeholder": "Search events, organizations…",
@@ -48,7 +50,7 @@
       "orDivider": "or"
     },
     "orgLogin": {
-      "title": "Organization login",
+      "title": "Log in",
       "subtitle": "Sign in to manage your organization",
       "email": "Work email",
       "emailPlaceholder": "org@example.com",
@@ -60,7 +62,7 @@
       "orDivider": "or"
     },
     "orgRegister": {
-      "title": "Register organization",
+      "title": "Sign up",
       "subtitle": "Create an organizer account on uevent",
       "orgName": "Organization name",
       "orgNamePlaceholder": "My Awesome Org",
@@ -112,6 +114,18 @@
     },
     "categories": {
       "title": "Explore by category"
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "steps": [
+        { "title": "Discover", "desc": "Browse thousands of events — from local meetups to global online conferences." },
+        { "title": "Connect", "desc": "Follow organizers and communities built around things you love." },
+        { "title": "Attend", "desc": "Get your ticket in seconds and enjoy the experience live or online." }
+      ]
+    },
+    "featuredOrgs": {
+      "title": "Top organizers",
+      "browseAll": "See all organizations"
     },
     "hostCta": {
       "title": "Ready to host your own event?",

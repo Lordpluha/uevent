@@ -1,7 +1,7 @@
 export type JwtSubjectType = 'user' | 'organization'
 
 export interface JwtPayload {
-  sub: number | string
+  sub: string
   type: JwtSubjectType
-  session_id: number | string
+  session_id: string
 }

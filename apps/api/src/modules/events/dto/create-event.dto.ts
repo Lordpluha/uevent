@@ -5,12 +5,14 @@ export const CreateEventDtoSchema = z.object({
   description: z.string().optional(),
   gallery: z.array(z.string()).optional(),
   time_zone: z.string(),
-  datetime_start: z.date(),
-  datetime_end: z.date(),
+  datetime_start: z.coerce.date(),
+  datetime_end: z.coerce.date(),
   seats: z.number().optional(),
   location: z.string().optional(),
-  organization_id: z.number().optional(),
-  tags: z.array(z.uuidv7()).optional(),
+  location_map_url: z.url().optional(),
+  online_link: z.url().optional(),
+  organization_id: z.string().uuid().optional(),
+  tags: z.array(z.string().uuid()).optional(),
 })
 
 export type CreateEventDto = z.infer<typeof CreateEventDtoSchema>

@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BadgeCheck,
   CalendarDays,
@@ -8,8 +9,9 @@ import {
   MapPin,
   Users,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { useOrg } from '@entities/Organization';
+import { organizationsApi, useOrg } from '@entities/Organization';
 import { useEvents } from '@entities/Event';
 import { EventCard } from '@entities/Event';
 import {
@@ -17,15 +19,45 @@ import {
   AvatarFallback,
   AvatarImage,
   Badge,
+  Button,
   Separator,
+  ShareButton,
 } from '@shared/components';
+import { useAuth } from '@shared/lib/auth-context';
+import { useMyOrg } from '@entities/Organization';
+import { AuthModal } from '@features/AuthModal';
 
 export function OrgProfilePage() {
+  const { isAuthenticated, accountType } = useAuth();
+  const queryClient = useQueryClient();
+  const { data: myOrg } = useMyOrg();
   const { id } = useParams<{ id: string }>();
   const { data: org, isLoading } = useOrg(id ?? '');
-  const { data: orgEvents = [] } = useEvents(
-    org ? { organization_id: Number(org.id) } : undefined,
+  const { data: orgEventsResult } = useEvents(
+    org ? { organization_id: org.id } : undefined,
   );
+  const orgEvents = orgEventsResult?.data ?? [];
+  const isUserViewer = isAuthenticated && accountType === 'user';
+  const orgId = org?.id ?? '';
+
+  const { data: followStatus } = useQuery({
+    queryKey: ['organization-follow', orgId],
+    queryFn: () => organizationsApi.getFollowStatus(orgId),
+    enabled: isUserViewer && !!orgId,
+  });
+
+  const followMutation = useMutation({
+    mutationFn: (nextFollow: boolean) => organizationsApi.setFollow(orgId, nextFollow),
+    onSuccess: async (_data, nextFollow) => {
+      await queryClient.invalidateQueries({ queryKey: ['organization-follow', orgId] });
+      await queryClient.invalidateQueries({ queryKey: ['organizations', orgId] });
+      toast.success(nextFollow ? 'Subscribed to organization updates' : 'Unsubscribed from organization updates');
+    },
+    onError: () => {
+      toast.error('Failed to update subscription');
+    },
+  });
+
   if (isLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
@@ -47,6 +79,7 @@ export function OrgProfilePage() {
   }
 
   const displayEvents = orgEvents.length > 0 ? orgEvents : [];
+  const isOwner = isAuthenticated && accountType === 'organization' && myOrg?.id === org.id;
 
   return (
     <main className="w-full pb-16">
@@ -91,6 +124,7 @@ export function OrgProfilePage() {
                 {org.verified && (
                   <BadgeCheck className="h-6 w-6 shrink-0 text-primary" />
                 )}
+                <ShareButton title={org.title} />
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <Badge variant="secondary">{org.category}</Badge>
@@ -122,6 +156,39 @@ export function OrgProfilePage() {
             Founded {org.foundedAt}
           </span>
         </div>
+
+        {isOwner && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link to={`/events/create?organizationId=${org.id}`}>
+              <Button size="sm">Create event</Button>
+            </Link>
+            <Link to={`/profile/organization/${org.id}`}>
+              <Button size="sm" variant="outline">Organization dashboard</Button>
+            </Link>
+          </div>
+        )}
+
+        {!isOwner && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {isUserViewer ? (
+              <Button
+                size="sm"
+                variant={followStatus?.followed ? 'outline' : 'default'}
+                disabled={followMutation.isPending}
+                onClick={() => followMutation.mutate(!(followStatus?.followed ?? false))}
+              >
+                {followStatus?.followed ? 'Unsubscribe' : 'Subscribe'}
+              </Button>
+            ) : (
+              <AuthModal
+                defaultTab="login"
+                variant="pill"
+                triggerLabel="Subscribe"
+                triggerClassName="bg-primary text-primary-foreground hover:bg-primary/90"
+              />
+            )}
+          </div>
+        )}
 
         {/* ── Description ──────────────────────────────────────── */}
         {org.description && (
@@ -179,13 +246,18 @@ export function OrgProfilePage() {
           ) : (
             <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
               {displayEvents.slice(0, 6).map((event) => (
-                <Link
-                  key={event.id}
-                  to={`/events/${event.id}`}
-                  className="shrink-0"
-                >
-                  <EventCard {...event} size="compact" />
-                </Link>
+                <div key={event.id} className="shrink-0">
+                  <Link to={`/events/${event.id}`}>
+                    <EventCard {...event} size="compact" />
+                  </Link>
+                  {isOwner && (
+                    <div className="mt-2 px-1">
+                      <Link to={`/events/${event.id}/tickets/create`} className="text-xs text-primary hover:underline">
+                        + Add ticket
+                      </Link>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           )}

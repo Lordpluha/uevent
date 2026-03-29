@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common'
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -8,6 +8,12 @@ import { LoginDto } from './dto/login.dto'
 import { JwtPayload } from './types/jwt-payload.interface'
 import { hashPassword, verifyPassword } from '../../common/password.util'
 import { CreateOrganizationDto } from '../organizations/dto/create-organization.dto'
+import {
+  ChangeOrgPasswordDto,
+  UpdateOrgEmailDto,
+  UpdateOrgProfileDto,
+  UpdateOrgSecurityDto,
+} from './dto/org-settings.dto'
 
 const ACCESS_EXPIRES = '15m'
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -87,6 +93,54 @@ export class OrgsAuthService {
     return tokens
   }
 
+  async getMe(id: string) {
+    const org = await this.orgsRepo.findOneBy({ id })
+    if (!org) throw new NotFoundException('Organization not found')
+    return this.toSafeOrganization(org)
+  }
+
+  async updateProfile(id: string, dto: UpdateOrgProfileDto) {
+    const org = await this.orgsRepo.findOneBy({ id })
+    if (!org) throw new NotFoundException('Organization not found')
+
+    Object.assign(org, dto)
+    const updated = await this.orgsRepo.save(org)
+    return this.toSafeOrganization(updated)
+  }
+
+  async updateEmail(id: string, dto: UpdateOrgEmailDto) {
+    const org = await this.orgsRepo.findOneBy({ id })
+    if (!org) throw new NotFoundException('Organization not found')
+
+    const exists = await this.orgsRepo.findOneBy({ email: dto.email })
+    if (exists && exists.id !== id) throw new ConflictException('Email already in use')
+
+    org.email = dto.email
+    const updated = await this.orgsRepo.save(org)
+    return this.toSafeOrganization(updated)
+  }
+
+  async changePassword(id: string, dto: ChangeOrgPasswordDto) {
+    const org = await this.orgsRepo.findOneBy({ id })
+    if (!org) throw new NotFoundException('Organization not found')
+
+    const valid = await verifyPassword(org.password, dto.current_password)
+    if (!valid) throw new UnauthorizedException('Current password is invalid')
+
+    org.password = await hashPassword(dto.new_password)
+    await this.orgsRepo.save(org)
+    return { message: 'Password updated' }
+  }
+
+  async updateSecurity(id: string, dto: UpdateOrgSecurityDto) {
+    const org = await this.orgsRepo.findOneBy({ id })
+    if (!org) throw new NotFoundException('Organization not found')
+
+    org.two_factor_enabled = dto.two_factor_enabled
+    const updated = await this.orgsRepo.save(org)
+    return this.toSafeOrganization(updated)
+  }
+
   async logout(sessionId: string) {
     await this.sessionsRepo.delete(sessionId)
   }
@@ -97,5 +151,10 @@ export class OrgsAuthService {
       this.jwtService.signAsync(payload, { expiresIn: '7d' }),
     ])
     return { access_token, refresh_token }
+  }
+
+  private toSafeOrganization(org: Organization) {
+    const { password, ...safe } = org
+    return safe
   }
 }

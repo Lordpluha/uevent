@@ -11,6 +11,7 @@ import {
   ComboboxItem,
   ComboboxList,
   ComboboxTrigger,
+  Input,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -35,16 +36,13 @@ interface Props {
   onTagsChange: (v: string[]) => void;
   dateRange: DateRange | undefined;
   onDateRangeChange: (v: DateRange | undefined) => void;
-  locFrom: string;
-  onLocFromChange: (v: string) => void;
-  locTo: string;
-  onLocToChange: (v: string) => void;
+  location: string;
+  onLocationChange: (v: string) => void;
   activeFilterCount: number;
   onClearAll: () => void;
   resultCount: number;
   tagsAnchor: RefObject<HTMLDivElement | null>;
-  locFromAnchor: RefObject<HTMLDivElement | null>;
-  locToAnchor: RefObject<HTMLDivElement | null>;
+  locationAnchor: RefObject<HTMLDivElement | null>;
   tags: string[];
   cities: string[];
 }
@@ -54,11 +52,10 @@ export function EventsMobileFilters({
   format, onFormatChange,
   selectedTags, onTagsChange,
   dateRange, onDateRangeChange,
-  locFrom, onLocFromChange,
-  locTo, onLocToChange,
+  location, onLocationChange,
   activeFilterCount, onClearAll,
   resultCount,
-  tagsAnchor, locFromAnchor, locToAnchor,
+  tagsAnchor, locationAnchor,
   tags,
   cities,
 }: Props) {
@@ -67,12 +64,12 @@ export function EventsMobileFilters({
       {/* Search */}
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
+        <Input
           type="text"
           placeholder="Search events…"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          className="h-10 w-full rounded-full border border-border bg-card pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="h-10 w-full pl-9"
         />
       </div>
 
@@ -113,19 +110,19 @@ export function EventsMobileFilters({
             {/* Format */}
             <div>
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Format</p>
-              <div className="flex gap-2">
-                {FORMAT_OPTIONS.map((f) => (
+              <div className="flex gap-1.5">
+                {FORMAT_OPTIONS.map((option) => (
                   <button
-                    key={f.value}
+                    key={option.value}
                     type="button"
-                    onClick={() => onFormatChange(f.value)}
-                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                      format === f.value
+                    onClick={() => onFormatChange(option.value)}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                      format === option.value
                         ? 'bg-primary text-primary-foreground'
                         : 'border border-border text-muted-foreground hover:border-primary/60 hover:text-foreground'
                     }`}
                   >
-                    {f.label}
+                    {option.label}
                   </button>
                 ))}
               </div>
@@ -136,32 +133,34 @@ export function EventsMobileFilters({
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Tags</p>
               <Combobox value={selectedTags} onValueChange={onTagsChange} multiple>
                 <div ref={tagsAnchor} className="w-full">
-                  <ComboboxTrigger className="flex min-h-9 w-full cursor-pointer flex-wrap items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-                    {selectedTags.length === 0 ? (
-                      <span className="flex items-center gap-2 text-muted-foreground">
-                        <Tag className="h-3.5 w-3.5 shrink-0" />
-                        Filter by tags…
-                      </span>
-                    ) : (
-                      <>
-                        <Tag className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        {selectedTags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="flex items-center gap-1 rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary"
-                          >
-                            {tag}
-                            <X
-                              className="h-3 w-3 cursor-pointer opacity-60 hover:opacity-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onTagsChange(selectedTags.filter((t) => t !== tag));
-                              }}
-                            />
-                          </span>
-                        ))}
-                      </>
-                    )}
+                  <ComboboxTrigger className="flex min-h-9 w-full cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                    <span className="flex flex-1 flex-wrap items-center gap-1.5">
+                      {selectedTags.length === 0 ? (
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <Tag className="h-3.5 w-3.5 shrink-0" />
+                          Filter by tags…
+                        </span>
+                      ) : (
+                        <>
+                          <Tag className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          {selectedTags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="flex items-center gap-1 rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary"
+                            >
+                              {tag}
+                              <X
+                                className="h-3 w-3 cursor-pointer opacity-60 hover:opacity-100"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onTagsChange(selectedTags.filter((t) => t !== tag));
+                                }}
+                              />
+                            </span>
+                          ))}
+                        </>
+                      )}
+                    </span>
                   </ComboboxTrigger>
                 </div>
                 <ComboboxContent anchor={tagsAnchor} align="start">
@@ -220,58 +219,30 @@ export function EventsMobileFilters({
             {/* Location */}
             <div>
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Location</p>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 rounded-md border border-input bg-background px-2 text-sm">
-                  <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <Combobox
-                    value={locFrom || null}
-                    onValueChange={(v) => onLocFromChange(v ?? '')}
-                    onInputValueChange={onLocFromChange}
-                  >
-                    <div ref={locFromAnchor} className="flex-1">
-                      <ComboboxInput
-                        placeholder="From city…"
-                        showTrigger={false}
-                        showClear={locFrom !== ''}
-                        className="h-9 w-full border-none bg-transparent shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0"
-                      />
-                    </div>
-                    <ComboboxContent anchor={locFromAnchor} align="start">
-                      <ComboboxList>
-                        {cities.map((city) => (
-                          <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
-                        ))}
-                        <ComboboxEmpty>No cities found</ComboboxEmpty>
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
-                </div>
-
-                <div className="flex items-center gap-2 rounded-md border border-input bg-background px-2 text-sm">
-                  <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <Combobox
-                    value={locTo || null}
-                    onValueChange={(v) => onLocToChange(v ?? '')}
-                    onInputValueChange={onLocToChange}
-                  >
-                    <div ref={locToAnchor} className="flex-1">
-                      <ComboboxInput
-                        placeholder="To city…"
-                        showTrigger={false}
-                        showClear={locTo !== ''}
-                        className="h-9 w-full border-none bg-transparent shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0"
-                      />
-                    </div>
-                    <ComboboxContent anchor={locToAnchor} align="start">
-                      <ComboboxList>
-                        {cities.map((city) => (
-                          <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
-                        ))}
-                        <ComboboxEmpty>No cities found</ComboboxEmpty>
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
-                </div>
+              <div className="flex items-center gap-2 rounded-md border border-input bg-background px-2 text-sm">
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <Combobox
+                  value={location || null}
+                  onValueChange={(v) => onLocationChange(v ?? '')}
+                  onInputValueChange={onLocationChange}
+                >
+                  <div ref={locationAnchor} className="flex-1">
+                    <ComboboxInput
+                      placeholder="Location…"
+                      showTrigger={false}
+                      showClear={location !== ''}
+                      className="h-9 w-full border-none bg-transparent shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0"
+                    />
+                  </div>
+                  <ComboboxContent anchor={locationAnchor} align="start">
+                    <ComboboxList>
+                      {cities.map((city) => (
+                        <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
+                      ))}
+                      <ComboboxEmpty>No locations found</ComboboxEmpty>
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
               </div>
             </div>
 

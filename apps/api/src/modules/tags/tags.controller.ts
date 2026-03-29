@@ -1,16 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query } from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common'
 import { TagsService } from './tags.service'
-import { CreateTagDto, CreateTagDtoSchema, UpdateTagDto, UpdateTagDtoSchema } from './dto'
+import { CreateTagDto, CreateTagDtoSchema, UpdateTagDto, UpdateTagDtoSchema, FindOrCreateTagsDto, FindOrCreateTagsDtoSchema } from './dto'
 import { GetTagsParams, GetTagsParamsSchema } from './params'
 import { ZodValidationPipe } from 'nestjs-zod'
+import { JwtGuard } from '../auth/guards/jwt.guard'
 
 @Controller('tags')
 export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 
   @Post()
+  @UseGuards(JwtGuard)
   create(@Body(new ZodValidationPipe(CreateTagDtoSchema)) dto: CreateTagDto) {
     return this.tagsService.create(dto)
+  }
+
+  @Post('find-or-create')
+  @UseGuards(JwtGuard)
+  findOrCreate(@Body(new ZodValidationPipe(FindOrCreateTagsDtoSchema)) dto: FindOrCreateTagsDto) {
+    return this.tagsService.findOrCreateByNames(dto.names)
   }
 
   @Get()

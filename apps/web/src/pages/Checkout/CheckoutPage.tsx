@@ -24,6 +24,22 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
   const [pendingPayment, setPendingPayment] = useState<any>(null);
   const [email, setEmail] = useState('');
 
+  const buildSuccessUrl = (paymentIntentId?: string) => {
+    const eventId = pendingPayment?.eventId;
+    if (!eventId) return `/payment-success?paymentIntentId=${paymentIntentId ?? clientSecret}`;
+
+    const params = new URLSearchParams({
+      ticketId: pendingPayment?.ticketId ?? '',
+      ticketType: pendingPayment?.ticketName ?? 'standard',
+      qty: String(pendingPayment?.quantity ?? 1),
+      total: String(Number(pendingPayment?.price ?? 0).toFixed(2)),
+      currency: '$',
+      order: pendingPayment?.paymentIntentId ?? paymentIntentId ?? clientSecret,
+    });
+
+    return `/checkout/${eventId}/success?${params.toString()}`;
+  };
+
   // load pending payment details
   useEffect(() => {
     const saved = localStorage.getItem('pendingPayment');
@@ -49,7 +65,7 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
       const result = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/payment-success?paymentIntentId=${clientSecret}`,
+          return_url: `${window.location.origin}${buildSuccessUrl(clientSecret)}`,
           receipt_email: email,
         },
         redirect: 'if_required',
@@ -60,10 +76,11 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
       return result;
     },
     onSuccess: async (result: any) => {
-      if(result?.paymentIntent?.status === 'succeeded' && pendingPayment?.email) {
+      const customerEmail = pendingPayment?.email || email;
+      if(result?.paymentIntent?.status === 'succeeded' && customerEmail) {
         try {
           await api.post('/payments/send-confirmation', {
-            userEmail: pendingPayment.email,
+            userEmail: customerEmail,
             userName: pendingPayment.fullName || 'Valued Customer',
             eventTitle: pendingPayment.eventTitle,
             ticketName: pendingPayment.ticketName,
@@ -81,11 +98,10 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
 
       if(result?.paymentIntent?.status === 'succeeded') {
         toast.success('Payment successful!');
-        localStorage.removeItem('pendingPayment');
-        navigate(`/payment-success?paymentIntentId=${result.paymentIntent.id}`);
+        navigate(buildSuccessUrl(result.paymentIntent.id));
       }else if(result?.paymentIntent?.status === 'processing') {
         toast.info('Payment is processing...');
-        navigate(`/payment-success?paymentIntentId=${result.paymentIntent.id}`);
+        navigate(buildSuccessUrl(result.paymentIntent.id));
       }
     },
     onError: (error: any) => {
@@ -93,7 +109,7 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
       setMessage(errorMessage);
       toast.error(errorMessage);
       setIsProcessing(false);
-      
+
       // redirect to payment-failed page
       setTimeout(() => {
         const reason = encodeURIComponent(errorMessage);
@@ -264,20 +280,20 @@ export function CheckoutPage() {
       }, 2000);
       return;
     }
-    
+
     setStripePromise(loadStripe(publishableKey));
   }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('pendingPayment');
-    if(saved) 
+    if(saved)
       {
       try {
         setPendingPayment(JSON.parse(saved));
       } catch (error) {
         console.error('Failed to parse pending payment:', error);
         toast.error('Failed to load payment details from session');
-        
+
         // redirecting home after fail
         setTimeout(() => {
           window.location.href = '/';

@@ -39,22 +39,28 @@ export class UsersService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const user = await this.userRepository.findOneBy({ id })
 
     if (!user) throw new NotFoundException(`User with id #${id} not found`)
     return user
   }
 
-  async update(id: number, dto: UpdateUserDto) {
+  async update(id: string, dto: UpdateUserDto) {
     const user = await this.findOne(id)
     if (dto.password) dto.password = await hashPassword(dto.password)
     Object.assign(user, dto)
     return await this.userRepository.save(user)
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const user = await this.findOne(id)
     await this.userRepository.remove(user)
+  }
+
+  async setAvatar(id: string, avatarUrl: string) {
+    const user = await this.findOne(id)
+    user.avatar = avatarUrl
+    return await this.userRepository.save(user)
   }
 }

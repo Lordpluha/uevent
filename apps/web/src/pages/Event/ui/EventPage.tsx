@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { Bookmark, CalendarDays, CalendarPlus, ChevronLeft, Clock, Images, MapPin, Share2, Star, Users, Video } from 'lucide-react';
+import { CalendarDays, CalendarPlus, ChevronLeft, Clock, ExternalLink, Images, MapPin, Star, Users, Video } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { EventCard, EventLightbox, useEvent, useEvents } from '@entities/Event';
 import { TicketCard } from '@entities/Ticket';
-import { Avatar, AvatarFallback, AvatarImage, Badge, Button, Separator } from '@shared/components';
-import { EventLocationMap, PromoCodeSection } from '@shared/components';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Button, RichTextEditor, Separator } from '@shared/components';
+import { EventLocationMap, PromoCodeSection, ShareButton } from '@shared/components';
 import { useAuth } from '@shared/lib/auth-context';
 import { authApi } from '@shared/api/auth.api';
 
@@ -14,17 +14,17 @@ export function EventPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: event, isLoading, isError } = useEvent(id ?? '');
-  const { data: allEvents = [] } = useEvents({ page: 1, limit: 100 });
+  const { data: allEventsResult } = useEvents({ page: 1, limit: 100 });
+  const allEvents = allEventsResult?.data ?? [];
   const { isAuthenticated, accountType } = useAuth();
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [appliedPromoCode, setAppliedPromoCode] = useState<string | undefined>();
   const [appliedPromoDiscount, setAppliedPromoDiscount] = useState<number | undefined>();
 
   useEffect(() => {
-    setIsBookmarked(event?.isBookmarked ?? false);
-  }, [event?.isBookmarked]);
+    window.scrollTo(0, 0);
+  }, [id]);
 
   const calendarMutation = useMutation({
     mutationFn: () => {
@@ -35,7 +35,24 @@ export function EventPage() {
       toast.success('Added to Google Calendar!');
       if (data.htmlLink) window.open(data.htmlLink, '_blank');
     },
-    onError: () => toast.error('Failed to add to Google Calendar. Make sure your Google account is linked.'),
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? '';
+      const lower = msg.toLowerCase();
+
+      if (lower.includes('google calendar api is disabled')) {
+        toast.error('Google Calendar API is disabled in Google Cloud. Enable calendar-json.googleapis.com and try again.');
+        return;
+      }
+
+      if (lower.includes('google calendar access denied') || lower.includes('google account not linked')) {
+        toast.error('Google Calendar access denied. Re-link your Google account.', {
+          action: { label: 'Link Google', onClick: () => window.location.assign('/api/auth/google') },
+        });
+        return;
+      }
+
+      toast.error('Failed to add to Google Calendar. Make sure your Google account is linked.');
+    },
   });
 
   const hasGallery = Boolean(event?.gallery && event.gallery.length > 0);
@@ -82,6 +99,8 @@ export function EventPage() {
       return !organizerEvents.some((organizerEvent) => organizerEvent.id === item.id);
     })
     .slice(0, 4);
+
+  const description = event.description?.trim() ?? '';
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
@@ -146,23 +165,7 @@ export function EventPage() {
               Google Calendar
             </Button>
           )}
-          <button
-            type="button"
-            aria-label="Share"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent"
-          >
-            <Share2 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
-            onClick={() => setIsBookmarked((b) => !b)}
-            className={`flex h-9 w-9 items-center justify-center rounded-full border border-border transition-colors hover:bg-accent ${
-              isBookmarked ? 'text-primary' : 'text-muted-foreground'
-            }`}
-          >
-            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-primary' : ''}`} />
-          </button>
+          <ShareButton title={event.title} />
         </div>
       </div>
 
@@ -176,8 +179,8 @@ export function EventPage() {
             value: event.location ?? 'Online',
           },
           { icon: Users, label: 'Attendees', value: event.attendeeCount.toLocaleString() },
-        ].map(({ icon: Icon, label, value }, idx) => (
-          <div key={idx} className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card p-3">
+        ].map(({ icon: Icon, label, value }) => (
+          <div key={label} className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card p-3">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Icon className="h-3.5 w-3.5" />
               {label}
@@ -188,8 +191,8 @@ export function EventPage() {
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        {event.tags.map((tag, idx) => (
-          <Badge key={`${tag}-${idx}`} variant="secondary" className="text-xs">
+        {event.tags.map((tag) => (
+          <Badge key={tag} variant="secondary" className="text-xs">
             {tag}
           </Badge>
         ))}
@@ -216,7 +219,37 @@ export function EventPage() {
 
       <div className="mb-6">
         <h2 className="mb-3 text-base font-semibold text-foreground">About this event</h2>
-        <p className="text-sm leading-relaxed text-muted-foreground">{event.description}</p>
+        <RichTextEditor
+          defaultValue={description}
+          readOnly
+          showToolbar={false}
+          placeholder=""
+          className="border-0 bg-transparent p-0 shadow-none focus-within:border-0 focus-within:ring-0"
+        />
+
+        {event.format === 'online' && event.onlineUrl && (
+          <a
+            href={event.onlineUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+          >
+            Join meeting
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        )}
+
+        {event.format === 'offline' && event.googleMapsUrl && (
+          <a
+            href={event.googleMapsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+          >
+            Open in Google Maps
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        )}
       </div>
 
       <Separator className="mb-8" />

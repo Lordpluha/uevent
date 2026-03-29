@@ -1,10 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm'
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
 import { Recurrence } from './recurrence.entity'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('overrides')
-export class Override {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+export class Override extends UuidEntity {
 
   @Column()
   new_start: Date
@@ -18,7 +17,7 @@ export class Override {
   // relations
 
   @Column()
-  recurrence_id: number
+  recurrence_id: string
 
   @ManyToOne(
     () => Recurrence,

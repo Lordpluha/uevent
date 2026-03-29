@@ -1,10 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm'
+import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { User } from './user.entity'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('user_sessions')
-export class UserSession {
-  @PrimaryGeneratedColumn()
-  id: number
+export class UserSession extends UuidEntity {
 
   @Column()
   access: string
@@ -24,10 +23,19 @@ export class UserSession {
   @Column({ nullable: true })
   ip_address: string
 
+  @Column({ nullable: true })
+  user_agent: string
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  last_active_at: Date
+
   // relations
 
   @Column()
-  user_id: number
+  user_id: string
 
   @ManyToOne(
     () => User,

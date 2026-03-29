@@ -14,7 +14,10 @@ export const GetEventsParamsSchema = z.object({
   date_from: z.coerce.date().optional(),
   date_to: z.coerce.date().optional(),
   location: z.string().optional(),
-  organization_id: z.coerce.number().int().positive().optional(),
+  location_from: z.string().optional(),
+  location_to: z.string().optional(),
+  organization_id: z.string().uuid().optional(),
+  user_id: z.string().uuid().optional(),
 })
 
 export type GetEventsParams = z.infer<typeof GetEventsParamsSchema>

@@ -5,6 +5,9 @@ import Stripe from 'stripe'
 import { Payment, PaymentStatus } from './entities/payment.entity'
 import { EmailService } from '../notifications/email.service'
 import { v4 as uuidv4 } from 'uuid'
+import { Ticket } from '../users/entities/ticket.entity'
+import { Notification } from '../notifications/entities/notification.entity'
+import { User } from '../users/entities/user.entity'
 
 @Injectable()
 export class PaymentsService {
@@ -14,8 +17,73 @@ export class PaymentsService {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
+
+    @InjectRepository(Ticket)
+    private readonly ticketsRepository: Repository<Ticket>,
+
+    @InjectRepository(Notification)
+    private readonly notificationsRepository: Repository<Notification>,
+
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+
     private readonly emailService: EmailService,
   ) {}
+
+  private async markTicketAsSold(metadata?: Record<string, string>) {
+    const ticketId = metadata?.ticketId
+    if (!ticketId) return
+
+    const quantity = Math.max(1, Number(metadata?.quantity ?? 1))
+    const ticket = await this.ticketsRepository.findOneBy({ id: ticketId })
+    if (!ticket) {
+      this.logger.warn(`Ticket ${ticketId} not found while marking payment as sold`)
+      return
+    }
+
+    if (ticket.quantity_limited && ticket.quantity_total !== null) {
+      const remaining = Math.max(0, ticket.quantity_total - ticket.quantity_sold)
+      if (quantity > remaining) {
+        this.logger.warn(`Payment quantity ${quantity} exceeds remaining ticket stock ${remaining} for ticket ${ticketId}`)
+        ticket.quantity_sold = ticket.quantity_total
+      } else {
+        ticket.quantity_sold += quantity
+      }
+    } else {
+      ticket.quantity_sold += quantity
+    }
+
+    await this.ticketsRepository.save(ticket)
+  }
+
+  private async createOrganizationPurchaseNotification(metadata?: Record<string, string>) {
+    const ticketId = metadata?.ticketId
+    if (!ticketId) return
+
+    const quantity = Math.max(1, Number(metadata?.quantity ?? 1))
+    const ticket = await this.ticketsRepository.findOne({
+      where: { id: ticketId },
+      relations: ['event'],
+    })
+
+    const organizationId = ticket?.event?.organization_id
+    if (!organizationId) {
+      this.logger.warn(`Could not resolve organization for ticket ${ticketId}`)
+      return
+    }
+
+    const eventTitle = metadata?.eventTitle || ticket?.event?.name || 'your event'
+    const ticketName = metadata?.ticketName || ticket?.name || 'ticket'
+
+    const notification = this.notificationsRepository.create({
+      name: 'New ticket purchase',
+      content: `A customer bought ${quantity} × ${ticketName} for ${eventTitle}.`,
+      user_id: null,
+      organization_id: organizationId,
+    })
+
+    await this.notificationsRepository.save(notification)
+  }
 
   private getStripe(): Stripe {
     if(!this.stripeInstance) {
@@ -43,7 +111,7 @@ export class PaymentsService {
       return paymentIntent
     } catch(error) {
       this.logger.error(`Failed to create payment intent: ${error.message}`)
-      throw new BadRequestException('Failed to create payment intent')
+      throw new BadRequestException(`Failed to create payment intent: ${error.message}`)
     }
   }
 
@@ -58,7 +126,7 @@ export class PaymentsService {
   }
 
 
-  async handleWebhookEvent(event: Stripe.Event) {
+  handleWebhookEvent(event: Stripe.Event) {
     this.logger.log(`Received event: ${event.type}`)
 
     switch(event.type) {
@@ -101,6 +169,9 @@ export class PaymentsService {
 
       this.logger.log(`Payment ${paymentIntent.id} saved to database`)
 
+      await this.markTicketAsSold(paymentIntent.metadata)
+      await this.createOrganizationPurchaseNotification(paymentIntent.metadata)
+
       // payment confirmation email
       if(paymentIntent.metadata) {
         this.logger.log(`Sending email to: ${paymentIntent.metadata.userEmail}`)
@@ -119,6 +190,13 @@ export class PaymentsService {
 
       if(!metadata?.userEmail || !metadata?.userName) {
         this.logger.warn(`Missing required email data for payment ${paymentIntent.id}`)
+        return
+      }
+
+      // Check user preference for payment emails
+      const user = await this.usersRepository.findOne({ where: { email: metadata.userEmail } })
+      if(user && !user.payment_email_enabled) {
+        this.logger.log(`Payment email disabled for user ${metadata.userEmail} — skipping`)
         return
       }
 

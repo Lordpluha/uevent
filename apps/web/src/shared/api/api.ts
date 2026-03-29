@@ -31,8 +31,14 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config as typeof error.config & { _retry?: boolean };
+    const requestUrl = String(originalRequest?.url ?? '');
 
     if (!axios.isAxiosError(error) || error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    // Google Calendar 401 means Google OAuth/relink issue, not an app session expiration.
+    if (requestUrl.includes('/auth/google/calendar')) {
       return Promise.reject(error);
     }
 

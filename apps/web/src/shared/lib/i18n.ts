@@ -14,9 +14,12 @@ export type Dictionary = {
       darkTheme: string;
       lightTheme: string;
       searchEvents: string;
+      searchSubtitle: string;
       startGroup: string;
       login: string;
       logout: string;
+      myAccount: string;
+      profileSettings: string;
     };
     search: {
       placeholder: string;
@@ -121,6 +124,14 @@ export type Dictionary = {
     };
     categories: {
       title: string;
+    };
+    howItWorks: {
+      title: string;
+      steps: Array<{ title: string; desc: string }>;
+    };
+    featuredOrgs: {
+      title: string;
+      browseAll: string;
     };
     hostCta: {
       title: string;

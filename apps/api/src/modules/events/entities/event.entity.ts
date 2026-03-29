@@ -1,7 +1,6 @@
 import {
   Entity,
   Column,
-  PrimaryGeneratedColumn,
   ManyToMany,
   OneToMany,
   OneToOne,
@@ -13,11 +12,10 @@ import { Tag } from '../../tags/entities/tag.entity'
 import { Recurrence } from './recurrence.entity'
 import { Ticket } from '../../users/entities/ticket.entity'
 import { Organization } from '../../organizations/entities/organization.entity'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('events')
-export class Event {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+export class Event extends UuidEntity {
 
   @Column()
   name: string
@@ -43,6 +41,12 @@ export class Event {
   @Column({ nullable: true })
   location: string
 
+  @Column({ type: 'text', nullable: true })
+  location_map_url: string | null
+
+  @Column({ type: 'text', nullable: true })
+  online_link: string | null
+
   // relations
 
   @ManyToMany(() => Tag)
@@ -67,5 +71,5 @@ export class Event {
   organization: Organization
 
   @Column({ nullable: true })
-  organization_id: number
+  organization_id: string
 }

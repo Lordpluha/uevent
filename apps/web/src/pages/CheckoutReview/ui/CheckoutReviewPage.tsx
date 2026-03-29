@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { ChevronLeft, CreditCard, Minus, Plus, ShieldCheck, Ticket } from 'lucide-react';
 import { useEvent } from '@entities/Event';
+import { useMe } from '@entities/User';
 import { Badge, Button, PromoCodeSection } from '@shared/components';
+import { api } from '@shared/api';
+import { toast } from 'sonner';
 
 const VALID_PROMO_CODES: Record<string, number> = {
   UEVENT15: 15,
@@ -20,6 +23,7 @@ export function CheckoutReviewPage() {
   const promoFromQuery = (searchParams.get('promo') ?? '').toUpperCase();
 
   const { data: event, isLoading } = useEvent(eventId ?? '');
+  const { data: me } = useMe();
 
   const [appliedPromoCode, setAppliedPromoCode] = useState<string | undefined>();
   const [appliedPromoDiscount, setAppliedPromoDiscount] = useState<number | undefined>();
@@ -45,27 +49,81 @@ export function CheckoutReviewPage() {
   const total = Math.max(0, subtotal - discount);
 
   const currency = selectedTicket?.currency ?? '$';
+  const remaining = selectedTicket?.quantityLimited
+    ? Math.max(0, (selectedTicket?.quantityTotal ?? 0) - (selectedTicket?.quantitySold ?? 0))
+    : undefined;
+  const maxQuantity = selectedTicket?.quantityLimited ? Math.max(1, Math.min(remaining ?? 1, 50)) : 10;
 
-  const handleProceedToPayment = () => {
+  useEffect(() => {
+    setQuantity((q) => Math.max(1, Math.min(q, maxQuantity)));
+  }, [maxQuantity]);
+
+  const handleProceedToPayment = async () => {
     if (!eventId || !selectedTicket) return;
-
-    setIsProcessingPayment(true);
-
-    const params = new URLSearchParams({
-      ticketType: selectedTicket.ticketType,
-      qty: String(quantity),
-      total: total.toFixed(2),
-      currency,
-      order: `DEMO-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-    });
-
-    if (appliedPromoCode) {
-      params.set('promo', appliedPromoCode);
+    if (selectedTicket.quantityLimited && (remaining ?? 0) <= 0) {
+      toast.error('This ticket is sold out');
+      return;
     }
 
-    window.setTimeout(() => {
-      navigate(`/checkout/${eventId}/success?${params.toString()}`);
-    }, 700);
+    setIsProcessingPayment(true);
+    try {
+      const orderId = `ticket-${selectedTicket.id}-event-${eventId}-${Date.now()}`;
+      const amountInCents = Math.round(total * 100);
+
+      if (amountInCents <= 0) {
+        const params = new URLSearchParams({
+          ticketId: selectedTicket.id,
+          ticketType: selectedTicket.ticketType,
+          qty: String(quantity),
+          total: total.toFixed(2),
+          currency,
+          order: orderId,
+        });
+        if (appliedPromoCode) params.set('promo', appliedPromoCode);
+        navigate(`/checkout/${eventId}/success?${params.toString()}`);
+        return;
+      }
+
+      const response = await api.post<{ clientSecret: string; paymentIntentId: string }>('/payments/create-intent', {
+        amount: amountInCents,
+        currency: 'usd',
+        orderId,
+        ticketId: selectedTicket.id,
+        quantity,
+        userEmail: me?.email,
+        userName: me?.name,
+        eventTitle: event?.title,
+        ticketName: selectedTicket.ticketType,
+        eventDate: event?.date,
+        eventLocation: event?.location,
+        organizationName: event?.organizer,
+      });
+
+      localStorage.setItem('pendingPayment', JSON.stringify({
+        clientSecret: response.data.clientSecret,
+        paymentIntentId: response.data.paymentIntentId,
+        email: me?.email,
+        fullName: me?.name,
+        ticketId: selectedTicket.id,
+        ticketName: selectedTicket.ticketType,
+        price: total,
+        quantity,
+        eventId,
+        eventTitle: event?.title,
+        eventDate: event?.date,
+        eventLocation: event?.location,
+        organizationName: event?.organizer,
+      }));
+
+      navigate(`/checkout?paymentIntentId=${response.data.paymentIntentId}`);
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Failed to start payment';
+      toast.error(message);
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   if (isLoading) {
@@ -127,12 +185,15 @@ export function CheckoutReviewPage() {
                   type="button"
                   aria-label="Increase quantity"
                   className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-                  onClick={() => setQuantity((q) => Math.min(10, q + 1))}
-                  disabled={quantity >= 10}
+                  onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
+                  disabled={quantity >= maxQuantity}
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </button>
               </div>
+              {selectedTicket?.quantityLimited && (
+                <p className="mt-1 text-xs text-muted-foreground">Available: {remaining ?? 0}</p>
+              )}
             </div>
             <Badge variant="secondary">Qty: {quantity}</Badge>
           </div>

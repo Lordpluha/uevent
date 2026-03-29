@@ -5,13 +5,59 @@ import { Organization } from './entities'
 import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
 import { GetOrganizationsParams } from './params'
 import { hashPassword } from '../../common/password.util'
+import { User } from '../users/entities/user.entity'
 
 @Injectable()
 export class OrganizationsService {
   constructor(
     @InjectRepository(Organization)
     private readonly orgsRepo: Repository<Organization>,
+
+    @InjectRepository(User)
+    private readonly usersRepo: Repository<User>,
   ) {}
+
+  private async enrichOrganization(org: Organization, currentUserId?: string) {
+    const followersCount = await this.orgsRepo
+      .createQueryBuilder('org')
+      .leftJoin('org.followers', 'f')
+      .where('org.id = :id', { id: org.id })
+      .select('COUNT(f.id)', 'count')
+      .getRawOne<{ count: string }>()
+
+    const eventsCount = await this.orgsRepo
+      .createQueryBuilder('org')
+      .leftJoin('org.events', 'e')
+      .where('org.id = :id', { id: org.id })
+      .select('COUNT(e.id)', 'count')
+      .getRawOne<{ count: string }>()
+
+    const isFollowing = currentUserId
+      ? (await this.orgsRepo
+          .createQueryBuilder('org')
+          .leftJoin('org.followers', 'f')
+          .where('org.id = :orgId', { orgId: org.id })
+          .andWhere('f.id = :userId', { userId: currentUserId })
+          .getCount()) > 0
+      : false
+
+    return {
+      ...org,
+      followers: Number(followersCount?.count ?? 0),
+      eventsCount: Number(eventsCount?.count ?? 0),
+      is_following: isFollowing,
+    }
+  }
+
+  private async findOneEntity(id: string) {
+    const org = await this.orgsRepo.findOne({
+      where: { id },
+      relations: ['sessions', 'otps', 'followers', 'events'],
+    })
+
+    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
+    return org
+  }
 
   async create(dto: CreateOrganizationDto) {
     const exists = await this.orgsRepo.findOneBy({ email: dto.email })
@@ -47,8 +93,10 @@ export class OrganizationsService {
 
     const [data, total] = await qb.getManyAndCount()
 
+    const dataWithStats = await Promise.all(data.map((org) => this.enrichOrganization(org)))
+
     return {
-      data,
+      data: dataWithStats,
       meta: {
         total,
         page,
@@ -58,25 +106,68 @@ export class OrganizationsService {
     }
   }
 
-  async findOne(id: string) {
-    const org = await this.orgsRepo.findOne({
-      where: { id },
-      relations: ['sessions', 'otps'],
-    })
-
-    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
-    return org
+  async findOne(id: string, currentUserId?: string) {
+    const org = await this.findOneEntity(id)
+    return this.enrichOrganization(org, currentUserId)
   }
 
   async update(id: string, dto: UpdateOrganizationDto) {
-    const org = await this.findOne(id)
+    const org = await this.findOneEntity(id)
     if (dto.password) dto.password = await hashPassword(dto.password)
     Object.assign(org, dto)
     return await this.orgsRepo.save(org)
   }
 
   async remove(id: string) {
-    const org = await this.findOne(id)
+    const org = await this.findOneEntity(id)
     await this.orgsRepo.remove(org)
+  }
+
+  async setAvatar(id: string, avatarUrl: string) {
+    const org = await this.findOneEntity(id)
+    org.avatar = avatarUrl
+    return await this.orgsRepo.save(org)
+  }
+
+  async setCover(id: string, coverUrl: string) {
+    const org = await this.findOneEntity(id)
+    org.coverUrl = coverUrl
+    return await this.orgsRepo.save(org)
+  }
+
+  async follow(id: string, userId: string) {
+    const org = await this.orgsRepo.findOne({ where: { id }, relations: ['followers'] })
+    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
+
+    const user = await this.usersRepo.findOneBy({ id: userId })
+    if (!user) throw new NotFoundException(`User with id #${userId} not found`)
+
+    if (!org.followers?.some((f) => f.id === userId)) {
+      org.followers = [...(org.followers ?? []), user]
+      await this.orgsRepo.save(org)
+    }
+
+    return { followed: true }
+  }
+
+  async unfollow(id: string, userId: string) {
+    const org = await this.orgsRepo.findOne({ where: { id }, relations: ['followers'] })
+    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
+
+    org.followers = (org.followers ?? []).filter((f) => f.id !== userId)
+    await this.orgsRepo.save(org)
+
+    return { followed: false }
+  }
+
+  async isFollowing(id: string, userId: string) {
+    const count = await this.orgsRepo
+      .createQueryBuilder('org')
+      .leftJoin('org.followers', 'f')
+      .where('org.id = :orgId', { orgId: id })
+      .andWhere('f.id = :userId', { userId })
+      .getCount()
+
+    return { followed: count > 0 }
   }
 }

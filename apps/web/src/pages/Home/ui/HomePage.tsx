@@ -1,8 +1,8 @@
 import { Link } from 'react-router';
-import { ArrowRight, Briefcase, Camera, Code2, Globe, Landmark, MonitorPlay, Music2, Users } from 'lucide-react';
+import { ArrowRight, Briefcase, Camera, CheckCircle2, Code2, Globe, Landmark, MonitorPlay, Music2, Search, Ticket, Users } from 'lucide-react';
 import { EventCard } from '@entities/Event';
 import { useEvents } from '@entities/Event';
-import { useOrgs } from '@entities/Organization';
+import { useOrgs, OrgCard } from '@entities/Organization';
 import { useAppContext } from '@shared/lib';
 import { Badge, buttonVariants } from '@shared/components';
 import { cn } from '@shared/lib/utils';
@@ -19,6 +19,8 @@ const CATEGORIES = [
   { label: 'Culture', icon: Landmark, color: 'text-orange-400' },
   { label: 'Online', icon: Globe, color: 'text-cyan-400' },
 ] as const;
+
+const HOW_ICONS = [Search, Users, Ticket] as const;
 
 
 
@@ -46,16 +48,16 @@ export { HomePage };
 function HomePage() {
   const { t } = useAppContext();
   const h = t.home;
-  const { data: eventsRaw, isLoading: eventsLoading } = useEvents();
-  const events = Array.isArray(eventsRaw) ? eventsRaw : [];
+  const { data: eventsResult, isLoading: eventsLoading } = useEvents({ page: 1, limit: 5 });
+  const events = eventsResult?.data ?? [];
 
-  const { data: orgsRaw, isLoading: orgsLoading } = useOrgs();
-  const orgs = Array.isArray(orgsRaw) ? orgsRaw : [];
+  const { data: orgsResult, isLoading: orgsLoading } = useOrgs({ page: 1, limit: 6 });
+  const orgs = orgsResult?.data ?? [];
 
   const stats = {
-    events: events.length,
-    organizations: orgs.length,
-    members: orgs.reduce((sum, o) => sum + (o.membersCount || 0), 0),
+    events: eventsResult?.total ?? 0,
+    organizations: orgsResult?.total ?? 0,
+    members: events.reduce((sum, event) => sum + (event.attendeeCount ?? 0), 0),
   };
 
   return (
@@ -87,7 +89,7 @@ function HomePage() {
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
-            to="/events"
+            to="/events/create"
             className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'px-8 text-sm font-semibold')}
           >
             {h.hero.ctaHost}
@@ -99,7 +101,12 @@ function HomePage() {
       <section className="border-y border-border/50 bg-card/40 px-6 py-12">
         <div className="mx-auto flex max-w-3xl flex-wrap justify-around gap-8">
           {eventsLoading || orgsLoading ? (
-            <div className="w-full text-center">Загрузка...</div>
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex flex-col items-center gap-2">
+                <div className="h-10 w-20 animate-pulse rounded-md bg-border/40" />
+                <div className="h-3 w-16 animate-pulse rounded bg-border/30" />
+              </div>
+            ))
           ) : (
             <>
               <StatCounter value={stats.events} suffix="+" label={h.stats.events} />
@@ -124,7 +131,14 @@ function HomePage() {
           {/* horizontal scroll row */}
           <div className="flex gap-4 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
             {eventsLoading ? (
-              <div className="w-full text-center">Загрузка...</div>
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-56 w-64 shrink-0 animate-pulse rounded-xl bg-border/30" />
+              ))
+            ) : events.length === 0 ? (
+              <div className="flex w-full flex-col items-center gap-3 py-12 text-center text-muted-foreground">
+                <CheckCircle2 className="h-10 w-10 opacity-30" />
+                <p className="text-sm">No events yet — be the first to create one!</p>
+              </div>
             ) : (
               events.slice(0, 5).map((event) => (
                 <Link key={event.id} to={`/events/${event.id}`} className="shrink-0">
@@ -159,6 +173,49 @@ function HomePage() {
         </div>
       </section>
 
+      {/* ── HOW IT WORKS ─────────────────────────────────── */}
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-12 text-center text-2xl font-bold tracking-tight">{h.howItWorks.title}</h2>
+          <div className="grid gap-8 sm:grid-cols-3">
+            {h.howItWorks.steps.map((step, i) => {
+              const Icon = HOW_ICONS[i];
+              return (
+                <div key={step.title} className="flex flex-col items-center gap-4 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+                    <Icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">{step.title}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURED ORGANIZATIONS ───────────────────────── */}
+      <section className="bg-card/30 px-6 py-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-8 flex items-center justify-between">
+            <h2 className="text-2xl font-bold tracking-tight">{h.featuredOrgs.title}</h2>
+            <Link to="/organizations" className="flex items-center gap-1 text-sm text-primary hover:underline">
+              {h.featuredOrgs.browseAll}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {orgsLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-32 animate-pulse rounded-xl bg-border/30" />
+                ))
+              : orgs.map((org) => <OrgCard key={org.id} {...org} />)}
+          </div>
+        </div>
+      </section>
+
       {/* ── HOST CTA ─────────────────────────────────────────── */}
       <section className="px-6 py-20">
         <div className="mx-auto max-w-3xl overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/10 via-card to-card p-12 text-center shadow-xl shadow-primary/5">
@@ -166,7 +223,7 @@ function HomePage() {
           <h2 className="text-3xl font-extrabold tracking-tight">{h.hostCta.title}</h2>
           <p className="mx-auto mt-4 max-w-md text-muted-foreground">{h.hostCta.subtitle}</p>
           <Link
-            to="/events"
+            to="/events/create"
             className={cn(buttonVariants({ variant: 'default', size: 'lg' }), 'mt-8 gap-2 px-10 text-sm font-semibold')}
           >
             {h.hostCta.cta}

@@ -61,6 +61,34 @@ export function OrgEditPage() {
     },
   });
 
+  const uploadLogoMutation = useMutation({
+    mutationFn: (file: File) => {
+      if (!id) throw new Error('Organization id is missing');
+      return organizationsApi.uploadLogo(id, file);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['organizations', id] });
+      toast.success('Logo updated');
+    },
+    onError: () => {
+      toast.error('Failed to upload logo');
+    },
+  });
+
+  const uploadCoverMutation = useMutation({
+    mutationFn: (file: File) => {
+      if (!id) throw new Error('Organization id is missing');
+      return organizationsApi.uploadCover(id, file);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['organizations', id] });
+      toast.success('Cover updated');
+    },
+    onError: () => {
+      toast.error('Failed to upload cover');
+    },
+  });
+
   // hydrate form when org loads
   useEffect(() => {
     if (org) {
@@ -95,12 +123,16 @@ export function OrgEditPage() {
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   const handleFileChange =
-    (label: string) => (e: ChangeEvent<HTMLInputElement>) => {
+    (label: 'Logo' | 'Cover') => (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        // TODO: upload file
-        console.log(`${label} selected:`, file.name);
+        if (label === 'Logo') {
+          uploadLogoMutation.mutate(file);
+        } else {
+          uploadCoverMutation.mutate(file);
+        }
       }
+      e.target.value = '';
     };
 
   const handleSubmit = (e: FormEvent) => {

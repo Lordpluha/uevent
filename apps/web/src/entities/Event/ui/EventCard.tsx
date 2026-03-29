@@ -1,12 +1,11 @@
 import { cva } from 'class-variance-authority';
-import { Bookmark, MapPin, Star, Video } from 'lucide-react';
+import { MapPin, Star, Video } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/components';
 import { Badge } from '@shared/components';
-import { Button } from '@shared/components';
 import { Card, CardContent } from '@shared/components';
 import { cn } from '@shared/lib/utils';
 import type { EventFormat } from '../model/event';
-import type { EventAttendee } from '../model/responses';
+import type { EventAttendee } from '../model/eventEntity';
 
 type Attendee = EventAttendee;
 
@@ -21,8 +20,6 @@ export type EventCardProps = {
   rating: number;
   attendeeCount: number;
   attendees?: Attendee[];
-  isBookmarked?: boolean;
-  onBookmark?: () => void;
   /** Visual size variant */
   size?: 'default' | 'compact';
 };
@@ -87,8 +84,6 @@ export const EventCard = ({
   rating,
   attendeeCount,
   attendees = [],
-  isBookmarked = false,
-  onBookmark,
   size = 'default',
 }: EventCardProps) => {
   return (
@@ -100,19 +95,6 @@ export const EventCard = ({
         ) : (
           <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">No image</div>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onBookmark?.();
-          }}
-          aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark event'}
-          className="absolute right-2 top-2 h-8 w-8 rounded-full bg-black/40 text-white backdrop-blur-sm hover:bg-black/60"
-        >
-          <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-white' : ''}`} />
-        </Button>
       </div>
 
       <CardContent className="space-y-3 p-4">
@@ -155,3 +137,26 @@ export const EventCard = ({
     </Card>
   );
 };
+
+export function EventCardSkeleton({ size = 'default' }: { size?: 'default' | 'compact' }) {
+  return (
+    <Card className={cn(cardVariants({ size }))}>
+      <div className={cn(coverVariants({ size }), 'animate-pulse bg-border/30')} />
+      <CardContent className="space-y-3 p-4">
+        <div className="h-5 w-4/5 animate-pulse rounded bg-border/30" />
+        <div className="h-4 w-3/5 animate-pulse rounded bg-border/25" />
+        <div className="h-3 w-2/5 animate-pulse rounded bg-border/20" />
+
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center gap-1">
+            <div className="h-6 w-6 animate-pulse rounded-full bg-border/30" />
+            <div className="h-6 w-6 animate-pulse rounded-full bg-border/25" />
+            <div className="h-6 w-6 animate-pulse rounded-full bg-border/20" />
+            <div className="ml-2 h-4 w-20 animate-pulse rounded bg-border/25" />
+          </div>
+          <div className="h-4 w-10 animate-pulse rounded bg-border/25" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

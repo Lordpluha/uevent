@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Repository, In } from 'typeorm'
 import { Tag } from './entities/tag.entity'
 import { CreateTagDto } from './dto/create-tag.dto'
 import { UpdateTagDto } from './dto/update-tag.dto'
@@ -19,12 +19,19 @@ export class TagsService {
   }
 
   async findAll(query: GetTagsParams) {
-    const { page, limit } = query
+    const { page, limit, search } = query
 
-    const [data, total] = await this.tagsRepo.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
-    })
+    const qb = this.tagsRepo.createQueryBuilder('tag')
+
+    if (search) {
+      qb.where('LOWER(tag.name) LIKE :search', { search: `%${search.toLowerCase()}%` })
+    }
+
+    qb.orderBy('tag.name', 'ASC')
+      .skip((page - 1) * limit)
+      .take(limit)
+
+    const [data, total] = await qb.getManyAndCount()
 
     return {
       data,
@@ -53,5 +60,17 @@ export class TagsService {
   async remove(id: string) {
     const tag = await this.findOne(id)
     await this.tagsRepo.remove(tag)
+  }
+
+  async findOrCreateByNames(names: string[]): Promise<Tag[]> {
+    if (!names.length) return []
+    const uniqueNames = [...new Set(names.map((n) => n.trim()).filter(Boolean))]
+    const existing = await this.tagsRepo.findBy({ name: In(uniqueNames) })
+    const existingNamesSet = new Set(existing.map((t) => t.name))
+    const toCreate = uniqueNames
+      .filter((n) => !existingNamesSet.has(n))
+      .map((n) => this.tagsRepo.create({ name: n }))
+    const created = toCreate.length ? await this.tagsRepo.save(toCreate) : []
+    return [...existing, ...created]
   }
 }

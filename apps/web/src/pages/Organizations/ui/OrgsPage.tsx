@@ -1,32 +1,70 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
 import { BadgeCheck, Search } from 'lucide-react';
 import { OrgCard, useOrgs } from '@entities/Organization';
+import {
+  Input,
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@shared/components';
+
+const PAGE_SIZE = 12;
+
+function getPaginationItems(current: number, total: number): Array<number | 'ellipsis'> {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 4) return [1, 2, 3, 4, 5, 'ellipsis', total];
+  if (current >= total - 3) return [1, 'ellipsis', total - 4, total - 3, total - 2, total - 1, total];
+  return [1, 'ellipsis', current - 1, current, current + 1, 'ellipsis', total];
+}
 
 export function OrgsPage() {
   const [query, setQuery] = useQueryState('q', parseAsString.withDefault(''));
   const [category, setCategory] = useQueryState('category', parseAsString.withDefault('All'));
   const [verifiedOnly, setVerifiedOnly] = useQueryState('verified', parseAsBoolean.withDefault(false));
+  const [pageParam, setPageParam] = useQueryState('page', parseAsString.withDefault('1'));
+  const page = Math.max(1, Number.parseInt(pageParam, 10) || 1);
 
-  const { data: catalogOrgs = [] } = useOrgs();
-  const { data: allOrgs = [] } = useOrgs({
+  const { data: orgsResult } = useOrgs({
     ...(query ? { search: query } : {}),
     ...(category !== 'All' ? { category } : {}),
     ...(verifiedOnly ? { verified: true } : {}),
+    page,
+    limit: PAGE_SIZE,
   });
+  const allOrgs = orgsResult?.data ?? [];
+  const total = orgsResult?.total ?? allOrgs.length;
+  const totalPages = Math.max(1, orgsResult?.totalPages ?? 1);
+  const hasMeta = typeof orgsResult?.totalPages === 'number';
+
+  const filtersSignature = `${query}::${category}::${verifiedOnly ? '1' : '0'}`;
+  const previousFiltersSignature = useRef(filtersSignature);
+
+  useEffect(() => {
+    if (hasMeta && page > totalPages) {
+      setPageParam(String(totalPages));
+    }
+  }, [hasMeta, page, setPageParam, totalPages]);
+
+  useEffect(() => {
+    if (previousFiltersSignature.current === filtersSignature) return;
+    previousFiltersSignature.current = filtersSignature;
+    if (page !== 1) setPageParam('1');
+  }, [filtersSignature, page, setPageParam]);
 
   const allCategories = useMemo(
     () =>
-      ['All', ...new Set(catalogOrgs.map((org) => org.category).filter(Boolean))].sort((a, b) =>
-        a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b),
+      ['All', ...new Set(allOrgs.map((org) => org.category).filter(Boolean))].sort(
+        (a, b) => (a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b)),
       ),
-    [catalogOrgs],
+    [allOrgs],
   );
 
-  const filtered = useMemo(
-    () => (verifiedOnly ? allOrgs.filter((org) => org.verified) : allOrgs),
-    [allOrgs, verifiedOnly],
-  );
+  const filtered = allOrgs;
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -43,12 +81,12 @@ export function OrgsPage() {
         {/* Search */}
         <div className="relative flex-1 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
+          <Input
             type="text"
             placeholder="Search organizations…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="h-9 w-full rounded-full border border-border bg-card pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="h-9 w-full pl-9"
           />
         </div>
 
@@ -87,7 +125,7 @@ export function OrgsPage() {
 
       {/* Results count */}
       <p className="mb-6 text-xs text-muted-foreground">
-        {filtered.length} organization{filtered.length !== 1 ? 's' : ''} found
+        {total} organization{total !== 1 ? 's' : ''} found
       </p>
 
       {/* Grid */}
@@ -98,11 +136,62 @@ export function OrgsPage() {
           <p className="text-sm text-muted-foreground">Try adjusting your search or filters.</p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((org) => (
-            <OrgCard key={org.id} {...org} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((org) => (
+              <OrgCard key={org.id} {...org} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (page > 1) setPageParam(String(page - 1));
+                    }}
+                    aria-disabled={page <= 1}
+                    className={page <= 1 ? 'pointer-events-none opacity-50' : undefined}
+                  />
+                </PaginationItem>
+
+                {getPaginationItems(page, totalPages).map((item, index) => (
+                  <PaginationItem key={item === 'ellipsis' ? `ellipsis-${index}` : item}>
+                    {item === 'ellipsis' ? (
+                      <PaginationEllipsis />
+                    ) : (
+                      <PaginationLink
+                        href="#"
+                        isActive={item === page}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setPageParam(String(item));
+                        }}
+                      >
+                        {item}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (page < totalPages) setPageParam(String(page + 1));
+                    }}
+                    aria-disabled={page >= totalPages}
+                    className={page >= totalPages ? 'pointer-events-none opacity-50' : undefined}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </>
       )}
     </main>
   );

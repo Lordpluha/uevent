@@ -2,12 +2,13 @@ import { Link, useParams } from 'react-router';
 import { CalendarDays, ChevronLeft, Globe, MapPin, Star } from 'lucide-react';
 import { EventCard, useEvents } from '@entities/Event';
 import { useUser } from '@entities/User';
-import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Separator, ShareButton } from '@shared/components';
 
 export function UserProfilePage() {
   const { id } = useParams();
   const { data: user, isLoading, isError } = useUser(id ?? '');
-  const { data: userEvents = [] } = useEvents({ page: 1, limit: 3 });
+  const { data: userEventsResult } = useEvents({ page: 1, limit: 3 });
+  const userEvents = userEventsResult?.data ?? [];
 
   if (isLoading) {
     return (
@@ -47,6 +48,7 @@ export function UserProfilePage() {
         <div className="flex-1">
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{user.name}</h1>
           <p className="text-sm text-muted-foreground">@{user.username}</p>
+          <ShareButton title={`${user.name} on UEVENT`} variant="default" className="mt-2" />
           {user.bio && <p className="mt-2 max-w-md text-sm text-muted-foreground">{user.bio}</p>}
           <div className="mt-3 flex flex-wrap justify-center gap-3 text-xs text-muted-foreground sm:justify-start">
             {user.location && (

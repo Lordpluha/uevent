@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+  InternalServerErrorException,
+  ServiceUnavailableException,
+} from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -6,10 +12,19 @@ import { google } from 'googleapis'
 import { User } from '../users/entities/user.entity'
 import { UserSession } from '../users/entities/user-session.entity'
 import { Event } from '../events/entities/event.entity'
+import { Ticket } from '../users/entities/ticket.entity'
 import { JwtPayload } from './types/jwt-payload.interface'
 
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 const ACCESS_EXPIRES = '15m'
+const GOOGLE_LINK_STATE_EXPIRES = '10m'
+const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events'
+
+type GoogleLinkStatePayload = {
+  sub: string
+  type: 'user'
+  purpose: 'google-link'
+}
 
 @Injectable()
 export class GoogleAuthService {
@@ -29,18 +44,83 @@ export class GoogleAuthService {
 
     @InjectRepository(Event)
     private readonly eventsRepo: Repository<Event>,
+
+    @InjectRepository(Ticket)
+    private readonly ticketsRepo: Repository<Ticket>,
   ) {}
 
   private createOAuth2Client() {
     return new google.auth.OAuth2(this.clientId, this.clientSecret, this.callbackUrl)
   }
 
+  async getLinkState(accessToken?: string, refreshToken?: string): Promise<string | undefined> {
+    const subject = await this.resolveUserIdFromTokens(accessToken, refreshToken)
+    if (!subject) return undefined
+
+    await this.resetGoogleGrantIfMissingCalendarScope(subject)
+
+    return await this.jwtService.signAsync(
+      { sub: subject, type: 'user', purpose: 'google-link' } as GoogleLinkStatePayload,
+      { expiresIn: GOOGLE_LINK_STATE_EXPIRES },
+    )
+  }
+
+  private async resetGoogleGrantIfMissingCalendarScope(userId: string) {
+    const user = await this.usersRepo.findOneBy({ id: userId })
+    if (!user?.google_refresh_token) return
+
+    const oauth2 = this.createOAuth2Client()
+    oauth2.setCredentials({ refresh_token: user.google_refresh_token })
+
+    try {
+      const accessToken = await oauth2.getAccessToken()
+      if (!accessToken.token) return
+
+      const tokenInfo = await oauth2.getTokenInfo(accessToken.token)
+      const scopes = tokenInfo.scopes ?? []
+      if (scopes.includes(CALENDAR_SCOPE)) return
+    } catch {
+      // Invalid/revoked token should also be cleared to force a clean relink.
+    }
+
+    await oauth2.revokeToken(user.google_refresh_token).catch(() => undefined)
+    await this.usersRepo.update(user.id, { google_refresh_token: null })
+  }
+
+  private async resolveUserIdFromTokens(accessToken?: string, refreshToken?: string): Promise<string | undefined> {
+    if (accessToken) {
+      try {
+        const payload = await this.jwtService.verifyAsync<JwtPayload>(accessToken)
+        if (payload.type === 'user') return payload.sub
+      } catch {
+        return this.resolveUserIdFromTokens(undefined, refreshToken)
+      }
+    }
+
+    if (!refreshToken) return undefined
+
+    try {
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken)
+      if (payload.type !== 'user') return undefined
+
+      const session = await this.sessionsRepo.findOne({
+        where: { id: payload.session_id, refresh: refreshToken },
+      })
+
+      if (!session || session.expiration < new Date()) return undefined
+      return payload.sub
+    } catch {
+      return undefined
+    }
+  }
+
   /** Generate the Google consent URL */
-  getConsentUrl(): string {
+  getConsentUrl(state?: string): string {
     const oauth2 = this.createOAuth2Client()
     return oauth2.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
+      state,
       scope: [
         'openid',
         'https://www.googleapis.com/auth/userinfo.email',
@@ -51,7 +131,7 @@ export class GoogleAuthService {
   }
 
   /** Exchange authorization code → find or create user → return JWT tokens */
-  async handleCallback(code: string) {
+  async handleCallback(code: string, state?: string) {
     const oauth2 = this.createOAuth2Client()
     const { tokens } = await oauth2.getToken(code)
     oauth2.setCredentials(tokens)
@@ -63,10 +143,28 @@ export class GoogleAuthService {
       throw new UnauthorizedException('Google account has no email')
     }
 
-    // Find existing user by google_id or email
-    let user = await this.usersRepo.findOneBy({ google_id: profile.id ?? undefined })
-    if (!user) {
-      user = await this.usersRepo.findOneBy({ email: profile.email })
+    let user: User | null = null
+
+    if (state) {
+      let linkPayload: GoogleLinkStatePayload
+      try {
+        linkPayload = await this.jwtService.verifyAsync<GoogleLinkStatePayload>(state)
+      } catch {
+        throw new UnauthorizedException('Invalid Google link state')
+      }
+
+      if (linkPayload.type !== 'user' || linkPayload.purpose !== 'google-link') {
+        throw new UnauthorizedException('Invalid Google link state')
+      }
+
+      user = await this.usersRepo.findOneBy({ id: linkPayload.sub })
+      if (!user) throw new UnauthorizedException('User for Google linking not found')
+    } else {
+      // Find existing user by google_id or email
+      user = await this.usersRepo.findOneBy({ google_id: profile.id ?? undefined })
+      if (!user) {
+        user = await this.usersRepo.findOneBy({ email: profile.email })
+      }
     }
 
     if (user) {
@@ -92,6 +190,10 @@ export class GoogleAuthService {
       await this.usersRepo.save(user)
     }
 
+    if (state) {
+      return { linked: true as const }
+    }
+
     // Create session + JWT tokens
     const session = this.sessionsRepo.create({
       user_id: user.id,
@@ -109,11 +211,11 @@ export class GoogleAuthService {
       refresh: jwtTokens.refresh_token,
     })
 
-    return jwtTokens
+    return { linked: false as const, tokens: jwtTokens }
   }
 
   /** Add a uevent event to the user's Google Calendar */
-  async addEventToCalendar(userId: number, eventId: string) {
+  async addEventToCalendar(userId: string, eventId: string) {
     const user = await this.usersRepo.findOneBy({ id: userId })
     if (!user?.google_refresh_token) {
       throw new UnauthorizedException(
@@ -126,36 +228,148 @@ export class GoogleAuthService {
       relations: ['tags'],
     })
     if (!event) {
-      throw new UnauthorizedException('Event not found')
+      throw new NotFoundException('Event not found')
     }
 
+    return this.insertCalendarEvent(user, {
+      summary: event.name,
+      description: this.buildEventDescription(event),
+      start: event.datetime_start,
+      end: event.datetime_end,
+      timeZone: event.time_zone || 'UTC',
+      location: event.location ?? undefined,
+    })
+  }
+
+  /** Add a purchased ticket (with full event details) to the user's Google Calendar */
+  async addTicketToCalendar(userId: string, ticketId: string) {
+    const user = await this.usersRepo.findOneBy({ id: userId })
+    if (!user?.google_refresh_token) {
+      throw new UnauthorizedException(
+        'Google account not linked or missing calendar permissions. Please re-login with Google.',
+      )
+    }
+
+    const ticket = await this.ticketsRepo.findOne({
+      where: { id: ticketId, user_id: userId },
+      relations: ['event', 'event.tags'],
+    })
+    const resolvedTicket = ticket ?? await this.ticketsRepo.findOne({
+      where: { id: ticketId },
+      relations: ['event', 'event.tags'],
+    })
+    if (!resolvedTicket) {
+      throw new NotFoundException('Ticket not found')
+    }
+
+    const event = resolvedTicket.event
+    const description = [
+      `🎟 Ticket: ${resolvedTicket.name}`,
+      resolvedTicket.description ? `📋 ${resolvedTicket.description}` : '',
+      '',
+      this.buildEventDescription(event),
+    ]
+      .filter((l) => l !== null && l !== undefined)
+      .join('\n')
+
+    return this.insertCalendarEvent(user, {
+      summary: `🎟 ${event?.name ?? resolvedTicket.name}`,
+      description,
+      start: resolvedTicket.datetime_start,
+      end: resolvedTicket.datetime_end,
+      timeZone: event?.time_zone || 'UTC',
+      location: event?.location ?? undefined,
+    })
+  }
+
+  private buildEventDescription(event: Event): string {
+    const clientUrl = process.env.CLIENT_URL ?? 'http://localhost:5173'
+    const lines: string[] = []
+    if (event.description) lines.push(event.description)
+    if (event.location) lines.push(`📍 ${event.location}`)
+    if (event.tags?.length) lines.push(`🏷 ${event.tags.map((t) => t.name).join(', ')}`)
+    lines.push(`🔗 ${clientUrl}/events/${event.id}`)
+    return lines.join('\n')
+  }
+
+  private async insertCalendarEvent(
+    user: User,
+    opts: {
+      summary: string
+      description: string
+      start: Date
+      end: Date
+      timeZone: string
+      location?: string
+    },
+  ) {
     const oauth2 = this.createOAuth2Client()
     oauth2.setCredentials({ refresh_token: user.google_refresh_token })
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2 })
 
-    const calendarEvent = {
-      summary: event.name,
-      description: event.description ?? '',
-      start: {
-        dateTime: new Date(event.datetime_start).toISOString(),
-        timeZone: event.time_zone || 'UTC',
-      },
-      end: {
-        dateTime: new Date(event.datetime_end).toISOString(),
-        timeZone: event.time_zone || 'UTC',
-      },
-      location: event.location ?? undefined,
+    const startDate = new Date(opts.start)
+    const endDate = new Date(opts.end)
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+      throw new InternalServerErrorException('Event has invalid date/time values')
     }
 
-    const result = await calendar.events.insert({
-      calendarId: 'primary',
-      requestBody: calendarEvent,
-    })
+    const startIso = startDate.toISOString()
+    const endIso = endDate.toISOString()
 
-    return {
-      calendarEventId: result.data.id,
-      htmlLink: result.data.htmlLink,
+    try {
+      const result = await calendar.events.insert({
+        calendarId: 'primary',
+        requestBody: {
+          summary: opts.summary,
+          description: opts.description,
+          start: { dateTime: startIso, timeZone: opts.timeZone },
+          end: { dateTime: endIso, timeZone: opts.timeZone },
+          location: opts.location,
+        },
+      })
+
+      return {
+        calendarEventId: result.data.id,
+        htmlLink: result.data.htmlLink,
+      }
+    } catch (err: unknown) {
+      const googleErr = err as {
+        response?: {
+          status?: number
+          data?: {
+            error?: {
+              message?: string
+              status?: string
+              errors?: Array<{ reason?: string; message?: string }>
+              details?: Array<{ reason?: string; metadata?: Record<string, string> }>
+            }
+          }
+        }
+        message?: string
+      }
+      const status = googleErr?.response?.status
+      const googleError = googleErr?.response?.data?.error
+      const reasons = [
+        ...(googleError?.errors?.map((item) => item.reason).filter(Boolean) ?? []),
+        ...(googleError?.details?.map((item) => item.reason).filter(Boolean) ?? []),
+      ]
+
+      if (status === 401 || status === 403) {
+        if (reasons.includes('accessNotConfigured') || reasons.includes('SERVICE_DISABLED')) {
+          throw new ServiceUnavailableException(
+            'Google Calendar API is disabled for the configured Google Cloud project. Enable calendar-json.googleapis.com and try again.',
+          )
+        }
+
+        throw new UnauthorizedException(
+          'Google Calendar access denied. Please re-link your Google account.',
+        )
+      }
+
+      throw new InternalServerErrorException(
+        `Failed to create Google Calendar event: ${googleErr?.message ?? 'unknown error'}`,
+      )
     }
   }
 

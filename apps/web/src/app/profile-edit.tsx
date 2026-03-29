@@ -1,7 +1,5 @@
-import { ProfileEditPage } from '@pages/ProfileEdit';
+import { Navigate } from 'react-router';
 
-export function meta() {
-  return [{ title: 'Edit profile — uevent' }, { name: 'description', content: 'Edit your uevent profile.' }];
+export default function ProfileEditRedirect() {
+  return <Navigate to="/profile/settings" replace />;
 }
-
-export default ProfileEditPage;

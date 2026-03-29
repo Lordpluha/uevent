@@ -1,6 +1,9 @@
 import { type RouteConfig, index, route } from '@react-router/dev/routes';
 
 export default [
+  // Ignore Chrome DevTools probe in dev to avoid noisy "No route matches" logs
+  route('/.well-known/appspecific/com.chrome.devtools.json', 'app/chrome-devtools-probe.tsx'),
+
   index('app/home.tsx'),
 
   // Events
@@ -21,7 +24,7 @@ export default [
 
   // Private: own profile
   route('/profile', 'app/profile.tsx'),
-  route('/profile/edit', 'app/profile-edit.tsx'),
+  route('/profile/settings', 'app/profile-settings.tsx'),
   route('/profile/organization/:id', 'app/organization-profile.tsx'),
 
   // Organizer flows

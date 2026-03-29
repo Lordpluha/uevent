@@ -33,7 +33,7 @@ export const backendEventSchema = z.object({
   datetime_end: z.string(),
   seats: z.number().nullable().optional(),
   location: z.string().nullable().optional(),
-  organization_id: z.number().nullable().optional(),
+  organization_id: z.string().uuid().nullable().optional(),
   tags: z.array(backendTagSchema).optional(),
   tickets: z.array(backendTicketSchema).optional(),
   format: z.string().optional(),

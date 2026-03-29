@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query } from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, UseGuards, ForbiddenException } from '@nestjs/common'
 import { NotificationsService } from './notifications.service'
 import {
   CreateNotificationDto,
@@ -8,6 +8,9 @@ import {
 } from './dto'
 import { ZodValidationPipe } from 'nestjs-zod'
 import { GetNotificationsParamsDto, GetNotificationsParamsSchema } from './params'
+import { JwtGuard } from '../auth/guards/jwt.guard'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
+import { JwtPayload } from '../auth/types/jwt-payload.interface'
 
 @Controller('notifications')
 export class NotificationsController {
@@ -19,8 +22,23 @@ export class NotificationsController {
   }
 
   @Get()
-  findAll(@Query(new ZodValidationPipe(GetNotificationsParamsSchema)) query: GetNotificationsParamsDto) {
-    return this.notificationsService.findAll(query)
+  @UseGuards(JwtGuard)
+  findAll(
+    @CurrentUser() user: JwtPayload,
+    @Query(new ZodValidationPipe(GetNotificationsParamsSchema)) query: GetNotificationsParamsDto,
+  ) {
+    const limit = query.limit ?? 20
+    const safeLimit = Math.min(limit, 50)
+
+    if (user.type === 'user') {
+      return this.notificationsService.findLatestByUser(user.sub, safeLimit)
+    }
+
+    if (user.type === 'organization') {
+      return this.notificationsService.findLatestByOrganization(user.sub, safeLimit)
+    }
+
+    throw new ForbiddenException('Unsupported account type')
   }
 
   @Get('user/:id')
@@ -42,8 +60,20 @@ export class NotificationsController {
   }
 
   @Patch(':id/read')
-  markAsRead(@Param('id', ParseUUIDPipe) id: string) {
-    return this.notificationsService.markAsRead(id)
+  @UseGuards(JwtGuard)
+  markAsRead(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    if (user.type === 'user') {
+      return this.notificationsService.markAsReadForUser(id, user.sub)
+    }
+
+    if (user.type === 'organization') {
+      return this.notificationsService.markAsReadForOrganization(id, user.sub)
+    }
+
+    throw new ForbiddenException('Unsupported account type')
   }
 
   @Delete(':id')
