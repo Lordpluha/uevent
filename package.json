@@ -22,6 +22,6 @@
     "node": ">=18"
   },
   "dependencies": {
-    "nodemailer": "^8.0.3"
+    "nodemailer": "^8.0.4"
   }
 }
