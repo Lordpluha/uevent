@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getAuthState } from '@shared/lib/auth-context';
+import { getAuthState, clearServerCookies } from '@shared/lib/auth-context';
 
 // In the browser: use Vite proxy (/api → localhost:3000) so cookies are same-origin.
 // In SSR: connect directly to the API server.
@@ -74,6 +74,7 @@ api.interceptors.response.use(
     } catch {
       logout();
       refreshQueue = [];
+      await clearServerCookies(accountType);
       if (typeof window !== 'undefined') window.location.href = '/';
       return Promise.reject(error);
     } finally {

@@ -1,47 +1,12 @@
 import { Link } from 'react-router';
-import { ArrowRight, Briefcase, Camera, CheckCircle2, Code2, Globe, Landmark, MonitorPlay, Music2, Search, Ticket, Users } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { EventCard } from '@entities/Event';
 import { useEvents } from '@entities/Event';
 import { useOrgs, OrgCard } from '@entities/Organization';
 import { useAppContext } from '@shared/lib';
 import { Badge, buttonVariants } from '@shared/components';
 import { cn } from '@shared/lib/utils';
-import { useCountUp } from '@shared/hooks/useCountUp';
-/* ── static data ──────────────────────────────────────────── */
-
-const CATEGORIES = [
-  { label: 'Technology', icon: Code2, color: 'text-violet-400' },
-  { label: 'Design', icon: MonitorPlay, color: 'text-blue-400' },
-  { label: 'Music', icon: Music2, color: 'text-pink-400' },
-  { label: 'Business', icon: Briefcase, color: 'text-amber-400' },
-  { label: 'Photography', icon: Camera, color: 'text-red-400' },
-  { label: 'Networking', icon: Users, color: 'text-green-400' },
-  { label: 'Culture', icon: Landmark, color: 'text-orange-400' },
-  { label: 'Online', icon: Globe, color: 'text-cyan-400' },
-] as const;
-
-const HOW_ICONS = [Search, Users, Ticket] as const;
-
-
-
-/* ── animated stat counter ──────────────────────────────────── */
-
-function StatCounter({ value, label, suffix = '' }: { value: number; label: string; suffix?: string }) {
-  const { value: displayed, ref } = useCountUp<HTMLSpanElement>(value, { duration: 1600 });
-  return (
-    <div className="flex flex-col items-center gap-1 text-center">
-      <span
-        ref={ref}
-        className="tabular-nums text-4xl font-extrabold tracking-tight text-primary transition-all"
-      >
-        {displayed.toLocaleString()}{suffix}
-      </span>
-      <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        {label}
-      </span>
-    </div>
-  );
-}
+import { CATEGORIES, HOW_ICONS, StatCounter } from './HomeConstants';
 
 export { HomePage };
 
@@ -62,7 +27,6 @@ function HomePage() {
 
   return (
     <main className="flex flex-col">
-      {/* ── HERO ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden px-6 pb-28 pt-32 text-center">
         {/* layered gradient glow */}
         <div className="pointer-events-none absolute inset-0 -z-10">
@@ -97,7 +61,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ── STATS ────────────────────────────────────────────── */}
       <section className="border-y border-border/50 bg-card/40 px-6 py-12">
         <div className="mx-auto flex max-w-3xl flex-wrap justify-around gap-8">
           {eventsLoading || orgsLoading ? (
@@ -117,7 +80,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ── TRENDING EVENTS ──────────────────────────────────── */}
       <section className="px-6 py-16">
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 flex items-center justify-between">
@@ -234,7 +196,4 @@ function HomePage() {
     </main>
   );
 }
-
-
-
 

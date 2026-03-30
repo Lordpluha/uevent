@@ -165,7 +165,7 @@ export class UsersAuthService {
     await this.sessionsRepo.delete(sessionId)
   }
 
-  async getSessions(userId: string) {
+  async getSessions(userId: string, currentSessionId?: string) {
     const sessions = await this.sessionsRepo.find({
       where: { user_id: userId },
       order: { last_active_at: 'DESC' },
@@ -178,10 +178,20 @@ export class UsersAuthService {
       location: s.location,
       created_at: s.created_at,
       last_active_at: s.last_active_at,
+      is_current: s.id === currentSessionId,
     }))
   }
 
-  async revokeSession(userId: string, sessionId: string) {
+  async revokeSession(userId: string, sessionId: string, code?: string) {
+    const user = await this.usersRepo.findOneBy({ id: userId })
+    if (!user) throw new NotFoundException('User not found')
+
+    if (user.two_fa && user.two_fa_secret) {
+      if (!code) throw new BadRequestException('2FA code is required')
+      const isValid = speakeasy.totp.verify({ secret: user.two_fa_secret, encoding: 'base32', token: code, window: 1 })
+      if (!isValid) throw new BadRequestException('Invalid verification code')
+    }
+
     const session = await this.sessionsRepo.findOne({
       where: { id: sessionId, user_id: userId },
     })

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ticketTypeSchema, ticketStatusSchema } from './ticketEntity';
+import { ticketTypeSchema, ticketStatusSchema } from '@shared/lib/ticket-schemas';
 
 export const createTicketSchema = z.object({
   eventId: z.string().min(1),

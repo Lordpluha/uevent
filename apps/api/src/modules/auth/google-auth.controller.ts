@@ -35,11 +35,15 @@ export class GoogleAuthController {
     }
 
     const result = await this.googleAuthService.handleCallback(code, state)
-    if (!result.linked) {
+    if (!result.linked && !('requires2fa' in result)) {
       setAuthCookies(res, result.tokens)
     }
 
     const clientUrl = process.env.CLIENT_URL ?? 'http://localhost:5173'
+    if (!result.linked && 'requires2fa' in result && result.tempToken) {
+      res.redirect(`${clientUrl}?auth=google_2fa&tempToken=${encodeURIComponent(result.tempToken)}`)
+      return
+    }
     const authQuery = result.linked ? 'google_linked' : 'google'
     res.redirect(`${clientUrl}?auth=${authQuery}`)
   }

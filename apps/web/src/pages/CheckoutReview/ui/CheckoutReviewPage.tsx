@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
+import { Link, useParams, useSearchParams } from 'react-router';
 import { ChevronLeft, CreditCard, Minus, Plus, ShieldCheck, Ticket } from 'lucide-react';
 import { useEvent } from '@entities/Event';
 import { useMe } from '@entities/User';
 import { Badge, Button, PromoCodeSection } from '@shared/components';
-import { api } from '@shared/api';
-import { toast } from 'sonner';
+import { useCheckoutPayment } from './useCheckoutPayment';
 
 const VALID_PROMO_CODES: Record<string, number> = {
   UEVENT15: 15,
@@ -17,7 +16,6 @@ const VALID_PROMO_CODES: Record<string, number> = {
 
 export function CheckoutReviewPage() {
   const { eventId } = useParams<{ eventId: string }>();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const ticketType = searchParams.get('ticketType') ?? 'standard';
   const promoFromQuery = (searchParams.get('promo') ?? '').toUpperCase();
@@ -28,7 +26,6 @@ export function CheckoutReviewPage() {
   const [appliedPromoCode, setAppliedPromoCode] = useState<string | undefined>();
   const [appliedPromoDiscount, setAppliedPromoDiscount] = useState<number | undefined>();
   const [quantity, setQuantity] = useState(1);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     if (!promoFromQuery) return;
@@ -58,73 +55,17 @@ export function CheckoutReviewPage() {
     setQuantity((q) => Math.max(1, Math.min(q, maxQuantity)));
   }, [maxQuantity]);
 
-  const handleProceedToPayment = async () => {
-    if (!eventId || !selectedTicket) return;
-    if (selectedTicket.quantityLimited && (remaining ?? 0) <= 0) {
-      toast.error('This ticket is sold out');
-      return;
-    }
-
-    setIsProcessingPayment(true);
-    try {
-      const orderId = `ticket-${selectedTicket.id}-event-${eventId}-${Date.now()}`;
-      const amountInCents = Math.round(total * 100);
-
-      if (amountInCents <= 0) {
-        const params = new URLSearchParams({
-          ticketId: selectedTicket.id,
-          ticketType: selectedTicket.ticketType,
-          qty: String(quantity),
-          total: total.toFixed(2),
-          currency,
-          order: orderId,
-        });
-        if (appliedPromoCode) params.set('promo', appliedPromoCode);
-        navigate(`/checkout/${eventId}/success?${params.toString()}`);
-        return;
-      }
-
-      const response = await api.post<{ clientSecret: string; paymentIntentId: string }>('/payments/create-intent', {
-        amount: amountInCents,
-        currency: 'usd',
-        orderId,
-        ticketId: selectedTicket.id,
-        quantity,
-        userEmail: me?.email,
-        userName: me?.name,
-        eventTitle: event?.title,
-        ticketName: selectedTicket.ticketType,
-        eventDate: event?.date,
-        eventLocation: event?.location,
-        organizationName: event?.organizer,
-      });
-
-      localStorage.setItem('pendingPayment', JSON.stringify({
-        clientSecret: response.data.clientSecret,
-        paymentIntentId: response.data.paymentIntentId,
-        email: me?.email,
-        fullName: me?.name,
-        ticketId: selectedTicket.id,
-        ticketName: selectedTicket.ticketType,
-        price: total,
-        quantity,
-        eventId,
-        eventTitle: event?.title,
-        eventDate: event?.date,
-        eventLocation: event?.location,
-        organizationName: event?.organizer,
-      }));
-
-      navigate(`/checkout?paymentIntentId=${response.data.paymentIntentId}`);
-    } catch (error) {
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'Failed to start payment';
-      toast.error(message);
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  };
+  const { isProcessingPayment, handleProceedToPayment } = useCheckoutPayment({
+    eventId,
+    selectedTicket,
+    total,
+    quantity,
+    remaining,
+    currency,
+    appliedPromoCode,
+    me,
+    event,
+  });
 
   if (isLoading) {
     return (

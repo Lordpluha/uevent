@@ -3,35 +3,12 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft } from 'lucide-react';
-import { z } from 'zod';
-import { toast } from 'sonner';
 import { Button, Field, FieldError, FieldGroup, FieldLabel, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components';
-import { api } from '@shared/api';
 import { useAuth } from '@shared/lib/auth-context';
 import { useMyOrg } from '@entities/Organization';
 import { useEvent } from '@entities/Event';
-
-const ticketFormSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
-  ticketType: z.enum(['free', 'standard', 'vip']),
-  datetimeStart: z.string().min(1),
-  datetimeEnd: z.string().min(1),
-  price: z.number().nonnegative(),
-  quantityLimited: z.boolean().default(false),
-  quantityTotal: z.number().int().positive().optional(),
-  privateInfo: z.string().optional(),
-}).superRefine((values, ctx) => {
-  if (values.quantityLimited && !values.quantityTotal) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['quantityTotal'],
-      message: 'Amount is required when ticket quantity is limited',
-    });
-  }
-})
-
-type TicketForm = z.input<typeof ticketFormSchema>
+import { ticketFormSchema, type TicketForm } from './ticketFormSchema';
+import { submitTicket } from './submitTicket';
 
 export function TicketCreatePage() {
   const { id } = useParams<{ id: string }>();
@@ -76,28 +53,7 @@ export function TicketCreatePage() {
   }
 
   const onSubmit = async (data: TicketForm) => {
-    try {
-      await api.post('/tickets', {
-        name: data.name,
-        description: data.description || undefined,
-        datetime_start: new Date(data.datetimeStart),
-        datetime_end: new Date(data.datetimeEnd),
-        price: ticketType === 'free' ? 0 : data.price,
-        quantity_limited: quantityLimited,
-        quantity_total: quantityLimited ? data.quantityTotal : undefined,
-        private_info: data.privateInfo || undefined,
-        event_id: id,
-        status: 'READY',
-      });
-
-      toast.success('Ticket created');
-      navigate(`/events/${id}`);
-    } catch (error) {
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'Failed to create ticket';
-      toast.error(message);
-    }
+    await submitTicket(data, { ticketType, quantityLimited, eventId: id!, onSuccess: () => navigate(`/events/${id}`) });
   };
 
   return (

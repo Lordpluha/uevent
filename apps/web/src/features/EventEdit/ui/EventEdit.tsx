@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { X } from 'lucide-react';
 
 import {
   Button,
@@ -18,6 +16,7 @@ import {
   SelectValue,
 } from '@shared/components';
 import { eventsApi, updateEventSchema, type EventModel, type UpdateEventDto } from '@entities/Event';
+import { EventEditTagsField } from './EventEditTagsField';
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -30,8 +29,6 @@ interface EventEditProps {
 /* ── Component ────────────────────────────────────────────────────────── */
 
 export function EventEdit({ event, onSuccess }: EventEditProps) {
-  const [tagInput, setTagInput] = useState('');
-
   const {
     register,
     control,
@@ -54,19 +51,6 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
   });
 
   const selectedFormat = watch('format');
-  const tags = watch('tags') ?? [];
-
-  const addTag = (value: string) => {
-    const trimmed = value.trim().replace(/,$/, '').trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      setValue('tags', [...tags, trimmed]);
-    }
-    setTagInput('');
-  };
-
-  const removeTag = (tag: string) => {
-    setValue('tags', tags.filter((t) => t !== tag));
-  };
 
   const onSubmit = async (data: UpdateEventDto) => {
     const dto: UpdateEventDto = {
@@ -167,44 +151,7 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
           </Field>
         )}
 
-        {/* Tags */}
-        <Field>
-          <FieldTitle>Tags</FieldTitle>
-          <div className="flex flex-col gap-2">
-            <Input
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ',') {
-                  e.preventDefault();
-                  addTag(tagInput);
-                }
-              }}
-              onBlur={() => tagInput && addTag(tagInput)}
-              placeholder="Add tag and press Enter…"
-            />
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => removeTag(tag)}
-                      className="ml-0.5 rounded-full text-muted-foreground transition-colors hover:text-foreground"
-                      aria-label={`Remove ${tag}`}
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </Field>
+        <EventEditTagsField watch={watch} setValue={setValue} />
 
         {/* Cover image URL */}
         <Field>

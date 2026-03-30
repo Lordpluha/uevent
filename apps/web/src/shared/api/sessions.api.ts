@@ -8,12 +8,13 @@ export interface UserSessionInfo {
   location: string | null;
   created_at: string;
   last_active_at: string;
+  is_current: boolean;
 }
 
 export const sessionsApi = {
   getAll: () =>
     api.get<UserSessionInfo[]>('/auth/users/sessions').then((r) => r.data),
 
-  revoke: (sessionId: string) =>
-    api.delete(`/auth/users/sessions/${sessionId}`),
+  revoke: (sessionId: string, code?: string) =>
+    api.delete(`/auth/users/sessions/${sessionId}`, { data: code ? { code } : undefined }),
 };

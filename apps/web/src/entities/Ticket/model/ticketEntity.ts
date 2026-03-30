@@ -1,10 +1,8 @@
 import { z } from 'zod';
+import { ticketStatusSchema, ticketTypeSchema } from '@shared/lib/ticket-schemas';
 
-export const ticketStatusSchema = z.enum(['available', 'limited', 'sold-out']);
-export const ticketTypeSchema = z.enum(['free', 'standard', 'vip']);
-
-export type TicketStatus = z.infer<typeof ticketStatusSchema>;
-export type TicketType = z.infer<typeof ticketTypeSchema>;
+export { ticketStatusSchema, ticketTypeSchema } from '@shared/lib/ticket-schemas';
+export type { TicketStatus, TicketType } from '@shared/lib/ticket-schemas';
 
 export const ticketSchema = z.object({
   ticketType: ticketTypeSchema,

@@ -2,33 +2,24 @@ import { Link, Navigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import {
   CalendarDays,
-  Edit,
-  Globe,
-  MapPin,
-  Settings,
   Star,
   Ticket,
   Users,
-  Clock,
 } from 'lucide-react';
 import { EventCard, useEvents } from '@entities/Event';
 import { useMe } from '@entities/User';
+import { useMyOrg } from '@entities/Organization';
 import { api } from '@shared/api';
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   Badge,
   Button,
   Separator,
-  ShareButton,
   Skeleton,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
 import { useAuth } from '@shared/lib/auth-context';
+import { ProfileHeroCard } from './ProfileHeroCard';
+import { ProfileTicketsList, type ProfileTicket } from './ProfileTicketsList';
 
 const STAT_ITEMS = [
   { key: 'eventsAttended', label: 'Events attended', icon: CalendarDays },
@@ -36,18 +27,6 @@ const STAT_ITEMS = [
   { key: 'followers', label: 'Followers', icon: Users },
   { key: 'following', label: 'Following', icon: Users },
 ] as const;
-
-type ProfileTicket = {
-  id: string;
-  name: string;
-  price: number | string;
-  status: 'DRAFT' | 'READY' | 'RESERVED' | 'PAID';
-  datetime_start?: string;
-  event?: {
-    id?: string;
-    name?: string;
-  };
-};
 
 function ProfileSkeleton() {
   return (
@@ -74,7 +53,8 @@ function ProfileSkeleton() {
 }
 
 export function ProfileViewPage() {
-  const { isAuthenticated, isReady } = useAuth();
+  const { isAuthenticated, accountType, isReady } = useAuth();
+  const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
   const { data: user, isLoading, isError } = useMe();
   const { data: eventsResult } = useEvents({ page: 1, limit: 4, user_id: user?.id }, !!user?.id);
   const myEvents = eventsResult?.data ?? [];
@@ -92,6 +72,11 @@ export function ProfileViewPage() {
 
   if (!isAuthenticated) return <Navigate to="/" replace />;
 
+  if (isAuthenticated && accountType === 'organization') {
+    if (myOrgLoading) return <ProfileSkeleton />;
+    if (myOrg?.id) return <Navigate to={`/profile/organization/${myOrg.id}`} replace />;
+  }
+
   if (isLoading) return <ProfileSkeleton />;
 
   if (!user || isError) {
@@ -104,93 +89,10 @@ export function ProfileViewPage() {
     );
   }
 
-  const initials = user.name
-    .split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
 
-      {/* ── Hero card ─────────────────────────────────────────── */}
-      <div className="relative mb-8 overflow-hidden rounded-2xl border border-border/60 bg-card">
-        <div
-          className="h-28 w-full bg-linear-to-br from-primary/30 via-primary/10 to-transparent"
-          aria-hidden
-        />
-        <div className="px-6 pb-6">
-          <div className="-mt-14 mb-4 flex items-end justify-between">
-            <Avatar className="h-24 w-24 shrink-0 border-4 border-card ring-2 ring-primary/20 shadow-md">
-              <AvatarImage src={user.avatarUrl} alt={user.name} />
-              <AvatarFallback className="text-2xl font-bold">{initials}</AvatarFallback>
-            </Avatar>
-            <div className="flex items-center gap-2 pb-1">
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Link to="/profile/settings">
-                      <Button variant="outline" size="sm" className="gap-1.5">
-                        <Edit className="h-3.5 w-3.5" />
-                        Edit profile
-                      </Button>
-                    </Link>
-                  }
-                />
-                <TooltipContent>Go to settings</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Link to="/profile/settings">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label="Settings">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  }
-                />
-                <TooltipContent>Settings</TooltipContent>
-              </Tooltip>
-              <ShareButton title={`${user.name} on UEVENT`} />
-            </div>
-          </div>
-
-          <h1 className="text-2xl font-extrabold tracking-tight">{user.name}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">@{user.username}</p>
-          {user.bio && <p className="mt-2 max-w-lg text-sm text-foreground/80">{user.bio}</p>}
-
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-            {user.location && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5 shrink-0" />
-                {user.location}
-              </span>
-            )}
-            {user.website && (
-              <a
-                href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1 text-primary hover:underline"
-              >
-                <Globe className="h-3.5 w-3.5 shrink-0" />
-                {user.website.replace(/^https?:\/\//, '')}
-              </a>
-            )}
-            {user.timezone && (
-              <span className="flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5 shrink-0" />
-                {user.timezone}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-              Joined {user.joinedAt}
-            </span>
-          </div>
-        </div>
-      </div>
+      <ProfileHeroCard user={user} />
 
       {/* ── Stats ──────────────────────────────────────────────── */}
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -261,53 +163,7 @@ export function ProfileViewPage() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">My purchased tickets</h2>
         </div>
-
-        {ticketsLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-14 w-full rounded-lg" />
-            <Skeleton className="h-14 w-full rounded-lg" />
-            <Skeleton className="h-14 w-full rounded-lg" />
-          </div>
-        ) : myTickets.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/60 py-10 text-center">
-            <p className="text-3xl">🎟️</p>
-            <p className="text-sm text-muted-foreground">You have no purchased tickets yet</p>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
-            <ul className="divide-y divide-border/60">
-              {myTickets.map((ticket) => {
-                const eventName = ticket.event?.name ?? 'Event';
-                const eventId = ticket.event?.id;
-                const price = Number(ticket.price ?? 0);
-                const date = ticket.datetime_start ? new Date(ticket.datetime_start) : null;
-
-                return (
-                  <li key={ticket.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-foreground">{ticket.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {eventId ? (
-                          <Link to={`/events/${eventId}`} className="text-primary hover:underline">
-                            {eventName}
-                          </Link>
-                        ) : (
-                          eventName
-                        )}
-                        {date ? ` • ${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="font-semibold text-foreground">{price > 0 ? `$${price.toFixed(2)}` : 'Free'}</p>
-                      <p className="text-xs text-muted-foreground">{ticket.status}</p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
+        <ProfileTicketsList tickets={myTickets} isLoading={ticketsLoading} />
       </section>
     </main>
   );

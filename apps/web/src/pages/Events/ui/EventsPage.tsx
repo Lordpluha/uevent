@@ -3,8 +3,7 @@ import { parseAsString, useQueryState } from 'nuqs';
 import { useEvents } from '@entities/Event';
 import { useTags } from '@shared/hooks/useTags';
 import { useEventsFilters } from '../model/useEventsFilters';
-import { EventsFilterBar } from './EventsFilterBar';
-import { EventsMobileFilters } from './EventsMobileFilters';
+import { EventsFilterBar, EventsMobileFilters } from '@features/EventsFilter';
 import { EventsGrid } from './EventsGrid';
 import {
   Pagination,
@@ -106,7 +105,7 @@ export function EventsPage() {
         location={f.location} onLocationChange={f.setLocation}
         activeFilterCount={f.activeFilterCount}
         onClearAll={f.clearAllFilters}
-        resultCount={events.length}
+        resultCount={total}
         tagsAnchor={f.sheetTagsAnchor}
         locationAnchor={f.sheetLocationAnchor}
         tags={filterTags}

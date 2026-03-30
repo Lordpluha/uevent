@@ -1,13 +1,10 @@
 import type { ChangeEvent, FormEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { Camera, ChevronLeft, ImagePlus, Save } from 'lucide-react';
+import { ChevronLeft, Save } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   Button,
   Field,
   FieldDescription,
@@ -21,14 +18,12 @@ import {
 import { useOrg } from '@entities/Organization';
 import { organizationsApi } from '@entities/Organization';
 import { cn } from '@shared/lib/utils';
+import { OrgEditBranding } from './OrgEditBranding';
 
 export function OrgEditPage() {
   const { id } = useParams();
   const { data: org, isLoading } = useOrg(id ?? '');
   const queryClient = useQueryClient();
-
-  const logoInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -58,34 +53,6 @@ export function OrgEditPage() {
     },
     onError: () => {
       toast.error('Failed to update organization');
-    },
-  });
-
-  const uploadLogoMutation = useMutation({
-    mutationFn: (file: File) => {
-      if (!id) throw new Error('Organization id is missing');
-      return organizationsApi.uploadLogo(id, file);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['organizations', id] });
-      toast.success('Logo updated');
-    },
-    onError: () => {
-      toast.error('Failed to upload logo');
-    },
-  });
-
-  const uploadCoverMutation = useMutation({
-    mutationFn: (file: File) => {
-      if (!id) throw new Error('Organization id is missing');
-      return organizationsApi.uploadCover(id, file);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['organizations', id] });
-      toast.success('Cover updated');
-    },
-    onError: () => {
-      toast.error('Failed to upload cover');
     },
   });
 
@@ -122,19 +89,6 @@ export function OrgEditPage() {
     (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-  const handleFileChange =
-    (label: 'Logo' | 'Cover') => (e: ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        if (label === 'Logo') {
-          uploadLogoMutation.mutate(file);
-        } else {
-          uploadCoverMutation.mutate(file);
-        }
-      }
-      e.target.value = '';
-    };
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     saveOrgMutation.mutate();
@@ -154,56 +108,12 @@ export function OrgEditPage() {
       <p className="mb-8 text-sm text-muted-foreground">{org.title}</p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Cover image */}
-        <div className="relative h-32 w-full overflow-hidden rounded-xl border border-border/60 bg-muted">
-          {org.coverUrl && (
-            <img src={org.coverUrl} alt="Cover" className="h-full w-full object-cover" />
-          )}
-          <button
-            type="button"
-            onClick={() => coverInputRef.current?.click()}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/40 text-white opacity-0 transition-opacity hover:opacity-100"
-          >
-            <ImagePlus className="h-5 w-5" />
-            <span className="text-xs font-medium">Change cover</span>
-          </button>
-          <input
-            ref={coverInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange('Cover')}
-          />
-        </div>
-
-        {/* Logo */}
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Avatar className="h-20 w-20 rounded-xl">
-              <AvatarImage src={org.avatarUrl} alt={org.title} />
-              <AvatarFallback className="rounded-xl text-xl">{org.title[0]}</AvatarFallback>
-            </Avatar>
-            <button
-              type="button"
-              onClick={() => logoInputRef.current?.click()}
-              className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow"
-              title="Change logo"
-            >
-              <Camera className="h-3 w-3" />
-            </button>
-            <input
-              ref={logoInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange('Logo')}
-            />
-          </div>
-          <div>
-            <p className="text-sm font-medium">Organization logo</p>
-            <p className="text-xs text-muted-foreground">Square image · JPG, PNG · max 2 MB</p>
-          </div>
-        </div>
+        <OrgEditBranding
+          orgId={id!}
+          orgTitle={org.title}
+          avatarUrl={org.avatarUrl}
+          coverUrl={org.coverUrl}
+        />
 
         <Separator />
 

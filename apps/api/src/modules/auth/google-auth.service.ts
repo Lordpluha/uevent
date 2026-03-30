@@ -194,6 +194,15 @@ export class GoogleAuthService {
       return { linked: true as const }
     }
 
+    // If user has 2FA enabled, return a temp token for verification instead of creating a session
+    if (user.two_fa && user.two_fa_secret) {
+      const tempToken = await this.jwtService.signAsync(
+        { sub: user.id, type: '2fa_pending' },
+        { expiresIn: '5m' },
+      )
+      return { linked: false as const, requires2fa: true as const, tempToken }
+    }
+
     // Create session + JWT tokens
     const session = this.sessionsRepo.create({
       user_id: user.id,

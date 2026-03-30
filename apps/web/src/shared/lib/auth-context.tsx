@@ -2,6 +2,16 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 
 export type AuthAccountType = 'user' | 'organization';
 
+/** Call the server to clear httpOnly auth cookies. Returns a promise that resolves when done. */
+export function clearServerCookies(accountType: AuthAccountType | null): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  const endpoint =
+    accountType === 'organization'
+      ? '/api/auth/organizations/logout'
+      : '/api/auth/users/logout';
+  return fetch(endpoint, { method: 'DELETE', credentials: 'include' }).then(() => {}).catch(() => {});
+}
+
 type AuthState = {
   isAuthenticated: boolean;
   accountType: AuthAccountType | null;
@@ -66,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    clearServerCookies(state.accountType);
     const next: AuthState = { isAuthenticated: false, accountType: null };
     setState(next);
     localStorage.removeItem(STORAGE_KEY);
@@ -73,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     _ref.accountType = next.accountType;
     _ref.isReady = true;
     setIsReady(true);
-  }, []);
+  }, [state.accountType]);
 
   // Keep module-level ref actions in sync (stable refs due to useCallback([]))
   _ref.setAuthenticated = setAuthenticated;

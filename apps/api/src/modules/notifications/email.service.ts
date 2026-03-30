@@ -16,7 +16,7 @@ interface PaymentConfirmationData {
 
 @Injectable()
 export class EmailService implements OnModuleInit {
-  private transporter: nodemailer.Transporter
+  private transporter: nodemailer.Transporter | undefined
   private readonly logger = new Logger(EmailService.name)
 
   constructor() {}
@@ -67,7 +67,7 @@ export class EmailService implements OnModuleInit {
       this.logger.error(`Failed to initialize email transporter: ${error.message}`)
       this.logger.error(`   This usually means Gmail credentials are invalid`)
       this.logger.error(`   Check SMTP_USER and SMTP_PASS in .env`)
-      throw error
+      this.transporter = undefined
     }
   }
 
@@ -578,6 +578,7 @@ Event Management Platform
   }
 
   async sendPaymentFailedEmail(userEmail: string, userName: string, eventTitle: string, ticketName: string, failureReason: string, paymentIntentId: string) {
+    if (!this.transporter) return null
     try {
       const htmlTemplate = this.generatePaymentFailedTemplate({ userEmail, userName, eventTitle, ticketName, failureReason, paymentIntentId })
 
@@ -601,6 +602,7 @@ Event Management Platform
   }
 
   async sendRefundEmail(userEmail: string, userName: string, eventTitle: string, ticketName: string, amount: number, paymentIntentId: string) {
+    if (!this.transporter) return null
     try {
       const htmlTemplate = this.generateRefundTemplate({ userEmail, userName, eventTitle, ticketName, amount, paymentIntentId })
 
@@ -1325,6 +1327,7 @@ Event Management Platform
     userAgent: string,
     loginTime: Date,
   ) {
+    if (!this.transporter) return null
     try {
       const formattedTime = loginTime.toLocaleString('en-US', {
         dateStyle: 'medium',

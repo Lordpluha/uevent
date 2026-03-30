@@ -1,4 +1,5 @@
 import { Controller, Post, Delete, Get, Body, UseGuards, Res, Req, Param, ParseUUIDPipe, UnauthorizedException } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
 import { ZodValidationPipe } from 'nestjs-zod'
 import { Request, Response } from 'express'
 import { z } from 'zod'
@@ -22,7 +23,10 @@ const ResetPasswordSchema = z.object({
 
 @Controller('auth/users')
 export class UsersAuthController {
-  constructor(private readonly usersAuthService: UsersAuthService) {}
+  constructor(
+    private readonly usersAuthService: UsersAuthService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Post('register')
   async register(
@@ -116,12 +120,20 @@ export class UsersAuthController {
   }
 
   @Delete('logout')
-  @UseGuards(JwtGuard)
   async logout(
-    @CurrentUser() user: JwtPayload,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    await this.usersAuthService.logout(user.session_id)
+    // Best-effort session cleanup — always clear cookies even if token is invalid
+    try {
+      const token = (req.cookies as Record<string, string>)?.access_token
+      if (token) {
+        const payload = await this.jwtService.verifyAsync<JwtPayload>(token).catch(() => null)
+        if (payload?.session_id) {
+          await this.usersAuthService.logout(payload.session_id)
+        }
+      }
+    } catch { /* best-effort cleanup */ }
     clearAuthCookies(res)
     return { message: 'Logged out' }
   }
@@ -135,7 +147,7 @@ export class UsersAuthController {
   @Get('sessions')
   @UseGuards(JwtGuard)
   getSessions(@CurrentUser() user: JwtPayload) {
-    return this.usersAuthService.getSessions(user.sub)
+    return this.usersAuthService.getSessions(user.sub, user.session_id)
   }
 
   @Delete('sessions/:id')
@@ -143,7 +155,14 @@ export class UsersAuthController {
   revokeSession(
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) sessionId: string,
+    @Body() body?: { code?: string },
+    @Res({ passthrough: true }) res?: Response,
   ) {
-    return this.usersAuthService.revokeSession(user.sub, sessionId)
+    return this.usersAuthService.revokeSession(user.sub, sessionId, body?.code).then(() => {
+      if (sessionId === user.session_id && res) {
+        clearAuthCookies(res)
+      }
+      return { message: 'Session revoked' }
+    })
   }
 }

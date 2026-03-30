@@ -10,16 +10,10 @@ import type { DateRange } from 'react-day-picker';
 import { useComboboxAnchor } from '@shared/components';
 import { useEvents } from '@entities/Event';
 import type { EventListParams } from '@entities/Event';
+import { FORMAT_VALUES, type Format } from '@features/EventsFilter';
 
-const FORMAT_VALUES = ['all', 'online', 'offline'] as const;
-
-export type Format = (typeof FORMAT_VALUES)[number];
-
-export const FORMAT_OPTIONS: { label: string; value: Format }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Online', value: 'online' },
-  { label: 'Offline', value: 'offline' },
-];
+export type { Format };
+export { FORMAT_OPTIONS } from '@features/EventsFilter';
 
 
 

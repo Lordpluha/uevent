@@ -2,7 +2,8 @@ import { Link, useParams } from 'react-router';
 import { CalendarDays, ChevronLeft, Globe, MapPin, Star } from 'lucide-react';
 import { EventCard, useEvents } from '@entities/Event';
 import { useUser } from '@entities/User';
-import { Avatar, AvatarFallback, AvatarImage, Badge, Separator, ShareButton } from '@shared/components';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
+import { ShareButton } from '@shared/components/ShareButton/ShareButton';
 
 export function UserProfilePage() {
   const { id } = useParams();
