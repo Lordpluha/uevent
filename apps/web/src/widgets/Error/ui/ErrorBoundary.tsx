@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router';
+import { useAppContext } from '@shared/lib';
 
 type Props = {
   status?: number | null;
@@ -6,8 +7,10 @@ type Props = {
   stack?: string;
 };
 
-export const ErrorBoundary = ({ status, message = 'An unexpected error occurred.', stack }: Props) => {
+export const ErrorBoundary = ({ status, message, stack }: Props) => {
   const navigate = useNavigate();
+  const { t } = useAppContext();
+  const displayMessage = message ?? t?.errors?.unexpectedError ?? 'An unexpected error occurred.';
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 bg-background px-6 text-center">
@@ -31,15 +34,17 @@ export const ErrorBoundary = ({ status, message = 'An unexpected error occurred.
 
       <div className="flex flex-col items-center gap-3">
         <h1 className="text-2xl font-semibold text-foreground">
-          {status ? `Error ${status}` : 'Something went wrong'}
+          {status
+            ? (t?.errors?.error ?? 'Error {{status}}').replace('{{status}}', String(status))
+            : t?.errors?.somethingWrong ?? 'Something went wrong'}
         </h1>
-        <p className="max-w-sm text-sm text-muted-foreground">{message}</p>
+        <p className="max-w-sm text-sm text-muted-foreground">{displayMessage}</p>
       </div>
 
       {stack && (
         <details className="w-full max-w-2xl rounded-xl border border-border bg-muted/40 text-left">
           <summary className="cursor-pointer select-none px-4 py-3 text-xs font-medium text-muted-foreground hover:text-foreground">
-            Stack trace
+            {t?.errors?.stackTrace ?? 'Stack trace'}
           </summary>
           <pre className="overflow-x-auto p-4 text-[11px] leading-relaxed text-muted-foreground">
             <code>{stack}</code>
@@ -53,13 +58,13 @@ export const ErrorBoundary = ({ status, message = 'An unexpected error occurred.
           onClick={() => navigate(-1)}
           className="rounded-full border border-border bg-card px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
         >
-          ← Go back
+          {t?.common?.goBack ?? 'Go back'}
         </button>
         <a
           href="/"
           className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
-          Home
+          {t?.common?.home ?? 'Home'}
         </a>
       </div>
     </div>

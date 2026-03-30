@@ -43,6 +43,9 @@ export class Organization extends UuidEntity {
   @Column({ default: false })
   two_factor_enabled: boolean
 
+  @Column({ nullable: true, type: 'text' })
+  two_fa_secret: string | null
+
   @Column('text', { array: true, nullable: true })
   tags: string[]
 

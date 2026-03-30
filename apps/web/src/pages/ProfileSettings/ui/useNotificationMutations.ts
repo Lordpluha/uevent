@@ -1,14 +1,17 @@
 import { usersApi } from '@entities/User'
+import { useAppContext } from '@shared/lib'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 export function useNotificationMutations(invalidateUser: () => Promise<void>) {
+  const { t } = useAppContext()
+
   const notificationsMutation = useMutation({
     mutationFn: (enabled: boolean) => usersApi.updateMe({ notificationsEnabled: enabled }),
     onSuccess: async () => {
       await invalidateUser()
     },
-    onError: () => toast.error('Failed to update notification settings'),
+    onError: () => toast.error(t.profileSettings.notifications.updateFailed),
   })
 
   const pushNotificationsMutation = useMutation({
@@ -16,7 +19,7 @@ export function useNotificationMutations(invalidateUser: () => Promise<void>) {
     onSuccess: async () => {
       await invalidateUser()
     },
-    onError: () => toast.error('Failed to update push notification settings'),
+    onError: () => toast.error(t.profileSettings.notifications.updateFailed),
   })
 
   const paymentEmailMutation = useMutation({
@@ -24,7 +27,7 @@ export function useNotificationMutations(invalidateUser: () => Promise<void>) {
     onSuccess: async () => {
       await invalidateUser()
     },
-    onError: () => toast.error('Failed to update payment email settings'),
+    onError: () => toast.error(t.profileSettings.notifications.updateFailed),
   })
 
   const subscriptionNotificationsMutation = useMutation({
@@ -32,7 +35,7 @@ export function useNotificationMutations(invalidateUser: () => Promise<void>) {
     onSuccess: async () => {
       await invalidateUser()
     },
-    onError: () => toast.error('Failed to update subscription notification settings'),
+    onError: () => toast.error(t.profileSettings.notifications.updateFailed),
   })
 
   const loginNotificationsMutation = useMutation({
@@ -40,7 +43,7 @@ export function useNotificationMutations(invalidateUser: () => Promise<void>) {
     onSuccess: async () => {
       await invalidateUser()
     },
-    onError: () => toast.error('Failed to update login notification settings'),
+    onError: () => toast.error(t.profileSettings.notifications.updateFailed),
   })
 
   return {

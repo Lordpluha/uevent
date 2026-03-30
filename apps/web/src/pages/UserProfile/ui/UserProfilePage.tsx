@@ -4,8 +4,10 @@ import { EventCard, useEvents } from '@entities/Event';
 import { useUser } from '@entities/User';
 import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
 import { ShareButton } from '@shared/components/ShareButton/ShareButton';
+import { useAppContext } from '@shared/lib';
 
 export function UserProfilePage() {
+  const { t } = useAppContext();
   const { id } = useParams();
   const { data: user, isLoading, isError } = useUser(id ?? '');
   const { data: userEventsResult } = useEvents({ page: 1, limit: 3 });
@@ -14,7 +16,7 @@ export function UserProfilePage() {
   if (isLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading user...</p>
+        <p className="text-sm text-muted-foreground">{t.userProfile.loading}</p>
       </main>
     );
   }
@@ -23,9 +25,9 @@ export function UserProfilePage() {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="text-5xl">👤</p>
-        <h1 className="text-xl font-semibold">User not found</h1>
+        <h1 className="text-xl font-semibold">{t.userProfile.notFound}</h1>
         <Link to="/" className="text-sm text-primary hover:underline">
-          ← Back to home
+          {t.userProfile.backToHome}
         </Link>
       </main>
     );
@@ -38,7 +40,7 @@ export function UserProfilePage() {
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ChevronLeft className="h-4 w-4" />
-        Back
+        {t.userProfile.back}
       </Link>
 
       <div className="mb-8 flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
@@ -49,7 +51,7 @@ export function UserProfilePage() {
         <div className="flex-1">
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{user.name}</h1>
           <p className="text-sm text-muted-foreground">@{user.username}</p>
-          <ShareButton title={`${user.name} on UEVENT`} variant="default" className="mt-2" />
+          <ShareButton title={t.userProfile.onUevent.replace('{{name}}', user.name)} variant="default" className="mt-2" />
           {user.bio && <p className="mt-2 max-w-md text-sm text-muted-foreground">{user.bio}</p>}
           <div className="mt-3 flex flex-wrap justify-center gap-3 text-xs text-muted-foreground sm:justify-start">
             {user.location && (
@@ -71,7 +73,7 @@ export function UserProfilePage() {
             )}
             <span className="flex items-center gap-1">
               <CalendarDays className="h-3.5 w-3.5" />
-              Joined {user.joinedAt}
+              {t.userProfile.joined.replace('{{date}}', user.joinedAt)}
             </span>
           </div>
         </div>
@@ -79,10 +81,10 @@ export function UserProfilePage() {
 
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: 'Events attended', value: user.eventsAttended },
-          { label: 'Tickets', value: user.ticketsCount },
-          { label: 'Followers', value: user.followers },
-          { label: 'Following', value: user.following },
+          { label: t.userProfile.eventsAttended, value: user.eventsAttended },
+          { label: t.userProfile.tickets, value: user.ticketsCount },
+          { label: t.userProfile.followers, value: user.followers },
+          { label: t.userProfile.following, value: user.following },
         ].map(({ label, value }) => (
           <div key={label} className="flex flex-col items-center gap-1 rounded-xl border border-border/60 bg-card py-4">
             <span className="text-2xl font-extrabold text-primary">{value.toLocaleString()}</span>
@@ -92,7 +94,7 @@ export function UserProfilePage() {
       </div>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-base font-semibold">Interests</h2>
+        <h2 className="mb-3 text-base font-semibold">{t.userProfile.interests}</h2>
         <div className="flex flex-wrap gap-2">
           {user.interests.map((tag) => (
             <Badge key={tag} variant="secondary">
@@ -106,9 +108,9 @@ export function UserProfilePage() {
 
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold">Recent events</h2>
+          <h2 className="text-base font-semibold">{t.userProfile.recentEvents}</h2>
           <Link to="/events" className="flex items-center gap-1 text-xs text-primary hover:underline">
-            See all <Star className="h-3 w-3" />
+            {t.userProfile.seeAll} <Star className="h-3 w-3" />
           </Link>
         </div>
         <div className="flex flex-wrap gap-4">

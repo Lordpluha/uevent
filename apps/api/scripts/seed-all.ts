@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { faker } from '@faker-js/faker';
 import { v7 as uuidv7 } from 'uuid';
-import * as argon2 from 'argon2';
+import {type Options, argon2id, hash} from 'argon2';
 import { User } from '../src/modules/users/entities/user.entity';
 import { UserSession } from '../src/modules/users/entities/user-session.entity';
 import { UserOtp } from '../src/modules/users/entities/user-otp.entity';
@@ -18,8 +18,8 @@ import { Notification } from '../src/modules/notifications/entities/notification
 import { File as FileEntity } from '../src/modules/files/entities/file.entity';
 import { Payment, PaymentStatus } from '../src/modules/payments/entities/payment.entity';
 
-const ARGON2_OPTIONS: argon2.Options = {
-  type: argon2.argon2id,
+const ARGON2_OPTIONS: Options = {
+  type: argon2id,
   memoryCost: 65536,
   timeCost: 3,
   parallelism: 4,
@@ -63,7 +63,7 @@ async function seedAll() {
   }
 
   // Organizations — password: "Password1!"
-  const orgPassword = await argon2.hash('Password1!', ARGON2_OPTIONS);
+  const orgPassword = await hash('Password1!', ARGON2_OPTIONS);
   const orgs: Organization[] = [];
   for (let i = 0; i < 20; i++) {
     const org = orgRepo.create({
@@ -83,7 +83,7 @@ async function seedAll() {
   }
 
   // Users — password: "Password1!"
-  const userPassword = await argon2.hash('Password1!', ARGON2_OPTIONS);
+  const userPassword = await hash('Password1!', ARGON2_OPTIONS);
   const users: User[] = [];
   for (let i = 0; i < 30; i++) {
     const user = userRepo.create({

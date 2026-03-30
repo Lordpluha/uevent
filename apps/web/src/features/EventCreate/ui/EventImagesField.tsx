@@ -4,6 +4,7 @@ import { PhotoSwipe } from 'react-pswp';
 import 'react-pswp/dist/index.css';
 
 import { Field, FieldDescription, FieldTitle } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 
 export type CoverFileEntry = { file: File; preview: string; w: number; h: number };
 
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
+  const { t } = useAppContext();
   const [isDragging, setIsDragging] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number>(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -56,7 +58,7 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
 
   return (
     <Field>
-      <FieldTitle>Images</FieldTitle>
+      <FieldTitle>{t.eventCreate.images.label}</FieldTitle>
       <div className="flex flex-col gap-3">
         {coverFiles.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -64,7 +66,7 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
               <div key={preview} className="relative aspect-square overflow-hidden rounded-lg border border-border/60">
                 <img
                   src={preview}
-                  alt={`Image ${index + 1}`}
+                  alt={t.eventCreate.images.imageAlt.replace('{{index}}', String(index + 1))}
                   className="h-full w-full cursor-zoom-in object-cover transition-opacity hover:opacity-80"
                   onClick={() => { setLightboxIndex(index); setLightboxOpen(true); }}
                 />
@@ -72,13 +74,13 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
                   type="button"
                   onClick={() => removeCoverFile(index)}
                   className="absolute right-1 top-1 rounded-full bg-background/80 p-0.5 text-muted-foreground backdrop-blur-sm hover:text-foreground"
-                  aria-label="Remove image"
+                  aria-label={t.eventCreate.images.removeImage}
                 >
                   <X className="size-3.5" />
                 </button>
                 {index === 0 && (
                   <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                    Cover
+                    {t.eventCreate.images.cover}
                   </span>
                 )}
               </div>
@@ -90,7 +92,7 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
                 className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-border/60 text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
               >
                 <ImagePlus className="size-5" />
-                <span className="text-xs">Add</span>
+                <span className="text-xs">{t.eventCreate.images.add}</span>
               </button>
             )}
           </div>
@@ -107,8 +109,8 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
           >
             <div className="flex flex-col items-center gap-2 p-6 text-center">
               <ImagePlus className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm font-medium">Drag & drop photos or click to browse</p>
-              <p className="text-xs text-muted-foreground">PNG, JPG, WebP · up to 20 files · 10 MB each</p>
+              <p className="text-sm font-medium">{t.eventCreate.images.dragDrop}</p>
+              <p className="text-xs text-muted-foreground">{t.eventCreate.images.hint}</p>
             </div>
           </div>
         )}
@@ -122,7 +124,7 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
         />
       </div>
       {coverFiles.length > 0 && (
-        <FieldDescription>First image is used as the cover. Drag images to the drop zone to add more.</FieldDescription>
+        <FieldDescription>{t.eventCreate.images.coverHint}</FieldDescription>
       )}
 
       {lightboxOpen && coverFiles.length > 0 && (

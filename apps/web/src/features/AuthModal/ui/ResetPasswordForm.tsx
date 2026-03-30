@@ -3,6 +3,7 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button, Input, Label, InputOTP, InputOTPGroup, InputOTPSlot } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { authApi } from '@shared/api/auth.api';
 
 export const ResetPasswordForm = ({
@@ -13,14 +14,15 @@ export const ResetPasswordForm = ({
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const { t } = useAppContext();
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => authApi.resetPassword(email, code, password),
     onSuccess: () => {
-      toast.success('Password reset successfully. Please log in.');
+      toast.success(t.authExtra.resetSuccess);
       onSuccess();
     },
-    onError: () => toast.error('Invalid or expired reset code'),
+    onError: () => toast.error(t.authExtra.resetFailed),
   });
 
   const canSubmit = code.length === 6 && password.length >= 8 && password === confirmPassword;
@@ -28,14 +30,14 @@ export const ResetPasswordForm = ({
   return (
     <div className="flex flex-col gap-4">
       <button type="button" onClick={onBack} className="inline-flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back
+        <ArrowLeft className="h-3.5 w-3.5" /> {t.common.back}
       </button>
       <div className="text-center">
-        <h3 className="text-lg font-semibold">Reset password</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Enter the code sent to <strong>{email}</strong></p>
+        <h3 className="text-lg font-semibold">{t.authExtra.resetTitle}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">{t.authExtra.resetDesc.replace('{{email}}', email)}</p>
       </div>
       <div className="flex flex-col items-center gap-1.5">
-        <Label>Verification code</Label>
+        <Label>{t.authExtra.verificationCode}</Label>
         <InputOTP maxLength={6} value={code} onChange={setCode}>
           <InputOTPGroup>
             <InputOTPSlot index={0} />
@@ -48,32 +50,32 @@ export const ResetPasswordForm = ({
         </InputOTP>
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="reset-password">New password</Label>
+        <Label htmlFor="reset-password">{t.authExtra.newPassword}</Label>
         <Input
           id="reset-password"
           type="password"
-          placeholder="At least 8 characters"
+          placeholder={t.authExtra.newPasswordPlaceholder}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="reset-confirm">Confirm password</Label>
+        <Label htmlFor="reset-confirm">{t.authExtra.confirmPassword}</Label>
         <Input
           id="reset-confirm"
           type="password"
-          placeholder="Repeat new password"
+          placeholder={t.authExtra.confirmPlaceholder}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           autoComplete="new-password"
         />
         {confirmPassword && password !== confirmPassword && (
-          <p className="text-xs text-destructive">Passwords do not match</p>
+          <p className="text-xs text-destructive">{t.authExtra.passwordsMismatch}</p>
         )}
       </div>
       <Button onClick={() => mutate()} className="w-full" disabled={isPending || !canSubmit}>
-        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reset password'}
+        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t.authExtra.resetPassword}
       </Button>
     </div>
   );

@@ -1,6 +1,7 @@
 import { Controller, Post, Delete, Get, Body, UseGuards, Res, Req, UnauthorizedException } from '@nestjs/common'
 import { ZodValidationPipe } from 'nestjs-zod'
 import { Request, Response } from 'express'
+import { z } from 'zod'
 import { OrgsAuthService } from './orgs-auth.service'
 import { LoginDto, LoginDtoSchema } from './dto/login.dto'
 import {
@@ -10,14 +11,16 @@ import {
   UpdateOrgEmailDtoSchema,
   UpdateOrgProfileDto,
   UpdateOrgProfileDtoSchema,
-  UpdateOrgSecurityDto,
-  UpdateOrgSecurityDtoSchema,
 } from './dto/org-settings.dto'
 import { JwtGuard } from './guards/jwt.guard'
 import { CurrentUser } from './decorators/current-user.decorator'
 import { JwtPayload } from './types/jwt-payload.interface'
 import { CreateOrganizationDto, CreateOrganizationDtoSchema } from '../organizations/dto/create-organization.dto'
 import { setAuthCookies, clearAuthCookies } from '../../common/auth-cookie.util'
+
+const Verify2faSchema = z.object({ tempToken: z.string(), code: z.string().length(6) })
+const Confirm2faSchema = z.object({ code: z.string().length(6) })
+const Disable2faSchema = z.object({ code: z.string().length(6) })
 
 @Controller('auth/organizations')
 export class OrgsAuthController {
@@ -29,7 +32,7 @@ export class OrgsAuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const tokens = await this.orgsAuthService.register(dto)
-    setAuthCookies(res, tokens)
+    setAuthCookies(res, tokens as { access_token: string; refresh_token: string })
     return { accountType: 'organization' }
   }
 
@@ -38,9 +41,48 @@ export class OrgsAuthController {
     @Body(new ZodValidationPipe(LoginDtoSchema)) dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const tokens = await this.orgsAuthService.login(dto)
-    setAuthCookies(res, tokens)
+    const result = await this.orgsAuthService.login(dto)
+
+    if ('requires2fa' in result) {
+      return { requires2fa: true, tempToken: result.tempToken }
+    }
+
+    setAuthCookies(res, result as { access_token: string; refresh_token: string })
     return { accountType: 'organization' }
+  }
+
+  @Post('2fa/verify')
+  async verify2fa(
+    @Body(new ZodValidationPipe(Verify2faSchema)) body: { tempToken: string; code: string },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const tokens = await this.orgsAuthService.verify2fa(body.tempToken, body.code)
+    setAuthCookies(res, tokens as { access_token: string; refresh_token: string })
+    return { accountType: 'organization' }
+  }
+
+  @Post('2fa/setup')
+  @UseGuards(JwtGuard)
+  setup2fa(@CurrentUser() user: JwtPayload) {
+    return this.orgsAuthService.setup2fa(user.sub as string)
+  }
+
+  @Post('2fa/confirm')
+  @UseGuards(JwtGuard)
+  confirm2fa(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(Confirm2faSchema)) body: { code: string },
+  ) {
+    return this.orgsAuthService.confirm2fa(user.sub as string, body.code)
+  }
+
+  @Post('2fa/disable')
+  @UseGuards(JwtGuard)
+  disable2fa(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(Disable2faSchema)) body: { code: string },
+  ) {
+    return this.orgsAuthService.disable2fa(user.sub as string, body.code)
   }
 
   @Post('refresh')
@@ -98,13 +140,5 @@ export class OrgsAuthController {
   ) {
     return this.orgsAuthService.changePassword(user.sub as string, dto)
   }
-
-  @Post('settings/security')
-  @UseGuards(JwtGuard)
-  updateSecurity(
-    @CurrentUser() user: JwtPayload,
-    @Body(new ZodValidationPipe(UpdateOrgSecurityDtoSchema)) dto: UpdateOrgSecurityDto,
-  ) {
-    return this.orgsAuthService.updateSecurity(user.sub as string, dto)
-  }
 }
+

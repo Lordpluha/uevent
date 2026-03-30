@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { Skeleton } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 
 export type ProfileTicket = {
   id: string;
@@ -19,6 +20,7 @@ interface ProfileTicketsListProps {
 }
 
 export function ProfileTicketsList({ tickets, isLoading }: ProfileTicketsListProps) {
+  const { t } = useAppContext();
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -33,7 +35,7 @@ export function ProfileTicketsList({ tickets, isLoading }: ProfileTicketsListPro
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/60 py-10 text-center">
         <p className="text-3xl">🎟️</p>
-        <p className="text-sm text-muted-foreground">You have no purchased tickets yet</p>
+        <p className="text-sm text-muted-foreground">{t.profile.noTickets}</p>
       </div>
     );
   }
@@ -42,7 +44,7 @@ export function ProfileTicketsList({ tickets, isLoading }: ProfileTicketsListPro
     <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
       <ul className="divide-y divide-border/60">
         {tickets.map((ticket) => {
-          const eventName = ticket.event?.name ?? 'Event';
+          const eventName = ticket.event?.name ?? t.profile.eventFallback;
           const eventId = ticket.event?.id;
           const price = Number(ticket.price ?? 0);
           const date = ticket.datetime_start ? new Date(ticket.datetime_start) : null;
@@ -64,7 +66,7 @@ export function ProfileTicketsList({ tickets, isLoading }: ProfileTicketsListPro
               </div>
 
               <div className="text-right">
-                <p className="font-semibold text-foreground">{price > 0 ? `$${price.toFixed(2)}` : 'Free'}</p>
+                <p className="font-semibold text-foreground">{price > 0 ? `$${price.toFixed(2)}` : t.common.free}</p>
                 <p className="text-xs text-muted-foreground">{ticket.status}</p>
               </div>
             </li>

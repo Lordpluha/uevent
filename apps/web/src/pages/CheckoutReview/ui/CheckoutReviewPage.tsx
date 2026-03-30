@@ -4,6 +4,7 @@ import { ChevronLeft, CreditCard, Minus, Plus, ShieldCheck, Ticket } from 'lucid
 import { useEvent } from '@entities/Event';
 import { useMe } from '@entities/User';
 import { Badge, Button, PromoCodeSection } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { useCheckoutPayment } from './useCheckoutPayment';
 
 const VALID_PROMO_CODES: Record<string, number> = {
@@ -15,9 +16,11 @@ const VALID_PROMO_CODES: Record<string, number> = {
 };
 
 export function CheckoutReviewPage() {
+  const { t } = useAppContext();
   const { eventId } = useParams<{ eventId: string }>();
   const [searchParams] = useSearchParams();
   const ticketType = searchParams.get('ticketType') ?? 'standard';
+  const ticketTypeLabel = ticketType === 'free' ? t.common.free : ticketType === 'vip' ? t.common.vip : t.common.standard;
   const promoFromQuery = (searchParams.get('promo') ?? '').toUpperCase();
 
   const { data: event, isLoading } = useEvent(eventId ?? '');
@@ -70,7 +73,7 @@ export function CheckoutReviewPage() {
   if (isLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading checkout...</p>
+        <p className="text-sm text-muted-foreground">{t.checkoutReview.loading}</p>
       </main>
     );
   }
@@ -82,39 +85,39 @@ export function CheckoutReviewPage() {
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ChevronLeft className="h-4 w-4" />
-        Back to event
+        {t.common.backToEvent}
       </Link>
 
-      <h1 className="text-2xl font-extrabold tracking-tight">Checkout review</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight">{t.checkoutReview.title}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Review ticket details before payment.
+        {t.checkoutReview.subtitle}
       </p>
 
       <section className="mt-6 space-y-5 rounded-xl border border-border/60 bg-card p-5">
         <div className="flex items-center gap-2 text-sm font-medium">
           <ShieldCheck className="h-4 w-4 text-primary" />
-          Secure purchase flow
+          {t.checkoutReview.securePurchase}
         </div>
 
         <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-          <p className="text-xs text-muted-foreground">Event</p>
-          <p className="text-sm font-semibold text-foreground">{event?.title ?? `Event ${eventId ?? ''}`}</p>
+          <p className="text-xs text-muted-foreground">{t.checkout.event}</p>
+          <p className="text-sm font-semibold text-foreground">{event?.title ?? `${t.checkout.event} #${eventId ?? ''}`}</p>
           <p className="mt-1 text-xs text-muted-foreground">{event?.date} • {event?.time}</p>
         </div>
 
         <div className="rounded-lg border border-border/60 bg-background/40 p-4">
           <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
             <Ticket className="h-3.5 w-3.5" />
-            Selected ticket
+            {t.checkoutReview.selectedTicket}
           </div>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold capitalize text-foreground">{selectedTicket?.ticketType ?? ticketType}</p>
-              <p className="text-xs text-muted-foreground">Unit price: {currency}{(selectedTicket?.price ?? 0).toFixed(2)}</p>
+              <p className="text-sm font-semibold capitalize text-foreground">{selectedTicket?.ticketType === 'free' ? t.common.free : selectedTicket?.ticketType === 'vip' ? t.common.vip : selectedTicket?.ticketType === 'standard' ? t.common.standard : ticketTypeLabel}</p>
+              <p className="text-xs text-muted-foreground">{t.checkoutReview.unitPrice} {currency}{(selectedTicket?.price ?? 0).toFixed(2)}</p>
               <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-border/60 px-2 py-1">
                 <button
                   type="button"
-                  aria-label="Decrease quantity"
+                  aria-label={t.checkoutReview.decreaseQuantity}
                   className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
@@ -124,7 +127,7 @@ export function CheckoutReviewPage() {
                 <span className="w-6 text-center text-sm font-semibold text-foreground">{quantity}</span>
                 <button
                   type="button"
-                  aria-label="Increase quantity"
+                  aria-label={t.checkoutReview.increaseQuantity}
                   className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
                   onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
                   disabled={quantity >= maxQuantity}
@@ -133,10 +136,10 @@ export function CheckoutReviewPage() {
                 </button>
               </div>
               {selectedTicket?.quantityLimited && (
-                <p className="mt-1 text-xs text-muted-foreground">Available: {remaining ?? 0}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t.checkoutReview.available} {remaining ?? 0}</p>
               )}
             </div>
-            <Badge variant="secondary">Qty: {quantity}</Badge>
+            <Badge variant="secondary">{t.checkoutReview.quantityShort}: {quantity}</Badge>
           </div>
         </div>
 
@@ -155,15 +158,15 @@ export function CheckoutReviewPage() {
 
         <div className="rounded-lg border border-border/60 bg-background/40 p-4 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Subtotal ({quantity} x ticket)</span>
+            <span className="text-muted-foreground">{t.checkoutReview.subtotal.replace('{{qty}}', String(quantity))}</span>
             <span>{currency}{subtotal.toFixed(2)}</span>
           </div>
           <div className="mt-1 flex items-center justify-between">
-            <span className="text-muted-foreground">Discount</span>
+            <span className="text-muted-foreground">{t.common.discount}</span>
             <span>-{currency}{discount.toFixed(2)}</span>
           </div>
           <div className="mt-3 flex items-center justify-between border-t border-border pt-3 font-semibold">
-            <span>Total</span>
+            <span>{t.common.total}</span>
             <span>{currency}{total.toFixed(2)}</span>
           </div>
         </div>
@@ -171,10 +174,10 @@ export function CheckoutReviewPage() {
         <div className="flex flex-wrap gap-3">
           <Button className="gap-1.5" onClick={handleProceedToPayment} disabled={isProcessingPayment || !selectedTicket}>
             <CreditCard className="h-4 w-4" />
-            {isProcessingPayment ? 'Processing...' : 'Proceed to payment'}
+            {isProcessingPayment ? t.common.processing : t.checkoutReview.proceedToPayment}
           </Button>
           <Link to={eventId ? `/events/${eventId}` : '/events'} className="text-sm text-primary hover:underline">
-            Edit selection
+            {t.checkoutReview.editSelection}
           </Link>
         </div>
       </section>

@@ -41,7 +41,19 @@ export const authApi = {
 
   // Organizations
   loginOrg: (email: string, password: string) =>
-    api.post<AuthResult>('/auth/organizations/login', { email, password }).then((r) => r.data),
+    api.post<LoginResult>('/auth/organizations/login', { email, password }).then((r) => r.data),
+
+  verifyOrg2fa: (tempToken: string, code: string) =>
+    api.post<AuthResult>('/auth/organizations/2fa/verify', { tempToken, code }).then((r) => r.data),
+
+  setupOrg2fa: () =>
+    api.post<{ secret: string; qrCodeDataUrl: string }>('/auth/organizations/2fa/setup').then((r) => r.data),
+
+  confirmOrg2fa: (code: string) =>
+    api.post<{ enabled: boolean }>('/auth/organizations/2fa/confirm', { code }).then((r) => r.data),
+
+  disableOrg2fa: (code: string) =>
+    api.post<{ enabled: boolean }>('/auth/organizations/2fa/disable', { code }).then((r) => r.data),
 
   refreshOrg: () =>
     api.post<AuthResult>('/auth/organizations/refresh', {}).then((r) => r.data),

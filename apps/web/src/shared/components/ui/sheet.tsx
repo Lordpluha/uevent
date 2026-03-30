@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 import { Dialog as SheetPrimitive } from '@base-ui/react/dialog';
 
+import { useAppContext } from '@shared/lib';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/components/ui/button';
 import { XIcon } from 'lucide-react';
@@ -44,6 +45,8 @@ function SheetContent({
   side?: 'top' | 'right' | 'bottom' | 'left';
   showCloseButton?: boolean;
 }) {
+  const { t } = useAppContext();
+
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -63,7 +66,7 @@ function SheetContent({
             render={<Button variant="ghost" className="absolute top-4 right-4" size="icon-sm" />}
           >
             <XIcon />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t.common.close}</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Popup>

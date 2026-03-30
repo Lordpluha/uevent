@@ -11,11 +11,13 @@ import { organizationsApi, useOrg } from '@entities/Organization';
 import { useEvents } from '@entities/Event';
 import { EventCard } from '@entities/Event';
 import { Separator } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { useMyOrg } from '@entities/Organization';
 import { OrgProfileHero } from './OrgProfileHero';
 
 export function OrgProfilePage() {
+  const { t } = useAppContext();
   const { isAuthenticated, accountType } = useAuth();
   const queryClient = useQueryClient();
   const { data: myOrg } = useMyOrg();
@@ -39,10 +41,10 @@ export function OrgProfilePage() {
     onSuccess: async (_data, nextFollow) => {
       await queryClient.invalidateQueries({ queryKey: ['organization-follow', orgId] });
       await queryClient.invalidateQueries({ queryKey: ['organizations', orgId] });
-      toast.success(nextFollow ? 'Subscribed to organization updates' : 'Unsubscribed from organization updates');
+      toast.success(nextFollow ? t.organizations.subscribed : t.organizations.unsubscribed);
     },
     onError: () => {
-      toast.error('Failed to update subscription');
+      toast.error(t.organizations.subscribeFailed);
     },
   });
 
@@ -58,9 +60,9 @@ export function OrgProfilePage() {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="text-5xl">🏢</p>
-        <h1 className="text-xl font-semibold">Organization not found</h1>
+        <h1 className="text-xl font-semibold">{t.organizations.notFound}</h1>
         <Link to="/organizations" className="text-sm text-primary hover:underline">
-          ← Back to organizations
+          {t.common.backToOrganizations}
         </Link>
       </main>
     );
@@ -84,9 +86,9 @@ export function OrgProfilePage() {
         {/* ── Stats ────────────────────────────────────────────── */}
         <div className="mt-6 grid grid-cols-3 gap-3 sm:max-w-md">
           {[
-            { label: 'Members', value: org.membersCount, icon: Users },
-            { label: 'Events', value: org.eventsCount, icon: CalendarDays },
-            { label: 'Followers', value: org.followers, icon: Heart },
+            { label: t.common.members, value: org.membersCount, icon: Users },
+            { label: t.common.events, value: org.eventsCount, icon: CalendarDays },
+            { label: t.common.followers, value: org.followers, icon: Heart },
           ].map(({ label, value, icon: Icon }) => (
             <div
               key={label}
@@ -107,14 +109,14 @@ export function OrgProfilePage() {
         <section>
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">
-              Events by {org.title}
+              {t.organizations.eventsBy.replace('{{name}}', org.title)}
             </h2>
             {displayEvents.length > 0 && (
               <Link
                 to={`/events?organizationId=${org.id}`}
                 className="text-xs text-primary hover:underline"
               >
-                See all
+                {t.common.seeAll}
               </Link>
             )}
           </div>
@@ -122,9 +124,9 @@ export function OrgProfilePage() {
           {displayEvents.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border/50 bg-card py-16 text-center">
               <span className="text-4xl">📅</span>
-              <p className="text-sm font-medium text-foreground">No events yet</p>
+              <p className="text-sm font-medium text-foreground">{t.organizations.noEventsYet}</p>
               <p className="text-xs text-muted-foreground">
-                This organization hasn't hosted any events.
+                {t.organizations.noEventsDesc}
               </p>
             </div>
           ) : (
@@ -137,7 +139,7 @@ export function OrgProfilePage() {
                   {isOwner && (
                     <div className="mt-2 px-1">
                       <Link to={`/events/${event.id}/tickets/create`} className="text-xs text-primary hover:underline">
-                        + Add ticket
+                        + {t.events.addTicket}
                       </Link>
                     </div>
                   )}

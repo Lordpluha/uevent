@@ -22,7 +22,7 @@ export type ApiNotification = {
 
 export const mapApiNotification = (raw: ApiNotification): Notification => ({
   id: raw.id,
-  title: raw.name?.trim() || 'Notification',
+  title: raw.name?.trim() || '',
   content: raw.content?.trim() || '',
   createdAt: raw.created ?? new Date().toISOString(),
   read: raw.had_readed ?? false,

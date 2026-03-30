@@ -9,9 +9,10 @@ interface SubmitEventOptions {
   durationHours: string;
   coverFiles: CoverFileEntry[];
   onSuccess?: (eventId: string) => void;
+  errorMessage?: string;
 }
 
-export async function submitCreateEvent({ data, durationHours, coverFiles, onSuccess }: SubmitEventOptions) {
+export async function submitCreateEvent({ data, durationHours, coverFiles, onSuccess, errorMessage }: SubmitEventOptions) {
   try {
     const start = new Date(`${data.date}T${data.time}`);
     const end = new Date(start.getTime() + Number(durationHours) * 60 * 60 * 1000);
@@ -42,6 +43,6 @@ export async function submitCreateEvent({ data, durationHours, coverFiles, onSuc
 
     onSuccess?.(created.data.id);
   } catch {
-    toast.error('Failed to create event');
+    if (errorMessage) toast.error(errorMessage);
   }
 }

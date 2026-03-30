@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import * as speakeasy from 'speakeasy'
-import * as QRCode from 'qrcode'
+import {toDataURL} from 'qrcode'
 import { User } from '../users/entities/user.entity'
 import { UserSession } from '../users/entities/user-session.entity'
 import { UserOtp } from '../users/entities/user-otp.entity'
@@ -12,7 +12,7 @@ import { JwtPayload } from './types/jwt-payload.interface'
 import { hashPassword, verifyPassword } from '../../common/password.util'
 import { CreateUserDto } from '../users/dto/create-user.dto'
 import { EmailService } from '../notifications/email.service'
-import * as crypto from 'crypto'
+import {randomInt} from 'crypto'
 
 const ACCESS_EXPIRES = '15m'
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -121,7 +121,7 @@ export class UsersAuthService {
         meta?.ip_address || 'Unknown',
         meta?.user_agent || 'Unknown',
         new Date(),
-      ).catch(() => {})
+      ).catch(() => undefined)
     }
 
     return { access_token: tokens.access_token, refresh_token: tokens.refresh_token }
@@ -216,7 +216,7 @@ export class UsersAuthService {
     const generated = speakeasy.generateSecret({ name: `UEvent:${user.email}`, issuer: 'UEvent' })
     const secret = generated.base32
     const otpauthUrl = generated.otpauth_url!
-    const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl)
+    const qrCodeDataUrl = await toDataURL(otpauthUrl)
 
     // Store secret temporarily (not enabled yet until verified)
     await this.usersRepo.update(userId, { two_fa_secret: secret })
@@ -264,7 +264,7 @@ export class UsersAuthService {
     if (!user) return { message: 'If that email exists, a reset code has been sent.' }
 
     // Generate 6-digit code
-    const code = crypto.randomInt(100000, 999999).toString()
+    const code = randomInt(100000, 999999).toString()
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
 
     // Invalidate old password reset OTPs

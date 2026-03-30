@@ -2,10 +2,12 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { EventCreate } from '@features/EventCreate';
+import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { useMyOrg } from '@entities/Organization';
 
 export function EventCreatePage() {
+  const { t } = useAppContext();
   const { isAuthenticated, accountType } = useAuth();
   const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
   const navigate = useNavigate();
@@ -33,19 +35,19 @@ export function EventCreatePage() {
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ChevronLeft className="h-4 w-4" />
-        Back to events
+        {t.eventCreate.backToEvents}
       </Link>
 
-      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">Create event</h1>
+      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">{t.eventCreate.title}</h1>
       <p className="mb-6 text-sm text-muted-foreground">
-        Build the event in one flow: essentials, format details, map/online link and publishing metadata.
+        {t.eventCreate.subtitle}
       </p>
 
       <EventCreate
         defaultOrganizationId={defaultOrganizationId}
         lockOrganization
         onSuccess={(eventId) => {
-          toast.success('Event created');
+          toast.success(t.eventCreate.created);
           navigate(`/events/${eventId}`);
         }}
       />

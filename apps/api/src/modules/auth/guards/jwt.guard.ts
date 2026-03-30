@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm'
 import { Request } from 'express'
 import { JwtPayload } from '../types/jwt-payload.interface'
 import { UserSession } from '../../users/entities/user-session.entity'
+import { OrganizationSession } from '../../organizations/entities/organization-session.entity'
 
 @Injectable()
 export class JwtGuard implements CanActivate {
@@ -26,7 +27,11 @@ export class JwtGuard implements CanActivate {
     }
 
     if (payload.session_id) {
-      const sessionExists = await this.dataSource.getRepository(UserSession).existsBy({ id: payload.session_id })
+      const repo =
+        payload.type === 'organization'
+          ? this.dataSource.getRepository(OrganizationSession)
+          : this.dataSource.getRepository(UserSession);
+      const sessionExists = await repo.existsBy({ id: payload.session_id })
       if (!sessionExists) throw new UnauthorizedException('Session has been revoked')
     }
 

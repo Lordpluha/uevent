@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { BadgeCheck, CalendarDays, Users } from 'lucide-react';
 import type { Organization } from '../model/organization';
 import { Avatar, AvatarFallback, AvatarImage, Badge } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { cn } from '@shared/lib/utils';
 
 export type OrgCardProps = Pick<
@@ -19,7 +20,9 @@ export const OrgCard = ({
   membersCount,
   eventsCount,
   verified,
-}: OrgCardProps) => (
+}: OrgCardProps) => {
+  const { t } = useAppContext();
+  return (
   <Link
     to={href ?? `/organizations/${id}`}
     className={cn(
@@ -48,12 +51,13 @@ export const OrgCard = ({
     <div className="flex items-center gap-4 text-xs text-muted-foreground">
       <span className="flex items-center gap-1">
         <Users className="h-3 w-3" />
-        {membersCount.toLocaleString()} members
+        {membersCount.toLocaleString()} {t.entityCard.members}
       </span>
       <span className="flex items-center gap-1">
         <CalendarDays className="h-3 w-3" />
-        {eventsCount} events
+        {eventsCount} {t.entityCard.events}
       </span>
     </div>
   </Link>
-);
+  );
+};

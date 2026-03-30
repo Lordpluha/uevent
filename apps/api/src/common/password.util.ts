@@ -1,8 +1,8 @@
-import * as argon2 from 'argon2'
+import {type Options, argon2id, hash, verify} from 'argon2'
 
 // OWASP-recommended argon2id parameters (2024)
-const ARGON2_OPTIONS: argon2.Options = {
-  type: argon2.argon2id,
+const ARGON2_OPTIONS: Options = {
+  type: argon2id,
   memoryCost: 65536, // 64 MiB
   timeCost: 3,       // iterations
   parallelism: 4,
@@ -10,7 +10,7 @@ const ARGON2_OPTIONS: argon2.Options = {
 }
 
 export const hashPassword = (password: string) =>
-  argon2.hash(password, ARGON2_OPTIONS)
+  hash(password, ARGON2_OPTIONS)
 
 export const verifyPassword = (hash: string, password: string) =>
-  argon2.verify(hash, password)
+  verify(hash, password)

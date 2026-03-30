@@ -19,11 +19,6 @@ export const ChangeOrgPasswordDtoSchema = z.object({
   new_password: z.string().min(8),
 })
 
-export const UpdateOrgSecurityDtoSchema = z.object({
-  two_factor_enabled: z.boolean(),
-})
-
 export type UpdateOrgProfileDto = z.infer<typeof UpdateOrgProfileDtoSchema>
 export type UpdateOrgEmailDto = z.infer<typeof UpdateOrgEmailDtoSchema>
 export type ChangeOrgPasswordDto = z.infer<typeof ChangeOrgPasswordDtoSchema>
-export type UpdateOrgSecurityDto = z.infer<typeof UpdateOrgSecurityDtoSchema>

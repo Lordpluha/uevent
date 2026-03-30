@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 
+import { useAppContext } from '@shared/lib';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/components/ui/button';
 import { XIcon } from 'lucide-react';
@@ -42,6 +43,8 @@ function DialogContent({
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
 }) {
+  const { t } = useAppContext();
+
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -60,7 +63,7 @@ function DialogContent({
             render={<Button variant="ghost" className="absolute top-2 right-2" size="icon-sm" />}
           >
             <XIcon />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t?.common?.close ?? 'Close'}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>
@@ -80,6 +83,8 @@ function DialogFooter({
 }: ComponentProps<'div'> & {
   showCloseButton?: boolean;
 }) {
+  const { t } = useAppContext();
+
   return (
     <div
       data-slot="dialog-footer"
@@ -87,7 +92,7 @@ function DialogFooter({
       {...props}
     >
       {children}
-      {showCloseButton && <DialogPrimitive.Close render={<Button variant="outline" />}>Close</DialogPrimitive.Close>}
+      {showCloseButton && <DialogPrimitive.Close render={<Button variant="outline" />}>{t?.common?.close ?? 'Close'}</DialogPrimitive.Close>}
     </div>
   );
 }

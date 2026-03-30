@@ -14,6 +14,7 @@ import {
   Button,
 } from '@shared/components';
 import { ShareButton } from '@shared/components/ShareButton/ShareButton';
+import { useAppContext } from '@shared/lib';
 import { AuthModal } from '@features/AuthModal';
 
 interface OrgProfileHeroProps {
@@ -44,6 +45,7 @@ export function OrgProfileHero({
   isFollowPending,
   onToggleFollow,
 }: OrgProfileHeroProps) {
+  const { t } = useAppContext();
   return (
     <>
       {/* ── Hero cover ────────────────────── */}
@@ -59,7 +61,7 @@ export function OrgProfileHero({
           className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-black/30 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-black/50 sm:left-6"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          Organizations
+          {t.organizations.title}
         </Link>
       </div>
 
@@ -105,7 +107,7 @@ export function OrgProfileHero({
           )}
           <span className="flex items-center gap-1.5">
             <CalendarDays className="h-3.5 w-3.5" />
-            Founded {org.foundedAt}
+            {t.organizations.founded.replace('{{date}}', org.foundedAt)}
           </span>
         </div>
 
@@ -113,10 +115,10 @@ export function OrgProfileHero({
         {isOwner && (
           <div className="mt-4 flex flex-wrap gap-2">
             <Link to={`/events/create?organizationId=${org.id}`}>
-              <Button size="sm">Create event</Button>
+              <Button size="sm">{t.common.createEvent}</Button>
             </Link>
             <Link to={`/profile/organization/${org.id}`}>
-              <Button size="sm" variant="outline">Organization dashboard</Button>
+              <Button size="sm" variant="outline">{t.organizations.dashboard}</Button>
             </Link>
           </div>
         )}
@@ -129,13 +131,13 @@ export function OrgProfileHero({
                 disabled={isFollowPending}
                 onClick={onToggleFollow}
               >
-                {followStatus?.followed ? 'Unsubscribe' : 'Subscribe'}
+                {followStatus?.followed ? t.organizations.unsubscribe : t.organizations.subscribe}
               </Button>
             ) : (
               <AuthModal
                 defaultTab="login"
                 variant="pill"
-                triggerLabel="Subscribe"
+                triggerLabel={t.organizations.subscribe}
                 triggerClassName="bg-primary text-primary-foreground hover:bg-primary/90"
               />
             )}

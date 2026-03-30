@@ -1,16 +1,19 @@
 import { Briefcase, Camera, Code2, Globe, Landmark, MonitorPlay, Music2, Search, Ticket, Users } from 'lucide-react';
+import type { Dictionary } from '@shared/lib';
 import { useCountUp } from '@shared/hooks/useCountUp';
 
-export const CATEGORIES = [
-  { label: 'Technology', icon: Code2, color: 'text-violet-400' },
-  { label: 'Design', icon: MonitorPlay, color: 'text-blue-400' },
-  { label: 'Music', icon: Music2, color: 'text-pink-400' },
-  { label: 'Business', icon: Briefcase, color: 'text-amber-400' },
-  { label: 'Photography', icon: Camera, color: 'text-red-400' },
-  { label: 'Networking', icon: Users, color: 'text-green-400' },
-  { label: 'Culture', icon: Landmark, color: 'text-orange-400' },
-  { label: 'Online', icon: Globe, color: 'text-cyan-400' },
-] as const;
+export function getHomeCategories(t: Dictionary) {
+  return [
+    { label: t.home.categories.items.technology, icon: Code2, color: 'text-violet-400' },
+    { label: t.home.categories.items.design, icon: MonitorPlay, color: 'text-blue-400' },
+    { label: t.home.categories.items.music, icon: Music2, color: 'text-pink-400' },
+    { label: t.home.categories.items.business, icon: Briefcase, color: 'text-amber-400' },
+    { label: t.home.categories.items.photography, icon: Camera, color: 'text-red-400' },
+    { label: t.home.categories.items.networking, icon: Users, color: 'text-green-400' },
+    { label: t.home.categories.items.culture, icon: Landmark, color: 'text-orange-400' },
+    { label: t.home.categories.items.online, icon: Globe, color: 'text-cyan-400' },
+  ] as const;
+}
 
 export const HOW_ICONS = [Search, Users, Ticket] as const;
 

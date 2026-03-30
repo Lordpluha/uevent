@@ -1,5 +1,6 @@
 import type { UpdateEventDto } from '@entities/Event'
 import { Field, FieldTitle, Input } from '@shared/components'
+import { useAppContext } from '@shared/lib'
 import { X } from 'lucide-react'
 import { useState } from 'react'
 import type { UseFormSetValue, UseFormWatch } from 'react-hook-form'
@@ -10,6 +11,7 @@ interface EventEditTagsFieldProps {
 }
 
 export function EventEditTagsField({ watch, setValue }: EventEditTagsFieldProps) {
+  const { t } = useAppContext()
   const [tagInput, setTagInput] = useState('')
   const tags = watch('tags') ?? []
 
@@ -30,7 +32,7 @@ export function EventEditTagsField({ watch, setValue }: EventEditTagsFieldProps)
 
   return (
     <Field>
-      <FieldTitle>Tags</FieldTitle>
+      <FieldTitle>{t.common.tags}</FieldTitle>
       <div className="flex flex-col gap-2">
         <Input
           value={tagInput}
@@ -42,7 +44,7 @@ export function EventEditTagsField({ watch, setValue }: EventEditTagsFieldProps)
             }
           }}
           onBlur={() => tagInput && addTag(tagInput)}
-          placeholder="Add tag and press Enter…"
+          placeholder={t.eventEdit.tagsPlaceholder}
         />
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">

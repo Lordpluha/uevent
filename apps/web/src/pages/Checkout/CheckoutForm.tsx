@@ -10,10 +10,12 @@ import {
 import type { StripePaymentElementOptions } from '@stripe/stripe-js';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { CheckoutOrderSummary } from './CheckoutOrderSummary';
 import { useConfirmPayment } from './useConfirmPayment';
 
 export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
+  const { t } = useAppContext();
   const navigate = useNavigate();
   const stripe = useStripe();
   const elements = useElements();
@@ -47,11 +49,11 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
         setPendingPayment(payment);
         setEmail(payment.email);
       } catch {
-        toast.error('Failed to load payment details');
+        toast.error(t.checkout.loadFailed);
         navigate('/');
       }
     }else {
-      toast.error('No payment in progress');
+      toast.error(t.checkout.noPayment);
       navigate('/');
     }
   }, [navigate]);
@@ -78,7 +80,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if(!stripe || !elements) {
-      toast.error('Stripe not ready');
+      toast.error(t.checkout.stripeNotReady);
       return;
     }
     setIsProcessing(true);
@@ -95,15 +97,15 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          {t.checkout.back}
         </button>
 
         {/* Card */}
         <div className="bg-card rounded-lg shadow-lg p-6 border border-border">
           {/* Title */}
-          <h1 className="text-2xl font-bold mb-2">Secure Checkout</h1>
+          <h1 className="text-2xl font-bold mb-2">{t.checkout.title}</h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Complete your payment to confirm ticket purchase
+            {t.checkout.subtitle}
           </p>
 
           <CheckoutOrderSummary
@@ -153,11 +155,10 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
             {/* Security */}
             <div className="pt-2 pb-4 space-y-2">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                🔒 Your payment information is encrypted and secure. Stripe handles all transactions
-                with industry-standard PCI DSS Level 1 compliance.
+                🔒 {t.checkout.secureNote}
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                💳 Some payment methods (PayPal, Apple Pay, Google Pay, etc.) will redirect you to securely complete authentication on their platform. You'll be automatically returned after successful verification.
+                💳 {t.checkout.redirectNote}
               </p>
             </div>
 
@@ -172,7 +173,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
                 }}
                 disabled={isProcessing || confirmPaymentMutation.isPending}
               >
-                Cancel
+                {t.common.cancel}
               </Button>
               <Button
                 type="submit"
@@ -184,10 +185,10 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
                 {isProcessing || confirmPaymentMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
+                    {t.common.processing}
                   </>
                 ) : (
-                  `Pay $${(pendingPayment.price || 0).toFixed(2)}`
+                  t.checkout.pay.replace('{{amount}}', `$${(pendingPayment.price || 0).toFixed(2)}`)
                 )}
               </Button>
             </div>

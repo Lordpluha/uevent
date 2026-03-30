@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@shared/components';
 import { usersApi } from '@entities/User';
+import { useAppContext } from '@shared/lib';
 import type { UserProfile } from './types';
 
 interface ProfileSectionProps {
@@ -28,6 +29,7 @@ interface ProfileSectionProps {
 }
 
 export function ProfileSection({ user, invalidateUser }: ProfileSectionProps) {
+  const { t } = useAppContext();
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState({
@@ -47,17 +49,17 @@ export function ProfileSection({ user, invalidateUser }: ProfileSectionProps) {
         location: profile.location.trim() || undefined,
         website: profile.website.trim() || undefined,
       }),
-    onSuccess: async () => { await invalidateUser(); toast.success('Profile updated'); },
-    onError: () => toast.error('Failed to update profile'),
+    onSuccess: async () => { await invalidateUser(); toast.success(t.profileSettings.profileSection.profileUpdated); },
+    onError: () => toast.error(t.profileSettings.profileSection.updateFailed),
   });
 
   const uploadAvatarMutation = useMutation({
     mutationFn: (file: File) => usersApi.uploadAvatar(file),
     onSuccess: async () => {
       await invalidateUser();
-      toast.success('Profile photo updated');
+      toast.success(t.profileSettings.profileSection.photoUpdated);
     },
-    onError: () => toast.error('Failed to upload profile photo'),
+    onError: () => toast.error(t.profileSettings.profileSection.photoFailed),
   });
 
   const setProfileField =
@@ -98,25 +100,25 @@ export function ProfileSection({ user, invalidateUser }: ProfileSectionProps) {
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
                 className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
-                aria-label="Change avatar"
+                aria-label={t.profileSettings.profileSection.changeAvatar}
               />
             }>
               <Camera className="h-3.5 w-3.5" />
             </TooltipTrigger>
-            <TooltipContent>Change photo</TooltipContent>
+            <TooltipContent>{t.profileSettings.profileSection.changePhoto}</TooltipContent>
           </Tooltip>
           <input
             ref={avatarInputRef}
             type="file"
             accept="image/*"
             className="hidden"
-            aria-label="Upload avatar"
+            aria-label={t.profileSettings.profileSection.uploadAvatar}
             onChange={handleAvatarChange}
           />
         </div>
         <div>
-          <p className="text-sm font-medium">Profile photo</p>
-          <p className="text-xs text-muted-foreground">JPG, PNG or WebP · max 2 MB</p>
+          <p className="text-sm font-medium">{t.profileSettings.profileSection.profilePhoto}</p>
+          <p className="text-xs text-muted-foreground">{t.profileSettings.profileSection.photoHint}</p>
         </div>
       </div>
 
@@ -125,60 +127,60 @@ export function ProfileSection({ user, invalidateUser }: ProfileSectionProps) {
       <FieldGroup>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="name">Full name</FieldLabel>
+            <FieldLabel htmlFor="name">{t.profileSettings.profileSection.fullName}</FieldLabel>
             <Input
               id="name"
               value={profile.name}
               onChange={setProfileField('name')}
-              placeholder="Your name"
+              placeholder={t.profileSettings.profileSection.fullNamePlaceholder}
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="username">Username</FieldLabel>
+            <FieldLabel htmlFor="username">{t.profileSettings.profileSection.username}</FieldLabel>
             <Input
               id="username"
               value={profile.username}
               onChange={setProfileField('username')}
-              placeholder="username"
+              placeholder={t.profileSettings.profileSection.usernamePlaceholder}
             />
-            <FieldDescription>Shown in your public profile URL.</FieldDescription>
+            <FieldDescription>{t.profileSettings.profileSection.usernameHint}</FieldDescription>
           </Field>
         </div>
 
         <Field>
-          <FieldLabel htmlFor="bio">Bio</FieldLabel>
+          <FieldLabel htmlFor="bio">{t.profileSettings.profileSection.bio}</FieldLabel>
           <Textarea
             id="bio"
             value={profile.bio}
             onChange={setProfileField('bio')}
-            placeholder="Tell something about yourself…"
+            placeholder={t.profileSettings.profileSection.bioPlaceholder}
             className="min-h-24 resize-y"
             maxLength={300}
           />
-          <FieldDescription>{profile.bio.length}/300 characters</FieldDescription>
+          <FieldDescription>{profile.bio.length}/300 {t.profileSettings.profileSection.characters}</FieldDescription>
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="location">
-              <MapPin className="inline h-3.5 w-3.5" /> Location
+              <MapPin className="inline h-3.5 w-3.5" /> {t.profileSettings.profileSection.location}
             </FieldLabel>
             <Input
               id="location"
               value={profile.location}
               onChange={setProfileField('location')}
-              placeholder="City, Country"
+              placeholder={t.profileSettings.profileSection.locationPlaceholder}
             />
           </Field>
           <Field>
             <FieldLabel htmlFor="website">
-              <Globe className="inline h-3.5 w-3.5" /> Website
+              <Globe className="inline h-3.5 w-3.5" /> {t.profileSettings.profileSection.website}
             </FieldLabel>
             <Input
               id="website"
               value={profile.website}
               onChange={setProfileField('website')}
-              placeholder="https://your.site"
+              placeholder={t.profileSettings.profileSection.websitePlaceholder}
             />
           </Field>
         </div>
@@ -191,7 +193,7 @@ export function ProfileSection({ user, invalidateUser }: ProfileSectionProps) {
           disabled={profileMutation.isPending}
         >
           <Save className="h-3.5 w-3.5" />
-          {profileMutation.isPending ? 'Saving…' : 'Save profile'}
+          {profileMutation.isPending ? t.common.saving : t.profileSettings.profileSection.saveProfile}
         </Button>
       </div>
     </form>

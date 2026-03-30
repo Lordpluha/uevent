@@ -11,6 +11,7 @@ import {
   SheetTrigger,
 } from '@shared/components';
 import type { Format } from '../model/types';
+import { useAppContext } from '@shared/lib';
 import {
   FilterFormatField,
   FilterTagsField,
@@ -50,6 +51,7 @@ export function EventsMobileFilters({
   tags,
   cities,
 }: Props) {
+  const { t } = useAppContext();
   return (
     <div className="mb-6 flex items-center gap-3 lg:hidden">
       {/* Search */}
@@ -57,7 +59,7 @@ export function EventsMobileFilters({
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Search events…"
+          placeholder={t.filters.searchPlaceholder}
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           className="h-10 w-full pl-9"
@@ -85,14 +87,14 @@ export function EventsMobileFilters({
         <SheetContent side="bottom" showCloseButton={false} className="max-h-[85vh] rounded-t-2xl px-0 pb-0">
           <div className="mx-auto mb-2 mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted" />
           <SheetHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-0">
-            <SheetTitle>Filters</SheetTitle>
+            <SheetTitle>{t.filters.filtersTitle}</SheetTitle>
             {activeFilterCount > 0 && (
               <button
                 type="button"
                 onClick={onClearAll}
                 className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
               >
-                Clear all
+                {t.filters.clearAll}
               </button>
             )}
           </SheetHeader>
@@ -100,25 +102,25 @@ export function EventsMobileFilters({
           <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-8">
             {/* Format */}
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Format</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.filters.format}</p>
               <FilterFormatField format={format} onFormatChange={onFormatChange} />
             </div>
 
             {/* Tags */}
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Tags</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.filters.tags}</p>
               <FilterTagsField selectedTags={selectedTags} onTagsChange={onTagsChange} tagsAnchor={tagsAnchor} tags={tags} />
             </div>
 
             {/* Date range */}
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Date range</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.filters.dateRange}</p>
               <FilterDateRangeField dateRange={dateRange} onDateRangeChange={onDateRangeChange} />
             </div>
 
             {/* Location */}
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Location</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.filters.location}</p>
               <FilterLocationField location={location} onLocationChange={onLocationChange} locationAnchor={locationAnchor} cities={cities} />
             </div>
 
@@ -131,7 +133,7 @@ export function EventsMobileFilters({
                 />
               }
             >
-              Show {resultCount} result{resultCount !== 1 ? 's' : ''}
+              {t.filters.showResults.replace('{{count}}', String(resultCount))}
             </SheetClose>
           </div>
         </SheetContent>

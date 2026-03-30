@@ -11,6 +11,7 @@ import {
   Separator,
 } from '@shared/components';
 import { ShareButton } from '@shared/components/ShareButton/ShareButton';
+import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { authApi } from '@shared/api/auth.api';
 import type { EventModel } from '@entities/Event';
@@ -21,29 +22,30 @@ interface Props {
 }
 
 export function EventDetails({ event, eventId }: Props) {
+  const { t } = useAppContext();
   const { isAuthenticated, accountType } = useAuth();
   const description = event.description?.trim() ?? '';
 
   const calendarMutation = useMutation({
     mutationFn: () => authApi.addToGoogleCalendar(eventId),
     onSuccess: (data) => {
-      toast.success('Added to Google Calendar!');
+      toast.success(t.events.details.calendarAdded);
       if (data.htmlLink) window.open(data.htmlLink, '_blank');
     },
     onError: (err: unknown) => {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? '';
       const lower = msg.toLowerCase();
       if (lower.includes('google calendar api is disabled')) {
-        toast.error('Google Calendar API is disabled in Google Cloud. Enable calendar-json.googleapis.com and try again.');
+        toast.error(t.events.details.calendarApiDisabled);
         return;
       }
       if (lower.includes('google calendar access denied') || lower.includes('google account not linked')) {
-        toast.error('Google Calendar access denied. Re-link your Google account.', {
-          action: { label: 'Link Google', onClick: () => window.location.assign('/api/auth/google') },
+        toast.error(t.events.details.calendarAccessDenied, {
+          action: { label: t.events.details.calendarLinkGoogle, onClick: () => window.location.assign('/api/auth/google') },
         });
         return;
       }
-      toast.error('Failed to add to Google Calendar. Make sure your Google account is linked.');
+      toast.error(t.events.details.calendarFailed);
     },
   });
 
@@ -60,7 +62,7 @@ export function EventDetails({ event, eventId }: Props) {
               disabled={calendarMutation.isPending || !eventId}
               onClick={() => calendarMutation.mutate()}
             >
-              <CalendarPlus className="h-4 w-4" /> Google Calendar
+              <CalendarPlus className="h-4 w-4" /> {t.events.details.googleCalendar}
             </Button>
           )}
           <ShareButton title={event.title} />
@@ -69,10 +71,10 @@ export function EventDetails({ event, eventId }: Props) {
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { icon: CalendarDays, label: 'Date', value: event.date },
-          { icon: Clock, label: 'Time', value: `${event.time} GMT` },
-          { icon: event.format === 'online' ? Video : MapPin, label: event.format === 'online' ? 'Platform' : 'Venue', value: event.location ?? 'Online' },
-          { icon: Users, label: 'Attendees', value: event.attendeeCount.toLocaleString() },
+          { icon: CalendarDays, label: t.common.date, value: event.date },
+          { icon: Clock, label: t.common.time, value: `${event.time} ${t.common.gmt}` },
+          { icon: event.format === 'online' ? Video : MapPin, label: event.format === 'online' ? t.events.details.platform : t.events.details.venue, value: event.location ?? t.common.online },
+          { icon: Users, label: t.common.attendees, value: event.attendeeCount.toLocaleString() },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card p-3">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Icon className="h-3.5 w-3.5" />{label}</span>
@@ -95,19 +97,19 @@ export function EventDetails({ event, eventId }: Props) {
             {event.organizer[0]}
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Organized by</p>
+            <p className="text-xs text-muted-foreground">{t.events.details.organizedBy}</p>
             <p className="text-sm font-semibold text-foreground">{event.organizer}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
           <Star className="h-4 w-4 fill-rose-500 text-rose-500" />
           <span className="text-sm font-bold text-foreground">{event.rating.toFixed(1)}</span>
-          <span className="text-xs text-muted-foreground">rating</span>
+          <span className="text-xs text-muted-foreground">{t.events.details.rating}</span>
         </div>
       </div>
 
       <div className="mb-6">
-        <h2 className="mb-3 text-base font-semibold text-foreground">About this event</h2>
+        <h2 className="mb-3 text-base font-semibold text-foreground">{t.events.details.aboutEvent}</h2>
         <RichTextEditor
           defaultValue={description}
           readOnly
@@ -118,13 +120,13 @@ export function EventDetails({ event, eventId }: Props) {
 
         {event.format === 'online' && event.onlineUrl && (
           <a href={event.onlineUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-            Join meeting <ExternalLink className="h-3.5 w-3.5" />
+            {t.events.details.joinMeeting} <ExternalLink className="h-3.5 w-3.5" />
           </a>
         )}
 
         {event.format === 'offline' && event.googleMapsUrl && (
           <a href={event.googleMapsUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-            Open in Google Maps <ExternalLink className="h-3.5 w-3.5" />
+            {t.events.details.openGoogleMaps} <ExternalLink className="h-3.5 w-3.5" />
           </a>
         )}
       </div>
@@ -133,7 +135,7 @@ export function EventDetails({ event, eventId }: Props) {
 
       {event.attendees && event.attendees.length > 0 && (
         <div className="mb-8">
-          <h2 className="mb-3 text-base font-semibold text-foreground">Who's going</h2>
+          <h2 className="mb-3 text-base font-semibold text-foreground">{t.events.details.whosGoing}</h2>
           <div className="flex items-center gap-3">
             <div className="flex">
               {event.attendees.map((a, i) => (
@@ -144,7 +146,7 @@ export function EventDetails({ event, eventId }: Props) {
               ))}
             </div>
             <span className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{event.attendeeCount.toLocaleString()}</span> people attending
+              <span className="font-semibold text-foreground">{event.attendeeCount.toLocaleString()}</span> {t.events.details.peopleAttending}
             </span>
           </div>
         </div>

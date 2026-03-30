@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { api } from '@shared/api';
+import { useAppContext } from '@shared/lib';
 
 interface UseCheckoutPaymentOptions {
   eventId?: string;
@@ -33,12 +34,13 @@ export function useCheckoutPayment({
   event,
 }: UseCheckoutPaymentOptions) {
   const navigate = useNavigate();
+  const { t } = useAppContext();
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const handleProceedToPayment = async () => {
     if (!eventId || !selectedTicket) return;
     if (selectedTicket.quantityLimited && (remaining ?? 0) <= 0) {
-      toast.error('This ticket is sold out');
+      toast.error(t.checkoutReview.soldOut);
       return;
     }
 
@@ -96,7 +98,7 @@ export function useCheckoutPayment({
     } catch (error) {
       const message =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'Failed to start payment';
+        t.checkoutReview.startFailed;
       toast.error(message);
     } finally {
       setIsProcessingPayment(false);

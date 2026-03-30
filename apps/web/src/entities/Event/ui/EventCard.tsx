@@ -3,6 +3,7 @@ import { MapPin, Star, Video } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/components';
 import { Badge } from '@shared/components';
 import { Card, CardContent } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { cn } from '@shared/lib/utils';
 import type { EventFormat } from '../model/event';
 import type { EventAttendee } from '../model/eventEntity';
@@ -24,10 +25,7 @@ export type EventCardProps = {
   size?: 'default' | 'compact';
 };
 
-const FORMAT_LABELS: Record<EventFormat, string> = {
-  online: 'Online',
-  offline: 'Offline',
-};
+
 
 /* ── cva definitions ─────────────────────────────────────── */
 
@@ -86,6 +84,7 @@ export const EventCard = ({
   attendees = [],
   size = 'default',
 }: EventCardProps) => {
+  const { t } = useAppContext();
   return (
     <Card className={cn(cardVariants({ size }))}>
       {/* Cover image */}
@@ -93,7 +92,7 @@ export const EventCard = ({
         {imageUrl ? (
           <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">No image</div>
+          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">{t.common.noImage}</div>
         )}
       </div>
 
@@ -104,16 +103,16 @@ export const EventCard = ({
         {/* Date, time, format */}
         <div className="flex flex-wrap items-center gap-1.5">
           <span className={cn(metaTextVariants({ size }))}>{date}</span>
-          <span className="text-xs text-muted-foreground">{time} GMT</span>
+          <span className="text-xs text-muted-foreground">{time} {t.common.gmt}</span>
           <span className="text-muted-foreground">·</span>
           <Badge variant="secondary" className="flex items-center gap-1 px-1.5 py-0.5 text-xs font-semibold">
             {format === 'online' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
-            {FORMAT_LABELS[format]}
+            {format === 'online' ? t.common.online : t.common.offline}
           </Badge>
         </div>
 
         {/* Organizer */}
-        <p className="truncate text-xs text-muted-foreground">from {organizer}</p>
+        <p className="truncate text-xs text-muted-foreground">{t.entityCard.from} {organizer}</p>
 
         {/* Attendees + rating */}
         <div className="flex items-center justify-between">
@@ -125,7 +124,7 @@ export const EventCard = ({
               </Avatar>
             ))}
             <span className="ml-2 text-sm font-semibold text-foreground">
-              {attendeeCount.toLocaleString()} attendees
+              {attendeeCount.toLocaleString()} {t.entityCard.attendees}
             </span>
           </div>
           <div className="flex items-center gap-1">

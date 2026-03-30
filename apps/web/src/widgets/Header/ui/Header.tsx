@@ -80,7 +80,7 @@ export const Header = () => {
           <LocaleSwitcher />
           <ThemeSwitcher variant="pill" />
           <SearchModal variant="pill" />
-          {isAuthenticated && <NotificationsBell enabled />}
+          {isAuthenticated && accountType === 'user' && <NotificationsBell enabled />}
           {isAuthenticated && currentAccount ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="rounded-full transition-opacity hover:opacity-80 focus:outline-none">
@@ -158,7 +158,7 @@ export const Header = () => {
               <LocaleSwitcher />
               <ThemeSwitcher variant="block" />
               <SearchModal variant="block" />
-              {isAuthenticated && (
+              {isAuthenticated && accountType === 'user' && (
                 <div className="self-start">
                   <NotificationsBell enabled />
                 </div>

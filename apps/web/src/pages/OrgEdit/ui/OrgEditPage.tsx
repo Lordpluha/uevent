@@ -18,9 +18,11 @@ import {
 import { useOrg } from '@entities/Organization';
 import { organizationsApi } from '@entities/Organization';
 import { cn } from '@shared/lib/utils';
+import { useAppContext } from '@shared/lib';
 import { OrgEditBranding } from './OrgEditBranding';
 
 export function OrgEditPage() {
+  const { t } = useAppContext();
   const { id } = useParams();
   const { data: org, isLoading } = useOrg(id ?? '');
   const queryClient = useQueryClient();
@@ -49,10 +51,10 @@ export function OrgEditPage() {
         queryClient.invalidateQueries({ queryKey: ['organizations'] }),
         queryClient.invalidateQueries({ queryKey: ['events'] }),
       ]);
-      toast.success('Organization updated');
+      toast.success(t.orgEdit.updated);
     },
     onError: () => {
-      toast.error('Failed to update organization');
+      toast.error(t.orgEdit.updateFailed);
     },
   });
 
@@ -70,15 +72,15 @@ export function OrgEditPage() {
   }, [org]);
 
   if (isLoading) {
-    return <main className="flex min-h-[60vh] items-center justify-center text-center">Загрузка...</main>;
+    return <main className="flex min-h-[60vh] items-center justify-center text-center">{t.orgEdit.loading}</main>;
   }
   if (!org) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="text-5xl">🏢</p>
-        <h1 className="text-xl font-semibold">Organization not found</h1>
+        <h1 className="text-xl font-semibold">{t.orgEdit.notFound}</h1>
         <Link to="/" className="text-sm text-primary hover:underline">
-          ← Back to home
+          {t.common.backToHome}
         </Link>
       </main>
     );
@@ -101,10 +103,10 @@ export function OrgEditPage() {
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ChevronLeft className="h-4 w-4" />
-        Back to organization
+        {t.orgEdit.backToOrg}
       </Link>
 
-      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">Edit organization</h1>
+      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">{t.orgEdit.title}</h1>
       <p className="mb-8 text-sm text-muted-foreground">{org.title}</p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -119,57 +121,57 @@ export function OrgEditPage() {
 
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="title">Organization name</FieldLabel>
+            <FieldLabel htmlFor="title">{t.orgEdit.name}</FieldLabel>
             <Input
               id="title"
               value={form.title}
               onChange={set('title')}
-              placeholder="My Organization"
+              placeholder={t.orgEdit.namePlaceholder}
             />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="description">Description</FieldLabel>
+            <FieldLabel htmlFor="description">{t.orgEdit.description}</FieldLabel>
             <Textarea
               id="description"
               value={form.description}
               onChange={set('description')}
-              placeholder="What is your organization about?"
+              placeholder={t.orgEdit.descriptionPlaceholder}
               className="min-h-28"
             />
-            <FieldDescription>Max 1000 characters.</FieldDescription>
+            <FieldDescription>{t.orgEdit.maxChars.replace('{{n}}', '1000')}</FieldDescription>
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="category">Category</FieldLabel>
+              <FieldLabel htmlFor="category">{t.orgEdit.category}</FieldLabel>
               <Input
                 id="category"
                 value={form.category}
                 onChange={set('category')}
-                placeholder="Technology"
+                placeholder={t.orgEdit.categoryPlaceholder}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="location">Location</FieldLabel>
+              <FieldLabel htmlFor="location">{t.orgEdit.location}</FieldLabel>
               <Input
                 id="location"
                 value={form.location}
                 onChange={set('location')}
-                placeholder="City, Country"
+                placeholder={t.orgEdit.locationPlaceholder}
               />
             </Field>
           </div>
 
           <Field>
-            <FieldLabel htmlFor="website">Website</FieldLabel>
+            <FieldLabel htmlFor="website">{t.orgEdit.website}</FieldLabel>
             <Input
               id="website"
               value={form.website}
               onChange={set('website')}
-              placeholder="https://your-org.com"
+              placeholder={t.orgEdit.websitePlaceholder}
             />
-            <FieldDescription>Public URL shown on your organization page.</FieldDescription>
+            <FieldDescription>{t.orgEdit.websiteHint}</FieldDescription>
           </Field>
         </FieldGroup>
 
@@ -177,11 +179,11 @@ export function OrgEditPage() {
 
         <div className="flex justify-end gap-3">
           <Link to={`/organizations/${id}`} className={cn(buttonVariants({ variant: 'ghost' }))}>
-            Cancel
+            {t.common.cancel}
           </Link>
           <Button type="submit" className="gap-1.5" disabled={saveOrgMutation.isPending || !id}>
             <Save className="h-3.5 w-3.5" />
-            {saveOrgMutation.isPending ? 'Saving...' : 'Save changes'}
+            {saveOrgMutation.isPending ? t.common.saving : t.common.saveChanges}
           </Button>
         </div>
       </form>

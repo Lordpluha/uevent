@@ -4,6 +4,7 @@ import { useEvents } from '@entities/Event';
 import { useTags } from '@shared/hooks/useTags';
 import { useEventsFilters } from '../model/useEventsFilters';
 import { EventsFilterBar, EventsMobileFilters } from '@features/EventsFilter';
+import { useAppContext } from '@shared/lib';
 import { EventsGrid } from './EventsGrid';
 import {
   Pagination,
@@ -25,6 +26,7 @@ function getPaginationItems(current: number, total: number): Array<number | 'ell
 }
 
 export function EventsPage() {
+  const { t } = useAppContext();
   const f = useEventsFilters();
   const [pageParam, setPageParam] = useQueryState('page', parseAsString.withDefault('1'));
   const page = Math.max(1, Number.parseInt(pageParam, 10) || 1);
@@ -79,9 +81,9 @@ export function EventsPage() {
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-10">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Events</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">{t.events.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Discover upcoming meetups, workshops &amp; conferences.
+          {t.events.subtitle}
         </p>
       </div>
 
@@ -168,7 +170,7 @@ export function EventsPage() {
 
       {!isLoading && events.length > 0 && (
         <p className="mt-3 text-center text-xs text-muted-foreground">
-          Page {page} of {totalPages} · {total} events
+          {t.events.pagination.replace('{{page}}', String(page)).replace('{{totalPages}}', String(totalPages)).replace('{{total}}', String(total))}
         </p>
       )}
     </main>

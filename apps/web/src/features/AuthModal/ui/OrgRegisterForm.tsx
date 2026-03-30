@@ -2,9 +2,10 @@ import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { z } from 'zod';
 import { Button, Input, Label } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { authApi } from '@shared/api/auth.api';
 import { organizationsApi } from '@entities/Organization';
@@ -46,7 +47,7 @@ export const OrgRegisterForm = ({
   onSuccess,
 }: { t: OrgRegisterDict; onSwitch: () => void; onSuccess: () => void }) => {
   const { setAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
+  const { t: appT } = useAppContext();
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterOrgValues>({
     resolver: zodResolver(registerOrgSchema),
   });
@@ -56,11 +57,10 @@ export const OrgRegisterForm = ({
       authApi.registerOrg({ name: v.name, email: v.email, password: v.password }),
     onSuccess: (data) => {
       setAuthenticated(data.accountType);
-      queryClient.prefetchQuery({ queryKey: ['me'], queryFn: () => organizationsApi.getMe() });
-      toast.success('Organization registered successfully');
+      toast.success(appT.authExtra.orgRegistered);
       onSuccess();
     },
-    onError: () => toast.error('Registration failed. Email may already be in use.'),
+    onError: () => toast.error(appT.authExtra.orgRegisterFailed),
   });
 
   return (

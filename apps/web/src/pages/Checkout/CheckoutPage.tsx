@@ -4,9 +4,11 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import type { StripeElementsOptions } from '@stripe/stripe-js';
 import { Loader2 } from 'lucide-react';
+import { useAppContext } from '@shared/lib';
 import { CheckoutForm } from './CheckoutForm';
 
 export function CheckoutPage() {
+  const { t } = useAppContext();
   const [pendingPayment, setPendingPayment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
@@ -15,7 +17,7 @@ export function CheckoutPage() {
     const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
     if(!publishableKey || publishableKey === 'pk_test_placeholder') {
       console.error('Stripe publishable key is not configured');
-      toast.error('Payment configuration error. Please contact support.');
+      toast.error(t.checkout.configError);
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
@@ -33,7 +35,7 @@ export function CheckoutPage() {
         setPendingPayment(JSON.parse(saved));
       } catch (error) {
         console.error('Failed to parse pending payment:', error);
-        toast.error('Failed to load payment details from session');
+        toast.error(t.checkout.loadFailed);
 
         // redirecting home after fail
         setTimeout(() => {
@@ -56,7 +58,7 @@ export function CheckoutPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">No payment in progress</p>
+          <p className="text-muted-foreground">{t.checkout.noPayment}</p>
         </div>
       </div>
     );

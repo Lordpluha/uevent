@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import type { Stripe, StripeElements } from '@stripe/stripe-js';
 import { api } from '@shared/api';
+import { useAppContext } from '@shared/lib';
 
 interface UseConfirmPaymentOptions {
   stripe: Stripe | null;
@@ -26,6 +27,7 @@ export function useConfirmPayment({
   setIsProcessing,
 }: UseConfirmPaymentOptions) {
   const navigate = useNavigate();
+  const { t } = useAppContext();
 
   return useMutation({
     mutationFn: async () => {
@@ -49,7 +51,7 @@ export function useConfirmPayment({
         try {
           await api.post('/payments/send-confirmation', {
             userEmail: customerEmail,
-            userName: pendingPayment.fullName || 'Valued Customer',
+            userName: pendingPayment.fullName || t.checkout.defaultName,
             eventTitle: pendingPayment.eventTitle,
             ticketName: pendingPayment.ticketName,
             price: pendingPayment.price,
@@ -65,15 +67,15 @@ export function useConfirmPayment({
       }
 
       if (result?.paymentIntent?.status === 'succeeded') {
-        toast.success('Payment successful!');
+        toast.success(t.checkout.paymentSuccess);
         navigate(buildSuccessUrl(result.paymentIntent.id));
       } else if (result?.paymentIntent?.status === 'processing') {
-        toast.info('Payment is processing...');
+        toast.info(t.checkout.paymentProcessing);
         navigate(buildSuccessUrl(result.paymentIntent.id));
       }
     },
     onError: (error: any) => {
-      const errorMessage = error?.message || 'Payment failed';
+      const errorMessage = error?.message || t.checkout.paymentFailed;
       setMessage(errorMessage);
       toast.error(errorMessage);
       setIsProcessing(false);

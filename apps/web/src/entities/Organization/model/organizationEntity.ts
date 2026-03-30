@@ -72,7 +72,7 @@ export const mapApiOrganization = (raw: ApiOrganization): Organization => ({
   website: raw.website ?? undefined,
   slogan: raw.slogan ?? undefined,
   phone: raw.phone ?? undefined,
-  category: raw.category ?? 'Other',
+  category: raw.category ?? '',
   foundedAt: raw.foundedAt ?? raw.created_at ?? '',
   membersCount: raw.membersCount ?? 0,
   eventsCount: raw.eventsCount ?? 0,

@@ -5,12 +5,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft } from 'lucide-react';
 import { Button, Field, FieldError, FieldGroup, FieldLabel, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components';
 import { useAuth } from '@shared/lib/auth-context';
+import { useAppContext } from '@shared/lib';
 import { useMyOrg } from '@entities/Organization';
 import { useEvent } from '@entities/Event';
 import { ticketFormSchema, type TicketForm } from './ticketFormSchema';
 import { submitTicket } from './submitTicket';
 
 export function TicketCreatePage() {
+  const { t } = useAppContext();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, accountType } = useAuth();
@@ -53,7 +55,14 @@ export function TicketCreatePage() {
   }
 
   const onSubmit = async (data: TicketForm) => {
-    await submitTicket(data, { ticketType, quantityLimited, eventId: id!, onSuccess: () => navigate(`/events/${id}`) });
+    await submitTicket(data, {
+      ticketType,
+      quantityLimited,
+      eventId: id!,
+      onSuccess: () => navigate(`/events/${id}`),
+      successMessage: t.ticketCreate.created,
+      fallbackError: t.ticketCreate.createFailed,
+    });
   };
 
   return (
@@ -63,29 +72,29 @@ export function TicketCreatePage() {
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ChevronLeft className="h-4 w-4" />
-        Back to event
+        {t.common.backToEvent}
       </Link>
 
-      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">Create ticket</h1>
+      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">{t.ticketCreate.title}</h1>
       <p className="mb-6 text-sm text-muted-foreground">
-        Event ID: {id ?? 'unknown'}. UI scaffold for organizer ticket setup.
+        {t.ticketCreate.eventId.replace('{{id}}', id ?? t.ticketCreate.unknownId)}
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 rounded-xl border border-border/60 bg-card p-5">
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="ticket-name">Ticket name</FieldLabel>
-            <Input id="ticket-name" placeholder="Early Bird" {...register('name')} />
+            <FieldLabel htmlFor="ticket-name">{t.ticketCreate.ticketName}</FieldLabel>
+            <Input id="ticket-name" placeholder={t.ticketCreate.ticketNamePlaceholder} {...register('name')} />
             <FieldError errors={errors.name ? [errors.name] : undefined} />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="ticket-description">Description</FieldLabel>
-            <Input id="ticket-description" placeholder="Ticket details" {...register('description')} />
+            <FieldLabel htmlFor="ticket-description">{t.ticketCreate.ticketDescription}</FieldLabel>
+            <Input id="ticket-description" placeholder={t.ticketCreate.ticketDescPlaceholder} {...register('description')} />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="ticket-type">Type</FieldLabel>
+            <FieldLabel htmlFor="ticket-type">{t.ticketCreate.type}</FieldLabel>
             <Select
               value={ticketType}
               onValueChange={(value) => {
@@ -96,24 +105,24 @@ export function TicketCreatePage() {
               }}
             >
               <SelectTrigger id="ticket-type">
-                <SelectValue placeholder="Choose type" />
+                <SelectValue placeholder={t.ticketCreate.typePlaceholder} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="standard">Standard</SelectItem>
-                <SelectItem value="vip">VIP</SelectItem>
+                <SelectItem value="free">{t.common.free}</SelectItem>
+                <SelectItem value="standard">{t.common.standard}</SelectItem>
+                <SelectItem value="vip">{t.common.vip}</SelectItem>
               </SelectContent>
             </Select>
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="ticket-price">Price</FieldLabel>
+            <FieldLabel htmlFor="ticket-price">{t.common.price}</FieldLabel>
             <Input
               id="ticket-price"
               type="number"
               min={0}
               step="0.01"
-              placeholder="0.00"
+              placeholder={t.ticketCreate.pricePlaceholder}
               disabled={ticketType === 'free'}
               {...register('price', { valueAsNumber: true })}
             />
@@ -121,7 +130,7 @@ export function TicketCreatePage() {
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="ticket-quantity-mode">Quantity</FieldLabel>
+            <FieldLabel htmlFor="ticket-quantity-mode">{t.common.quantity}</FieldLabel>
             <Select
               value={quantityLimited ? 'limited' : 'unlimited'}
               onValueChange={(value) => {
@@ -132,24 +141,24 @@ export function TicketCreatePage() {
               }}
             >
               <SelectTrigger id="ticket-quantity-mode">
-                <SelectValue placeholder="Select quantity mode" />
+                <SelectValue placeholder={t.ticketCreate.quantityMode} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="unlimited">Unlimited</SelectItem>
-                <SelectItem value="limited">Limited</SelectItem>
+                <SelectItem value="unlimited">{t.ticketCreate.unlimited}</SelectItem>
+                <SelectItem value="limited">{t.ticketCreate.limited}</SelectItem>
               </SelectContent>
             </Select>
           </Field>
 
           {quantityLimited && (
             <Field>
-              <FieldLabel htmlFor="ticket-quantity-total">Available amount</FieldLabel>
+              <FieldLabel htmlFor="ticket-quantity-total">{t.ticketCreate.availableAmount}</FieldLabel>
               <Input
                 id="ticket-quantity-total"
                 type="number"
                 min={1}
                 step={1}
-                placeholder="100"
+                placeholder={t.ticketCreate.quantityPlaceholder}
                 {...register('quantityTotal', { valueAsNumber: true })}
               />
               <FieldError errors={errors.quantityTotal ? [errors.quantityTotal] : undefined} />
@@ -157,25 +166,25 @@ export function TicketCreatePage() {
           )}
 
           <Field>
-            <FieldLabel htmlFor="ticket-start">Start datetime</FieldLabel>
+            <FieldLabel htmlFor="ticket-start">{t.ticketCreate.startDatetime}</FieldLabel>
             <Input id="ticket-start" type="datetime-local" {...register('datetimeStart')} />
             <FieldError errors={errors.datetimeStart ? [errors.datetimeStart] : undefined} />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="ticket-end">End datetime</FieldLabel>
+            <FieldLabel htmlFor="ticket-end">{t.ticketCreate.endDatetime}</FieldLabel>
             <Input id="ticket-end" type="datetime-local" {...register('datetimeEnd')} />
             <FieldError errors={errors.datetimeEnd ? [errors.datetimeEnd] : undefined} />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="ticket-private-info">Private info</FieldLabel>
-            <Input id="ticket-private-info" placeholder="Internal notes" {...register('privateInfo')} />
+            <FieldLabel htmlFor="ticket-private-info">{t.ticketCreate.privateInfo}</FieldLabel>
+            <Input id="ticket-private-info" placeholder={t.ticketCreate.privateInfoPlaceholder} {...register('privateInfo')} />
           </Field>
         </FieldGroup>
 
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving…' : 'Save ticket'}
+          {isSubmitting ? t.common.saving : t.ticketCreate.saveTicket}
         </Button>
       </form>
     </main>

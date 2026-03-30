@@ -6,13 +6,14 @@ import { useOrgs, OrgCard } from '@entities/Organization';
 import { useAppContext } from '@shared/lib';
 import { Badge, buttonVariants } from '@shared/components';
 import { cn } from '@shared/lib/utils';
-import { CATEGORIES, HOW_ICONS, StatCounter } from './HomeConstants';
+import { getHomeCategories, HOW_ICONS, StatCounter } from './HomeConstants';
 
 export { HomePage };
 
 function HomePage() {
   const { t } = useAppContext();
   const h = t.home;
+  const categories = getHomeCategories(t);
   const { data: eventsResult, isLoading: eventsLoading } = useEvents({ page: 1, limit: 5 });
   const events = eventsResult?.data ?? [];
 
@@ -99,7 +100,7 @@ function HomePage() {
             ) : events.length === 0 ? (
               <div className="flex w-full flex-col items-center gap-3 py-12 text-center text-muted-foreground">
                 <CheckCircle2 className="h-10 w-10 opacity-30" />
-                <p className="text-sm">No events yet — be the first to create one!</p>
+                <p className="text-sm">{h.trending.noEvents}</p>
               </div>
             ) : (
               events.slice(0, 5).map((event) => (
@@ -117,7 +118,7 @@ function HomePage() {
         <div className="mx-auto max-w-4xl">
           <h2 className="mb-8 text-center text-2xl font-bold tracking-tight">{h.categories.title}</h2>
           <div className="flex flex-wrap justify-center gap-3">
-            {CATEGORIES.map(({ label, icon: Icon, color }) => (
+            {categories.map(({ label, icon: Icon, color }) => (
               <Link
                 key={label}
                 to="/events"

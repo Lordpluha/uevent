@@ -66,9 +66,9 @@ export type ApiUserListResponse = {
 };
 
 export const formatJoinedAt = (value?: string | null): string => {
-  if (!value) return 'Recently';
+  if (!value) return '—';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Recently';
+  if (Number.isNaN(date.getTime())) return '—';
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -79,8 +79,8 @@ export const formatJoinedAt = (value?: string | null): string => {
 export const mapApiUser = (raw: ApiUser): User => {
   const id = String(raw.id);
   const composedName = [raw.first_name, raw.last_name].filter(Boolean).join(' ').trim();
-  const name = raw.name?.trim() || composedName || `User ${id}`;
-  const username = raw.username?.trim() || `user${id}`;
+  const name = raw.name?.trim() || composedName || id;
+  const username = raw.username?.trim() || id;
 
   return {
     id,

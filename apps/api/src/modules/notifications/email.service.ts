@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
-import * as nodemailer from 'nodemailer'
-import * as QRCode from 'qrcode'
+import {type Transporter, createTransport} from 'nodemailer'
+import { toDataURL } from 'qrcode'
 
 interface PaymentConfirmationData {
   userEmail: string
@@ -16,10 +16,9 @@ interface PaymentConfirmationData {
 
 @Injectable()
 export class EmailService implements OnModuleInit {
-  private transporter: nodemailer.Transporter | undefined
+  private transporter: Transporter | undefined
   private readonly logger = new Logger(EmailService.name)
-
-  constructor() {}
+  private static readonly SMTP_VERIFY_TIMEOUT_MS = 5000
 
   async onModuleInit() {
     await this.initializeTransporter()
@@ -48,7 +47,7 @@ export class EmailService implements OnModuleInit {
 
       this.logger.log(`🔧 Configuring email with Gmail (${smtpHost}:${port})...`)
 
-      this.transporter = nodemailer.createTransport({
+      this.transporter = createTransport({
         host: smtpHost,
         port: port,
         secure: isSecure,
@@ -56,9 +55,17 @@ export class EmailService implements OnModuleInit {
           user: smtpUser,
           pass: smtpPass,
         },
+        connectionTimeout: EmailService.SMTP_VERIFY_TIMEOUT_MS,
+        greetingTimeout: EmailService.SMTP_VERIFY_TIMEOUT_MS,
+        socketTimeout: EmailService.SMTP_VERIFY_TIMEOUT_MS,
       })
 
-      await this.transporter.verify()
+      await Promise.race([
+        this.transporter.verify(),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('SMTP verify timeout')), EmailService.SMTP_VERIFY_TIMEOUT_MS)
+        }),
+      ])
 
       this.logger.log(`Email transporter successfully connected to Gmail!`)
       this.logger.log(`From: ${smtpFrom}`)
@@ -130,7 +137,7 @@ export class EmailService implements OnModuleInit {
         'Scan this code at event entrance'
       ].join('\n')
 
-      const qrCodeUrl = await QRCode.toDataURL(ticketInfo, {
+      const qrCodeUrl = await toDataURL(ticketInfo, {
         errorCorrectionLevel: 'L',
         type: 'image/png',
         width: 300,

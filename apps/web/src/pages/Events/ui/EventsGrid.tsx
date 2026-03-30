@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { EventCard, EventCardSkeleton } from '@entities/Event';
 import type { EventModel } from '@entities/Event';
+import { useAppContext } from '@shared/lib';
 
 interface Props {
   events: EventModel[];
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function EventsGrid({ events, isLoading = false }: Props) {
+  const { t } = useAppContext();
   if (isLoading) {
     const skeletonKeys = ['a', 'b', 'c', 'd', 'e', 'f'];
     return (
@@ -23,8 +25,8 @@ export function EventsGrid({ events, isLoading = false }: Props) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
         <span className="text-5xl">🔍</span>
-        <p className="text-base font-semibold text-foreground">No events found</p>
-        <p className="text-sm text-muted-foreground">Try adjusting your search or filters.</p>
+        <p className="text-base font-semibold text-foreground">{t.events.noEvents}</p>
+        <p className="text-sm text-muted-foreground">{t.events.noEventsTip}</p>
       </div>
     );
   }

@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { MapPin } from 'lucide-react';
 import type { User } from '../model/user';
 import { Avatar, AvatarFallback, AvatarImage, Badge } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { cn } from '@shared/lib/utils';
 
 export type UserCardProps = Pick<
@@ -18,7 +19,9 @@ export const UserCard = ({
   location,
   interests,
   eventsAttended,
-}: UserCardProps) => (
+}: UserCardProps) => {
+  const { t } = useAppContext();
+  return (
   <Link
     to={`/users/${id}`}
     className={cn(
@@ -46,7 +49,7 @@ export const UserCard = ({
           {location}
         </span>
       )}
-      <span>{eventsAttended} events attended</span>
+      <span>{eventsAttended} {t.entityCard.eventsAttended}</span>
     </div>
 
     <div className="flex flex-wrap gap-1.5">
@@ -57,4 +60,5 @@ export const UserCard = ({
       ))}
     </div>
   </Link>
-);
+  );
+};

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { Button, Input, Label } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { authApi } from '@shared/api/auth.api';
 import { usersApi } from '@entities/User';
@@ -47,6 +48,7 @@ export const RegisterForm = ({
   onSuccess,
 }: { t: RegisterDict; onSwitch: () => void; onSuccess: () => void }) => {
   const { setAuthenticated } = useAuth();
+  const { t: appT } = useAppContext();
   const queryClient = useQueryClient();
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterUserValues>({
     resolver: zodResolver(registerUserSchema),
@@ -58,10 +60,10 @@ export const RegisterForm = ({
     onSuccess: (data) => {
       setAuthenticated(data.accountType);
       queryClient.prefetchQuery({ queryKey: ['me'], queryFn: () => usersApi.getMe() });
-      toast.success('Account created successfully');
+      toast.success(appT.authExtra.accountCreated);
       onSuccess();
     },
-    onError: () => toast.error('Registration failed. Email or username may already be in use.'),
+    onError: () => toast.error(appT.authExtra.registerFailed),
   });
 
   return (

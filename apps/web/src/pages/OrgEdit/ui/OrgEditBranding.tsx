@@ -9,6 +9,7 @@ import {
   AvatarImage,
 } from '@shared/components';
 import { organizationsApi } from '@entities/Organization';
+import { useAppContext } from '@shared/lib';
 
 interface OrgEditBrandingProps {
   orgId: string;
@@ -18,6 +19,7 @@ interface OrgEditBrandingProps {
 }
 
 export function OrgEditBranding({ orgId, orgTitle, avatarUrl, coverUrl }: OrgEditBrandingProps) {
+  const { t } = useAppContext();
   const queryClient = useQueryClient();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -26,18 +28,18 @@ export function OrgEditBranding({ orgId, orgTitle, avatarUrl, coverUrl }: OrgEdi
     mutationFn: (file: File) => organizationsApi.uploadLogo(orgId, file),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['organizations', orgId] });
-      toast.success('Logo updated');
+      toast.success(t.orgEdit.logoUpdated);
     },
-    onError: () => toast.error('Failed to upload logo'),
+    onError: () => toast.error(t.orgEdit.logoFailed),
   });
 
   const uploadCoverMutation = useMutation({
     mutationFn: (file: File) => organizationsApi.uploadCover(orgId, file),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['organizations', orgId] });
-      toast.success('Cover updated');
+      toast.success(t.orgEdit.coverUpdated);
     },
-    onError: () => toast.error('Failed to upload cover'),
+    onError: () => toast.error(t.orgEdit.coverFailed),
   });
 
   const handleFileChange = (label: 'Logo' | 'Cover') => (e: ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +56,7 @@ export function OrgEditBranding({ orgId, orgTitle, avatarUrl, coverUrl }: OrgEdi
       {/* Cover image */}
       <div className="relative h-32 w-full overflow-hidden rounded-xl border border-border/60 bg-muted">
         {coverUrl && (
-          <img src={coverUrl} alt="Cover" className="h-full w-full object-cover" />
+          <img src={coverUrl} alt={t.orgEdit.coverAlt} className="h-full w-full object-cover" />
         )}
         <button
           type="button"
@@ -62,7 +64,7 @@ export function OrgEditBranding({ orgId, orgTitle, avatarUrl, coverUrl }: OrgEdi
           className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/40 text-white opacity-0 transition-opacity hover:opacity-100"
         >
           <ImagePlus className="h-5 w-5" />
-          <span className="text-xs font-medium">Change cover</span>
+          <span className="text-xs font-medium">{t.orgEdit.changeCover}</span>
         </button>
         <input
           ref={coverInputRef}
@@ -84,7 +86,7 @@ export function OrgEditBranding({ orgId, orgTitle, avatarUrl, coverUrl }: OrgEdi
             type="button"
             onClick={() => logoInputRef.current?.click()}
             className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow"
-            title="Change logo"
+            title={t.orgEdit.changeLogo}
           >
             <Camera className="h-3 w-3" />
           </button>
@@ -97,8 +99,8 @@ export function OrgEditBranding({ orgId, orgTitle, avatarUrl, coverUrl }: OrgEdi
           />
         </div>
         <div>
-          <p className="text-sm font-medium">Organization logo</p>
-          <p className="text-xs text-muted-foreground">Square image · JPG, PNG · max 2 MB</p>
+            <p className="text-sm font-medium">{t.orgEdit.logoLabel}</p>
+          <p className="text-xs text-muted-foreground">{t.orgEdit.logoHint}</p>
         </div>
       </div>
     </>

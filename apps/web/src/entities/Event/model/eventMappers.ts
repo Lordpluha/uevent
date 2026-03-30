@@ -15,9 +15,9 @@ export const mapTicketStatus = (status?: string | null): 'available' | 'limited'
 }
 
 export const toDisplayDate = (value?: string | Date): string => {
-  if (!value) return 'TBD'
+  if (!value) return '—'
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'TBD'
+  if (Number.isNaN(date.getTime())) return '—'
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -72,7 +72,7 @@ export const mapApiEvent = (event: ApiEvent): EventModel => {
     location: event.location ?? undefined,
     googleMapsUrl: event.location_map_url ?? undefined,
     onlineUrl: event.online_link ?? undefined,
-    organizer: event.organizer ?? (event.organization_id ? String(event.organization_id) : 'Organizer'),
+    organizer: event.organizer ?? (event.organization_id ? String(event.organization_id) : '—'),
     rating: 0,
     attendeeCount: event.attendeeCount ?? attendeeCountFromTickets ?? event.attendees?.length ?? 0,
     attendees: event.attendees ?? [],

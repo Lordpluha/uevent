@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Field, FieldDescription, FieldTitle } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { tagsApi } from '@shared/api';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function EventTagsField({ tags, onAddTag, onRemoveTag }: Props) {
+  const { t } = useAppContext();
   const [tagInput, setTagInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const { data: tagsResult } = useQuery({ queryKey: ['tags'], queryFn: () => tagsApi.getAll({ limit: 100 }) });
@@ -26,7 +28,7 @@ export function EventTagsField({ tags, onAddTag, onRemoveTag }: Props) {
 
   return (
     <Field>
-      <FieldTitle>Tags</FieldTitle>
+      <FieldTitle>{t.common.tags}</FieldTitle>
       <div className="flex flex-col gap-2">
         <div className="relative">
           <div
@@ -72,7 +74,7 @@ export function EventTagsField({ tags, onAddTag, onRemoveTag }: Props) {
                 }
               }}
               className="h-7 min-w-36 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              placeholder={tags.length ? 'Add more tags…' : 'Search or create tags…'}
+              placeholder={tags.length ? t.eventCreate.tags.addMore : t.eventCreate.tags.searchOrCreate}
             />
           </div>
           {showSuggestions && (() => {
@@ -100,7 +102,7 @@ export function EventTagsField({ tags, onAddTag, onRemoveTag }: Props) {
                     onMouseDown={(e) => { e.preventDefault(); addTag(trimmed); setShowSuggestions(false); }}
                     className="w-full px-3 py-1.5 text-left text-sm text-primary hover:bg-accent"
                   >
-                    Create "{trimmed}"
+                    {t.eventCreate.tags.createTag.replace('{{name}}', trimmed)}
                   </button>
                 )}
               </div>
@@ -108,7 +110,7 @@ export function EventTagsField({ tags, onAddTag, onRemoveTag }: Props) {
           })()}
         </div>
       </div>
-      <FieldDescription>Select existing tags or type a new one to create it.</FieldDescription>
+      <FieldDescription>{t.eventCreate.tags.hint}</FieldDescription>
     </Field>
   );
 }

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { Button, Input, Label } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { authApi } from '@shared/api/auth.api';
 import type { LoginResult } from '@shared/api/auth.api';
@@ -39,6 +40,7 @@ export const LoginForm = ({
   onForgotPassword,
 }: { t: LoginDict; onSwitch: () => void; onSuccess: () => void; on2faRequired: (token: string) => void; onForgotPassword: () => void }) => {
   const { setAuthenticated } = useAuth();
+  const { t: appT } = useAppContext();
   const queryClient = useQueryClient();
   const { register, handleSubmit, formState: { errors } } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -54,11 +56,11 @@ export const LoginForm = ({
       if ('accountType' in data) {
         setAuthenticated(data.accountType);
         queryClient.prefetchQuery({ queryKey: ['me'], queryFn: () => usersApi.getMe() });
-        toast.success('Logged in successfully');
+        toast.success(appT.authExtra.loginSuccess);
         onSuccess();
       }
     },
-    onError: () => toast.error('Invalid email or password'),
+    onError: () => toast.error(appT.authExtra.invalidCredentials),
   });
 
   return (
@@ -76,7 +78,7 @@ export const LoginForm = ({
       </div>
       <div className="flex justify-end">
         <button type="button" onClick={onForgotPassword} className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
-          Forgot password?
+          {appT.authExtra.forgotPassword}
         </button>
       </div>
       <Button type="submit" className="w-full" disabled={isPending}>

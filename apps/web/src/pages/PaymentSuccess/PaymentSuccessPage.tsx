@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CheckCircle, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@shared/components';
 import { api } from '@shared/api';
+import { useAppContext } from '@shared/lib';
 import { toast } from 'sonner';
 
 interface PaymentStatus {
@@ -13,6 +14,7 @@ interface PaymentStatus {
 }
 
 export function PaymentSuccessPage() {
+  const { t } = useAppContext();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const paymentIntentId = searchParams.get('paymentIntentId');
@@ -34,7 +36,7 @@ export function PaymentSuccessPage() {
 
   useEffect(() => {
     if(!paymentIntentId) {
-      toast.error('Invalid success link');
+      toast.error(t.paymentSuccess.invalidLink);
       navigate('/');
     }
   }, [paymentIntentId, navigate]);
@@ -69,23 +71,23 @@ export function PaymentSuccessPage() {
         {/* Title */}
         {isProcessing ? (
           <>
-            <h1 className="text-3xl font-bold mb-2">Confirming Payment…</h1>
+            <h1 className="text-3xl font-bold mb-2">{t.paymentSuccess.confirming}</h1>
             <p className="text-muted-foreground mb-6">
-              We're verifying your payment. This usually takes a few seconds.
+              {t.paymentSuccess.confirmingDesc}
             </p>
           </>
         ) : isFailed ? (
           <>
-            <h1 className="text-3xl font-bold mb-2">Payment Failed</h1>
+            <h1 className="text-3xl font-bold mb-2">{t.paymentSuccess.failed}</h1>
             <p className="text-muted-foreground mb-6">
-              Something went wrong with your payment. Please try again or contact support.
+              {t.paymentSuccess.failedDesc}
             </p>
           </>
         ) : (
           <>
-            <h1 className="text-3xl font-bold mb-2">Payment Successful!</h1>
+            <h1 className="text-3xl font-bold mb-2">{t.paymentSuccess.success}</h1>
             <p className="text-muted-foreground mb-6">
-              Your ticket has been successfully purchased. You can now access your ticket details.
+              {t.paymentSuccess.successDesc}
             </p>
           </>
         )}
@@ -95,16 +97,16 @@ export function PaymentSuccessPage() {
           {isConfirmed && payment && (
             <div className="mb-3 flex items-center justify-center gap-2 text-lg font-semibold text-foreground">
               <span>{currencySymbol}{payment.amount.toFixed(2)}</span>
-              <span className="text-sm font-normal text-emerald-600 dark:text-emerald-400">Paid</span>
+              <span className="text-sm font-normal text-emerald-600 dark:text-emerald-400">{t.paymentSuccess.paid}</span>
             </div>
           )}
-          <div className="text-sm text-muted-foreground mb-1">Payment Intent ID</div>
+          <div className="text-sm text-muted-foreground mb-1">{t.paymentSuccess.paymentIntentId}</div>
           <code className="block text-xs bg-muted p-2 rounded mb-2 break-all font-mono">
             {paymentIntentId}
           </code>
           {isConfirmed && (
             <p className="text-xs text-muted-foreground">
-              Keep this for your records. A confirmation email has been sent.
+              {t.paymentSuccess.keepRecords}
             </p>
           )}
         </div>
@@ -117,14 +119,14 @@ export function PaymentSuccessPage() {
             disabled={isProcessing}
           >
             <ArrowRight className="mr-2 h-4 w-4" />
-            View My Tickets
+            {t.paymentSuccess.viewTickets}
           </Button>
           <Button
             variant="outline"
             onClick={() => navigate('/events')}
             className="w-full"
           >
-            Browse More Events
+            {t.paymentSuccess.browseMore}
           </Button>
         </div>
       </div>

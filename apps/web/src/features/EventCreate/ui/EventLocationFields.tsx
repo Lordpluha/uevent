@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { Button, Field, FieldError, FieldTitle, Input } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import type { CreateEventDto } from '@entities/Event';
 import { LeafletMapPicker } from './LeafletMapPicker';
 import { DEFAULT_CENTER, buildGoogleMapsLink, parseCoordsFromMapsUrl } from './helpers';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function EventLocationFields({ form }: Props) {
+  const { t } = useAppContext();
   const { register, watch, setValue, formState: { errors } } = form;
   const [mapPickerVisible, setMapPickerVisible] = useState(false);
 
@@ -33,20 +35,20 @@ export function EventLocationFields({ form }: Props) {
   return (
     <>
       <Field>
-        <FieldTitle>Location</FieldTitle>
+        <FieldTitle>{t.common.location}</FieldTitle>
         <Input
           {...register('location')}
-          placeholder="City, venue or address"
+          placeholder={t.eventCreate.locationFields.placeholder}
           aria-invalid={!!errors.location}
         />
         <FieldError errors={errors.location ? [errors.location] : undefined} />
       </Field>
 
       <Field>
-        <FieldTitle>Google Maps link</FieldTitle>
+        <FieldTitle>{t.eventCreate.locationFields.mapsLink}</FieldTitle>
         <Input
           {...register('googleMapsUrl')}
-          placeholder="https://maps.google.com/..."
+          placeholder={t.eventCreate.locationFields.mapsPlaceholder}
           aria-invalid={!!errors.googleMapsUrl}
         />
         <FieldError errors={errors.googleMapsUrl ? [errors.googleMapsUrl] : undefined} />
@@ -62,7 +64,7 @@ export function EventLocationFields({ form }: Props) {
               setValue('googleMapsUrl', fallbackGoogleMapsUrl, { shouldValidate: true });
             }}
           >
-            Use current location in Google Maps
+            {t.eventCreate.locationFields.useCurrentLocation}
           </Button>
 
           <Button
@@ -71,7 +73,7 @@ export function EventLocationFields({ form }: Props) {
             size="sm"
             onClick={() => setMapPickerVisible((prev) => !prev)}
           >
-            {mapPickerVisible ? 'Hide map picker' : 'Choose on map'}
+            {mapPickerVisible ? t.eventCreate.locationFields.hideMap : t.eventCreate.locationFields.chooseOnMap}
           </Button>
 
           {effectiveGoogleMapsUrl && (
@@ -81,14 +83,14 @@ export function EventLocationFields({ form }: Props) {
               rel="noreferrer"
               className="text-xs text-primary hover:underline"
             >
-              Open map in new tab
+              {t.eventCreate.locationFields.openMapTab}
             </a>
           )}
         </div>
 
         {selectedCoords && (
           <p className="mt-2 text-xs text-muted-foreground">
-            Selected coordinates: {selectedCoords.lat.toFixed(6)}, {selectedCoords.lng.toFixed(6)}
+            {t.eventCreate.locationFields.selectedCoords} {selectedCoords.lat.toFixed(6)}, {selectedCoords.lng.toFixed(6)}
           </p>
         )}
 

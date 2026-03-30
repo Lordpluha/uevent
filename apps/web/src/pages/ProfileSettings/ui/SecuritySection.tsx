@@ -20,6 +20,7 @@ import {
   Switch,
 } from '@shared/components';
 import { authApi } from '@shared/api/auth.api';
+import { useAppContext } from '@shared/lib';
 import { PasswordChangeForm } from './PasswordChangeForm';
 import type { UserProfile } from './types';
 
@@ -31,6 +32,7 @@ interface SecuritySectionProps {
 }
 
 export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: SecuritySectionProps) {
+  const { t } = useAppContext();
   const [isEnableTwoFaDialogOpen, setIsEnableTwoFaDialogOpen] = useState(false);
   const [isDisableTwoFaDialogOpen, setIsDisableTwoFaDialogOpen] = useState(false);
   const [twoFaSetupData, setTwoFaSetupData] = useState<{ secret: string; qrCodeDataUrl: string } | null>(null);
@@ -44,7 +46,7 @@ export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: Secur
       setTwoFaCode('');
       setIsEnableTwoFaDialogOpen(true);
     },
-    onError: () => toast.error('Failed to start 2FA setup'),
+    onError: () => toast.error(t.profileSettings.security.setupFailed),
   });
 
   const twoFaConfirmMutation = useMutation({
@@ -55,9 +57,9 @@ export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: Secur
       setIsEnableTwoFaDialogOpen(false);
       setTwoFaSetupData(null);
       setTwoFaCode('');
-      toast.success('2FA enabled');
+      toast.success(t.profileSettings.security.enabled);
     },
-    onError: () => { toast.error('Invalid verification code'); setTwoFaCode(''); },
+    onError: () => { toast.error(t.profileSettings.security.invalidCode); setTwoFaCode(''); },
   });
 
   const twoFaDisableMutation = useMutation({
@@ -67,9 +69,9 @@ export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: Secur
       setTwoFa(false);
       setIsDisableTwoFaDialogOpen(false);
       setDisableTwoFaCode('');
-      toast.success('2FA disabled');
+      toast.success(t.profileSettings.security.disabled);
     },
-    onError: () => { toast.error('Invalid verification code'); setDisableTwoFaCode(''); },
+    onError: () => { toast.error(t.profileSettings.security.invalidCode); setDisableTwoFaCode(''); },
   });
 
   const handleTwoFaChange = (enabled: boolean) => {
@@ -97,22 +99,22 @@ export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: Secur
       <AlertDialog open={isEnableTwoFaDialogOpen} onOpenChange={(o) => { if (!o) { setIsEnableTwoFaDialogOpen(false); setTwoFaSetupData(null); setTwoFaCode(''); } }}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Set up two-factor authentication</AlertDialogTitle>
+            <AlertDialogTitle>{t.profileSettings.security.setupTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              Scan the QR code with your authenticator app (Google Authenticator, Authy, etc.), then enter the 6-digit code to verify.
+              {t.profileSettings.security.setupDesc}
             </AlertDialogDescription>
           </AlertDialogHeader>
           {twoFaSetupData && (
             <div className="flex flex-col items-center gap-4 py-2">
               <div className="rounded-xl border border-border bg-white p-3">
-                <img src={twoFaSetupData.qrCodeDataUrl} alt="2FA QR Code" className="h-48 w-48" />
+                <img src={twoFaSetupData.qrCodeDataUrl} alt={t.profileSettings.security.qrAlt} className="h-48 w-48" />
               </div>
               <div className="w-full rounded-lg bg-muted/50 p-3 text-center">
-                <p className="mb-1 text-xs text-muted-foreground">Or enter this key manually:</p>
+                <p className="mb-1 text-xs text-muted-foreground">{t.profileSettings.security.manualKey}</p>
                 <code className="text-xs font-mono break-all select-all">{twoFaSetupData.secret}</code>
               </div>
               <div className="flex flex-col items-center gap-2">
-                <p className="text-sm font-medium">Verification code</p>
+                <p className="text-sm font-medium">{t.profileSettings.security.verificationCode}</p>
                 <InputOTP maxLength={6} value={twoFaCode} onChange={setTwoFaCode}>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
@@ -127,9 +129,9 @@ export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: Secur
             </div>
           )}
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={twoFaConfirmMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={twoFaConfirmMutation.isPending}>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmEnableTwoFa} disabled={twoFaConfirmMutation.isPending || twoFaCode.length !== 6}>
-              {twoFaConfirmMutation.isPending ? 'Verifying...' : 'Enable 2FA'}
+              {twoFaConfirmMutation.isPending ? t.common.verifying : t.profileSettings.security.enable2fa}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -139,9 +141,9 @@ export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: Secur
       <AlertDialog open={isDisableTwoFaDialogOpen} onOpenChange={(o) => { if (!o) { setIsDisableTwoFaDialogOpen(false); setDisableTwoFaCode(''); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disable two-factor authentication?</AlertDialogTitle>
+            <AlertDialogTitle>{t.profileSettings.security.disableTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              Enter your current 2FA code to confirm disabling two-factor authentication.
+              {t.profileSettings.security.disableDesc}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex flex-col items-center gap-2 py-2">
@@ -157,9 +159,9 @@ export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: Secur
             </InputOTP>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={twoFaDisableMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={twoFaDisableMutation.isPending}>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDisableTwoFa} disabled={twoFaDisableMutation.isPending || disableTwoFaCode.length !== 6}>
-              {twoFaDisableMutation.isPending ? 'Disabling...' : 'Disable 2FA'}
+              {twoFaDisableMutation.isPending ? t.profileSettings.security.disabling : t.profileSettings.security.disable2fa}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -175,19 +177,19 @@ export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: Secur
               ) : (
                 <Shield className="h-4 w-4 text-muted-foreground" />
               )}
-              Two-factor authentication
+              {t.profileSettings.security.twoFa}
             </FieldTitle>
             <FieldDescription className="mt-0.5">
               {twoFa
-                ? 'Enabled — your account is protected.'
-                : 'Add a second layer of security to your account.'}
+                ? t.profileSettings.security.enabledDesc
+                : t.profileSettings.security.disabledDesc}
             </FieldDescription>
           </div>
           <Switch
             checked={twoFa}
             onCheckedChange={handleTwoFaChange}
             disabled={twoFaSetupMutation.isPending || twoFaConfirmMutation.isPending || twoFaDisableMutation.isPending}
-            aria-label="Toggle 2FA"
+            aria-label={t.profileSettings.security.toggleTwoFa}
           />
         </Field>
       </div>

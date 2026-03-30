@@ -6,8 +6,10 @@ import { Dialog, DialogContent, Button, InputOTP, InputOTPGroup, InputOTPSlot } 
 import { useAuth } from '@shared/lib/auth-context'
 import { authApi } from '@shared/api'
 import { usersApi } from '@entities/User'
+import { useAppContext } from '@shared/lib'
 
 export function GoogleAuthHandler() {
+  const { t } = useAppContext()
   const { setAuthenticated } = useAuth()
   const queryClient = useQueryClient()
   const [tempToken, setTempToken] = useState<string | null>(null)
@@ -41,11 +43,11 @@ export function GoogleAuthHandler() {
     onSuccess: (data) => {
       setAuthenticated(data.accountType)
       queryClient.prefetchQuery({ queryKey: ['me'], queryFn: () => usersApi.getMe() })
-      toast.success('Logged in successfully')
+      toast.success(t?.authExtra?.loginSuccess ?? 'Logged in successfully')
       setTempToken(null)
       setCode('')
     },
-    onError: () => { toast.error('Invalid 2FA code'); setCode(''); },
+    onError: () => { toast.error(t?.authExtra?.invalid2fa ?? 'Invalid 2FA code'); setCode(''); },
   })
 
   if (!tempToken) return null
@@ -58,8 +60,8 @@ export function GoogleAuthHandler() {
             <KeyRound className="h-6 w-6 text-primary" />
           </div>
           <div className="text-center">
-            <h3 className="text-lg font-semibold">Two-factor authentication</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Enter the 6-digit code from your authenticator app.</p>
+            <h3 className="text-lg font-semibold">{t?.authExtra?.twoFaTitle ?? 'Two-factor authentication'}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{t?.authExtra?.twoFaDesc ?? 'Enter the 6-digit code from your authenticator app.'}</p>
           </div>
           <InputOTP maxLength={6} value={code} onChange={setCode} onComplete={() => mutate()}>
             <InputOTPGroup>
@@ -72,7 +74,7 @@ export function GoogleAuthHandler() {
             </InputOTPGroup>
           </InputOTP>
           <Button onClick={() => mutate()} className="w-full" disabled={isPending || code.length !== 6}>
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify'}
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (t?.authExtra?.verify ?? 'Verify')}
           </Button>
         </div>
       </DialogContent>

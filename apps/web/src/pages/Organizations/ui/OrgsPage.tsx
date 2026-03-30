@@ -12,6 +12,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 
 const PAGE_SIZE = 12;
 
@@ -23,15 +24,16 @@ function getPaginationItems(current: number, total: number): Array<number | 'ell
 }
 
 export function OrgsPage() {
+  const { t } = useAppContext();
   const [query, setQuery] = useQueryState('q', parseAsString.withDefault(''));
-  const [category, setCategory] = useQueryState('category', parseAsString.withDefault('All'));
+  const [category, setCategory] = useQueryState('category', parseAsString.withDefault('all'));
   const [verifiedOnly, setVerifiedOnly] = useQueryState('verified', parseAsBoolean.withDefault(false));
   const [pageParam, setPageParam] = useQueryState('page', parseAsString.withDefault('1'));
   const page = Math.max(1, Number.parseInt(pageParam, 10) || 1);
 
   const { data: orgsResult } = useOrgs({
     ...(query ? { search: query } : {}),
-    ...(category !== 'All' ? { category } : {}),
+    ...(category !== 'all' ? { category } : {}),
     ...(verifiedOnly ? { verified: true } : {}),
     page,
     limit: PAGE_SIZE,
@@ -57,11 +59,13 @@ export function OrgsPage() {
   }, [filtersSignature, page, setPageParam]);
 
   const allCategories = useMemo(
-    () =>
-      ['All', ...new Set(allOrgs.map((org) => org.category).filter(Boolean))].sort(
-        (a, b) => (a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b)),
-      ),
-    [allOrgs],
+    () => [
+      { value: 'all', label: t.filters.all },
+      ...[...new Set(allOrgs.map((org) => org.category).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b))
+        .map((item) => ({ value: item, label: item })),
+    ],
+    [allOrgs, t.filters.all],
   );
 
   const filtered = allOrgs;
@@ -70,9 +74,9 @@ export function OrgsPage() {
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Organizations</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">{t.organizations.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Discover communities, clubs and groups organizing events near you.
+          {t.organizations.subtitle}
         </p>
       </div>
 
@@ -83,7 +87,7 @@ export function OrgsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search organizations…"
+            placeholder={t.organizations.searchPlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="h-9 w-full pl-9"
@@ -94,16 +98,16 @@ export function OrgsPage() {
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0" style={{ scrollbarWidth: 'none' }}>
           {allCategories.map((cat) => (
             <button
-              key={cat}
+              key={cat.value}
               type="button"
-              onClick={() => setCategory(cat)}
+              onClick={() => setCategory(cat.value)}
               className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                category === cat
+                category === cat.value
                   ? 'bg-primary text-primary-foreground'
                   : 'border border-border text-muted-foreground hover:border-primary/60 hover:text-foreground'
               }`}
             >
-              {cat}
+              {cat.label}
             </button>
           ))}
         </div>
@@ -119,21 +123,21 @@ export function OrgsPage() {
           }`}
         >
           <BadgeCheck className="h-3.5 w-3.5" />
-          Verified
+          {t.common.verified}
         </button>
       </div>
 
       {/* Results count */}
       <p className="mb-6 text-xs text-muted-foreground">
-        {total} organization{total !== 1 ? 's' : ''} found
+        {total} {t.organizations.found}
       </p>
 
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
           <span className="text-5xl">🏛️</span>
-          <p className="text-base font-semibold text-foreground">No organizations found</p>
-          <p className="text-sm text-muted-foreground">Try adjusting your search or filters.</p>
+          <p className="text-base font-semibold text-foreground">{t.organizations.noOrgs}</p>
+          <p className="text-sm text-muted-foreground">{t.organizations.noOrgsTip}</p>
         </div>
       ) : (
         <>

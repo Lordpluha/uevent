@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from '@shared/components';
 import { ShareButton } from '@shared/components/ShareButton/ShareButton';
+import { useAppContext } from '@shared/lib';
 
 interface ProfileHeroUser {
   name: string;
@@ -30,6 +31,7 @@ interface ProfileHeroUser {
 }
 
 export function ProfileHeroCard({ user }: { user: ProfileHeroUser }) {
+  const { t } = useAppContext();
   const initials = user.name
     .split(' ')
     .map((n) => n[0])
@@ -56,26 +58,26 @@ export function ProfileHeroCard({ user }: { user: ProfileHeroUser }) {
                   <Link to="/profile/settings">
                     <Button variant="outline" size="sm" className="gap-1.5">
                       <Edit className="h-3.5 w-3.5" />
-                      Edit profile
+                      {t.profile.editProfile}
                     </Button>
                   </Link>
                 }
               />
-              <TooltipContent>Go to settings</TooltipContent>
+              <TooltipContent>{t.profile.goToSettings}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger
                 render={
                   <Link to="/profile/settings">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label="Settings">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label={t.profile.settings}>
                       <Settings className="h-4 w-4" />
                     </Button>
                   </Link>
                 }
               />
-              <TooltipContent>Settings</TooltipContent>
+              <TooltipContent>{t.profile.settings}</TooltipContent>
             </Tooltip>
-            <ShareButton title={`${user.name} on UEVENT`} />
+            <ShareButton title={t.profile.shareTitle.replace('{{name}}', user.name)} />
           </div>
         </div>
 
@@ -109,7 +111,7 @@ export function ProfileHeroCard({ user }: { user: ProfileHeroUser }) {
           )}
           <span className="flex items-center gap-1">
             <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-            Joined {user.joinedAt}
+            {t.profile.joined.replace('{{date}}', user.joinedAt)}
           </span>
         </div>
       </div>

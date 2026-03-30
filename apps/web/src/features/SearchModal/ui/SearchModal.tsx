@@ -94,8 +94,8 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
             <CommandEmpty>{t.header.search.empty}</CommandEmpty>
 
             <CommandGroup heading={t.header.search.groups.events}>
-              {eventsLoading && <CommandItem disabled>Loading events...</CommandItem>}
-              {eventsError && <CommandItem disabled>Failed to load events</CommandItem>}
+              {eventsLoading && <CommandItem disabled>{t.searchModal.loadingEvents}</CommandItem>}
+              {eventsError && <CommandItem disabled>{t.searchModal.failedEvents}</CommandItem>}
               {!eventsLoading && !eventsError && searchEvents.map((event) => (
                 <CommandItem key={event.id} value={event.title} onSelect={() => handleSelect(event.href)}>
                   <CalendarDays className="text-muted-foreground" />
@@ -107,8 +107,8 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
             <CommandSeparator />
 
             <CommandGroup heading={t.header.search.groups.organizations}>
-              {organizationsLoading && <CommandItem disabled>Loading organizations...</CommandItem>}
-              {organizationsError && <CommandItem disabled>Failed to load organizations</CommandItem>}
+              {organizationsLoading && <CommandItem disabled>{t.searchModal.loadingOrgs}</CommandItem>}
+              {organizationsError && <CommandItem disabled>{t.searchModal.failedOrgs}</CommandItem>}
               {!organizationsLoading && !organizationsError && organizations.map((org) => (
                 <CommandItem key={org.id} value={org.title} onSelect={() => handleSelect(org.href)}>
                   <Users className="text-muted-foreground" />

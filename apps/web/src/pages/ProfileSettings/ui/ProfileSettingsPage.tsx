@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Separator, Skeleton } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { useMe } from '@entities/User';
 import { useAuth } from '@shared/lib/auth-context';
 import { ProfileSection } from './ProfileSection';
@@ -20,11 +21,11 @@ import { SessionsSection } from './SessionsSection';
 import type { UserProfile } from './types';
 
 const NAV_ITEMS = [
-  { id: 'profile', label: 'Profile', icon: User },
-  { id: 'preferences', label: 'Preferences', icon: Globe },
-  { id: 'security', label: 'Security', icon: Shield },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'sessions', label: 'Sessions', icon: Monitor },
+  { id: 'profile', icon: User },
+  { id: 'preferences', icon: Globe },
+  { id: 'security', icon: Shield },
+  { id: 'notifications', icon: Bell },
+  { id: 'sessions', icon: Monitor },
 ] as const;
 
 type SectionId = (typeof NAV_ITEMS)[number]['id'];
@@ -42,6 +43,7 @@ function SettingsSkeleton() {
 }
 
 export function ProfileSettingsPage() {
+  const { t } = useAppContext();
   const { isAuthenticated, isReady } = useAuth();
   const { data: user, isLoading } = useMe();
   const queryClient = useQueryClient();
@@ -60,6 +62,14 @@ export function ProfileSettingsPage() {
   const scrollTo = (id: SectionId) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setActiveSection(id);
+  };
+
+  const navLabels: Record<SectionId, string> = {
+    profile: t.profileSettings.tabs.profile,
+    preferences: t.profileSettings.tabs.preferences,
+    security: t.profileSettings.tabs.security,
+    notifications: t.profileSettings.tabs.notifications,
+    sessions: t.profileSettings.tabs.sessions,
   };
 
   if (!isReady || isLoading) {
@@ -99,16 +109,16 @@ export function ProfileSettingsPage() {
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ChevronLeft className="h-4 w-4" />
-        Back to profile
+        {t.common.backToProfile}
       </Link>
-      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">Settings</h1>
-      <p className="mb-8 text-sm text-muted-foreground">Manage your account preferences, security, and notifications.</p>
+      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">{t.profileSettings.title}</h1>
+      <p className="mb-8 text-sm text-muted-foreground">{t.profileSettings.subtitle}</p>
 
       <div className="flex flex-col gap-8 sm:flex-row sm:items-start">
         {/* Sticky sidebar nav */}
-        <nav className="sm:sticky sm:top-20 sm:w-44 sm:shrink-0" aria-label="Settings navigation">
+        <nav className="sm:sticky sm:top-20 sm:w-44 sm:shrink-0" aria-label={t.profileSettings.title}>
           <ul className="space-y-1">
-            {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+            {NAV_ITEMS.map(({ id, icon: Icon }) => (
               <li key={id}>
                 <button
                   type="button"
@@ -120,7 +130,7 @@ export function ProfileSettingsPage() {
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {label}
+                  {navLabels[id]}
                 </button>
               </li>
             ))}
@@ -132,7 +142,7 @@ export function ProfileSettingsPage() {
           <section id="profile" aria-labelledby="section-profile">
             <div className="mb-5 flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
-              <h2 id="section-profile" className="text-base font-semibold">Profile</h2>
+              <h2 id="section-profile" className="text-base font-semibold">{t.profileSettings.tabs.profile}</h2>
             </div>
             <ProfileSection user={userProfile} invalidateUser={invalidateUser} />
           </section>
@@ -142,7 +152,7 @@ export function ProfileSettingsPage() {
           <section id="preferences" aria-labelledby="section-preferences">
             <div className="mb-5 flex items-center gap-2">
               <Globe className="h-4 w-4 text-muted-foreground" />
-              <h2 id="section-preferences" className="text-base font-semibold">Preferences</h2>
+              <h2 id="section-preferences" className="text-base font-semibold">{t.profileSettings.tabs.preferences}</h2>
             </div>
             <PreferencesSection user={userProfile} invalidateUser={invalidateUser} />
           </section>
@@ -152,7 +162,7 @@ export function ProfileSettingsPage() {
           <section id="security" aria-labelledby="section-security">
             <div className="mb-5 flex items-center gap-2">
               <Shield className="h-4 w-4 text-muted-foreground" />
-              <h2 id="section-security" className="text-base font-semibold">Security</h2>
+              <h2 id="section-security" className="text-base font-semibold">{t.profileSettings.tabs.security}</h2>
             </div>
             <SecuritySection user={userProfile} invalidateUser={invalidateUser} twoFa={twoFa} setTwoFa={setTwoFa} />
           </section>
@@ -162,7 +172,7 @@ export function ProfileSettingsPage() {
           <section id="notifications" aria-labelledby="section-notifications">
             <div className="mb-5 flex items-center gap-2">
               <Bell className="h-4 w-4 text-muted-foreground" />
-              <h2 id="section-notifications" className="text-base font-semibold">Notifications</h2>
+              <h2 id="section-notifications" className="text-base font-semibold">{t.profileSettings.tabs.notifications}</h2>
             </div>
             <NotificationsSection user={userProfile} invalidateUser={invalidateUser} />
           </section>
@@ -172,7 +182,7 @@ export function ProfileSettingsPage() {
           <section id="sessions" aria-labelledby="section-sessions">
             <div className="mb-5 flex items-center gap-2">
               <Monitor className="h-4 w-4 text-muted-foreground" />
-              <h2 id="section-sessions" className="text-base font-semibold">Active Sessions</h2>
+              <h2 id="section-sessions" className="text-base font-semibold">{t.profileSettings.activeSessions}</h2>
             </div>
             <SessionsSection twoFa={twoFa} />
           </section>

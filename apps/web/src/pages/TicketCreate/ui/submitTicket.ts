@@ -4,7 +4,14 @@ import type { TicketForm } from './ticketFormSchema'
 
 export async function submitTicket(
   data: TicketForm,
-  opts: { ticketType: string; quantityLimited: boolean; eventId: string; onSuccess: () => void },
+  opts: {
+    ticketType: string
+    quantityLimited: boolean
+    eventId: string
+    onSuccess: () => void
+    successMessage: string
+    fallbackError: string
+  },
 ) {
   try {
     await api.post('/tickets', {
@@ -19,11 +26,11 @@ export async function submitTicket(
       event_id: opts.eventId,
       status: 'READY',
     })
-    toast.success('Ticket created')
+    toast.success(opts.successMessage)
     opts.onSuccess()
   } catch (error) {
     const message =
-      (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to create ticket'
+      (error as { response?: { data?: { message?: string } } })?.response?.data?.message || opts.fallbackError
     toast.error(message)
   }
 }

@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { eventsApi, updateEventSchema, type EventModel, type UpdateEventDto } from '@entities/Event';
 import { EventEditTagsField } from './EventEditTagsField';
 
@@ -29,6 +30,7 @@ interface EventEditProps {
 /* ── Component ────────────────────────────────────────────────────────── */
 
 export function EventEdit({ event, onSuccess }: EventEditProps) {
+  const { t } = useAppContext();
   const {
     register,
     control,
@@ -68,10 +70,10 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
       <FieldGroup>
         {/* Title */}
         <Field>
-          <FieldTitle>Title</FieldTitle>
+          <FieldTitle>{t.common.title}</FieldTitle>
           <Input
             {...register('title')}
-            placeholder="Event title"
+            placeholder={t.eventEdit.titlePlaceholder}
             aria-invalid={!!errors.title}
           />
           <FieldError errors={errors.title ? [errors.title] : undefined} />
@@ -79,7 +81,7 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
 
         {/* Description */}
         <Field>
-          <FieldTitle>Description</FieldTitle>
+          <FieldTitle>{t.common.description}</FieldTitle>
           <Controller
             control={control}
             name="description"
@@ -87,7 +89,7 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
               <RichTextEditor
                 defaultValue={event.description}
                 onChange={field.onChange}
-                placeholder="Describe your event…"
+                placeholder={t.eventEdit.descriptionPlaceholder}
                 aria-invalid={!!errors.description}
               />
             )}
@@ -98,7 +100,7 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
         {/* Date & Time */}
         <div className="grid grid-cols-2 gap-4">
           <Field>
-            <FieldTitle>Date</FieldTitle>
+            <FieldTitle>{t.common.date}</FieldTitle>
             <Input
               {...register('date')}
               type="date"
@@ -107,7 +109,7 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
             <FieldError errors={errors.date ? [errors.date] : undefined} />
           </Field>
           <Field>
-            <FieldTitle>Time</FieldTitle>
+            <FieldTitle>{t.common.time}</FieldTitle>
             <Input
               {...register('time')}
               type="time"
@@ -119,18 +121,18 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
 
         {/* Format */}
         <Field>
-          <FieldTitle>Format</FieldTitle>
+          <FieldTitle>{t.common.format}</FieldTitle>
           <Controller
             control={control}
             name="format"
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="w-full" aria-invalid={!!errors.format}>
-                  <SelectValue placeholder="Select format" />
+                  <SelectValue placeholder={t.eventEdit.formatPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="offline">Offline</SelectItem>
-                  <SelectItem value="online">Online</SelectItem>
+                  <SelectItem value="offline">{t.common.offline}</SelectItem>
+                  <SelectItem value="online">{t.common.online}</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -141,10 +143,10 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
         {/* Location (offline only) */}
         {selectedFormat === 'offline' && (
           <Field>
-            <FieldTitle>Location</FieldTitle>
+            <FieldTitle>{t.common.location}</FieldTitle>
             <Input
               {...register('location')}
-              placeholder="City, venue or address"
+              placeholder={t.eventEdit.locationPlaceholder}
               aria-invalid={!!errors.location}
             />
             <FieldError errors={errors.location ? [errors.location] : undefined} />
@@ -155,10 +157,10 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
 
         {/* Cover image URL */}
         <Field>
-          <FieldTitle>Cover image URL</FieldTitle>
+          <FieldTitle>{t.eventEdit.coverImageUrl}</FieldTitle>
           <Input
             {...register('imageUrl')}
-            placeholder="https://…"
+            placeholder={t.eventEdit.imageUrlPlaceholder}
             aria-invalid={!!errors.imageUrl}
           />
           <FieldError errors={errors.imageUrl ? [errors.imageUrl] : undefined} />
@@ -166,7 +168,7 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
       </FieldGroup>
 
       <Button type="submit" disabled={isSubmitting} className="self-end">
-        {isSubmitting ? 'Saving…' : 'Save changes'}
+        {isSubmitting ? t.common.saving : t.common.saveChanges}
       </Button>
     </form>
   );

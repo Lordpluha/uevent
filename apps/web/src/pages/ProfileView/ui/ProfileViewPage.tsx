@@ -17,15 +17,16 @@ import {
   Skeleton,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
+import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { ProfileHeroCard } from './ProfileHeroCard';
 import { ProfileTicketsList, type ProfileTicket } from './ProfileTicketsList';
 
 const STAT_ITEMS = [
-  { key: 'eventsAttended', label: 'Events attended', icon: CalendarDays },
-  { key: 'ticketsCount', label: 'Tickets', icon: Ticket },
-  { key: 'followers', label: 'Followers', icon: Users },
-  { key: 'following', label: 'Following', icon: Users },
+  { key: 'eventsAttended', icon: CalendarDays },
+  { key: 'ticketsCount', icon: Ticket },
+  { key: 'followers', icon: Users },
+  { key: 'following', icon: Users },
 ] as const;
 
 function ProfileSkeleton() {
@@ -53,6 +54,7 @@ function ProfileSkeleton() {
 }
 
 export function ProfileViewPage() {
+  const { t } = useAppContext();
   const { isAuthenticated, accountType, isReady } = useAuth();
   const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
   const { data: user, isLoading, isError } = useMe();
@@ -83,20 +85,27 @@ export function ProfileViewPage() {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="text-5xl">👤</p>
-        <h1 className="text-xl font-semibold">Profile unavailable</h1>
-        <Link to="/" className="text-sm text-primary hover:underline">← Back to home</Link>
+        <h1 className="text-xl font-semibold">{t.profile.unavailable}</h1>
+        <Link to="/" className="text-sm text-primary hover:underline">{t.common.backToHome}</Link>
       </main>
     );
   }
+
+  const STAT_LABELS: Record<string, string> = {
+    eventsAttended: t.profile.eventsAttended,
+    ticketsCount: t.profile.tickets,
+    followers: t.common.followers,
+    following: t.common.following,
+  };
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
 
       <ProfileHeroCard user={user} />
 
-      {/* ── Stats ──────────────────────────────────────────────── */}
+      {/* ── Stats ──────────────────────────────────────────────────── */}
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {STAT_ITEMS.map(({ key, label, icon: Icon }) => (
+        {STAT_ITEMS.map(({ key, icon: Icon }) => (
           <div
             key={key}
             className="flex flex-col items-center gap-1.5 rounded-xl border border-border/60 bg-card py-5 transition-colors hover:border-primary/40"
@@ -105,7 +114,7 @@ export function ProfileViewPage() {
             <span className="text-2xl font-extrabold text-primary tabular-nums">
               {user[key].toLocaleString()}
             </span>
-            <span className="text-center text-xs text-muted-foreground">{label}</span>
+            <span className="text-center text-xs text-muted-foreground">{STAT_LABELS[key]}</span>
           </div>
         ))}
       </div>
@@ -114,7 +123,7 @@ export function ProfileViewPage() {
       {user.interests.length > 0 && (
         <>
           <section className="mb-8">
-            <h2 className="mb-3 text-base font-semibold">Interests</h2>
+            <h2 className="mb-3 text-base font-semibold">{t.profile.interests}</h2>
             <div className="flex flex-wrap gap-2">
               {user.interests.map((tag) => (
                 <Badge key={tag} variant="secondary" className="cursor-default select-none">
@@ -130,9 +139,9 @@ export function ProfileViewPage() {
       {/* ── My events ──────────────────────────────────────────── */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold">My events</h2>
+          <h2 className="text-base font-semibold">{t.profile.myEvents}</h2>
           <Link to="/events" className="flex items-center gap-1 text-xs text-primary hover:underline">
-            See all <Star className="h-3 w-3" />
+            {t.common.seeAll} <Star className="h-3 w-3" />
           </Link>
         </div>
         {myEvents.length === 0 ? (
@@ -140,9 +149,9 @@ export function ProfileViewPage() {
             'flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/60 py-10 text-center'
           )}>
             <p className="text-3xl">🗓️</p>
-            <p className="text-sm text-muted-foreground">No events yet</p>
+            <p className="text-sm text-muted-foreground">{t.profile.noEventsYet}</p>
             <Link to="/events">
-              <Button variant="outline" size="sm">Browse events</Button>
+              <Button variant="outline" size="sm">{t.profile.browseEvents}</Button>
             </Link>
           </div>
         ) : (
@@ -161,7 +170,7 @@ export function ProfileViewPage() {
       {/* ── Purchased tickets ─────────────────────────────────── */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold">My purchased tickets</h2>
+          <h2 className="text-base font-semibold">{t.profile.myTickets}</h2>
         </div>
         <ProfileTicketsList tickets={myTickets} isLoading={ticketsLoading} />
       </section>

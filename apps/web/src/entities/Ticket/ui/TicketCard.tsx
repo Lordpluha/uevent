@@ -1,6 +1,7 @@
 import { cva } from 'class-variance-authority';
 import { CalendarDays, Clock, MapPin, Video, QrCode } from 'lucide-react';
 import { Badge } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { cn } from '@shared/lib/utils';
 import type { TicketStatus, TicketType } from '../model/ticket';
 
@@ -56,17 +57,7 @@ const panelPriceVariants = cva('text-2xl font-black leading-none', {
   defaultVariants: { ticketType: 'standard' },
 });
 
-const TYPE_LABELS: Record<TicketType, string> = {
-  free: 'Free',
-  standard: 'Standard',
-  vip: 'VIP',
-};
 
-const STATUS_BADGE: Record<TicketStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
-  available: { label: 'Available', variant: 'secondary' },
-  limited: { label: 'Limited', variant: 'default' },
-  'sold-out': { label: 'Sold out', variant: 'destructive' },
-};
 
 /* ──────────────────────────────────────────────────────────── */
 
@@ -83,6 +74,17 @@ export const TicketCard = ({
   status,
   onSelect,
 }: TicketCardProps) => {
+  const { t } = useAppContext();
+  const TYPE_LABELS: Record<TicketType, string> = {
+    free: t.common.free,
+    standard: t.common.standard,
+    vip: t.common.vip,
+  };
+  const STATUS_BADGE: Record<TicketStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
+    available: { label: t.entityCard.available, variant: 'secondary' },
+    limited: { label: t.entityCard.limited, variant: 'default' },
+    'sold-out': { label: t.entityCard.soldOut, variant: 'destructive' },
+  };
   const statusBadge = STATUS_BADGE[status];
   const isSoldOut = status === 'sold-out';
 
@@ -96,10 +98,10 @@ export const TicketCard = ({
       {/* Left panel — price + type */}
       <div className={cn(panelVariants({ ticketType }))}>
         <span className={cn(panelTextVariants({ ticketType }))}>{TYPE_LABELS[ticketType]}</span>
-        <span className={cn(panelPriceVariants({ ticketType }))}>{price === 0 ? 'Free' : `${currency}${price}`}</span>
+        <span className={cn(panelPriceVariants({ ticketType }))}>{price === 0 ? t.common.free : `${currency}${price}`}</span>
         {seat && (
           <span className="mt-1 rounded bg-black/10 px-1.5 py-0.5 text-[10px] font-semibold text-foreground/60">
-            Seat {seat}
+            {t.entityCard.seat} {seat}
           </span>
         )}
       </div>
@@ -127,7 +129,7 @@ export const TicketCard = ({
           </span>
           <span className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5 shrink-0" />
-            {eventTime} GMT
+            {eventTime} {t.common.gmt}
           </span>
           <span className="flex items-center gap-1.5">
             {format === 'online' ? (
@@ -145,7 +147,7 @@ export const TicketCard = ({
             onClick={onSelect}
             className="mt-1 w-full rounded-lg bg-primary py-1.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
-            Get ticket
+            {t.entityCard.getTicket}
           </button>
         )}
       </div>

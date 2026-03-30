@@ -1,14 +1,17 @@
 import type { ComponentProps } from 'react';
 
+import { useAppContext } from '@shared/lib';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/components/ui/button';
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from 'lucide-react';
 
 function Pagination({ className, ...props }: ComponentProps<'nav'>) {
+  const { t } = useAppContext();
+
   return (
     <nav
       role="navigation"
-      aria-label="pagination"
+      aria-label={t.pagination.navigation}
       data-slot="pagination"
       className={cn('mx-auto flex w-full justify-center', className)}
       {...props}
@@ -45,31 +48,37 @@ function PaginationLink({ className, isActive, size = 'icon', ...props }: Pagina
 
 function PaginationPrevious({
   className,
-  text = 'Previous',
+  text,
   ...props
 }: ComponentProps<typeof PaginationLink> & { text?: string }) {
+  const { t } = useAppContext();
+
   return (
-    <PaginationLink aria-label="Go to previous page" size="default" className={cn('pl-2!', className)} {...props}>
+    <PaginationLink aria-label={t.pagination.previousPage} size="default" className={cn('pl-2!', className)} {...props}>
       <ChevronLeftIcon data-icon="inline-start" />
-      <span className="hidden sm:block">{text}</span>
+      <span className="hidden sm:block">{text ?? t.pagination.previous}</span>
     </PaginationLink>
   );
 }
 
 function PaginationNext({
   className,
-  text = 'Next',
+  text,
   ...props
 }: ComponentProps<typeof PaginationLink> & { text?: string }) {
+  const { t } = useAppContext();
+
   return (
-    <PaginationLink aria-label="Go to next page" size="default" className={cn('pr-2!', className)} {...props}>
-      <span className="hidden sm:block">{text}</span>
+    <PaginationLink aria-label={t.pagination.nextPage} size="default" className={cn('pr-2!', className)} {...props}>
+      <span className="hidden sm:block">{text ?? t.pagination.next}</span>
       <ChevronRightIcon data-icon="inline-end" />
     </PaginationLink>
   );
 }
 
 function PaginationEllipsis({ className, ...props }: ComponentProps<'span'>) {
+  const { t } = useAppContext();
+
   return (
     <span
       aria-hidden
@@ -78,7 +87,7 @@ function PaginationEllipsis({ className, ...props }: ComponentProps<'span'>) {
       {...props}
     >
       <MoreHorizontalIcon />
-      <span className="sr-only">More pages</span>
+      <span className="sr-only">{t.pagination.morePages}</span>
     </span>
   );
 }

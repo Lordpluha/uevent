@@ -19,6 +19,7 @@ import {
 } from '@shared/components';
 import { usersApi } from '@entities/User';
 import { tagsApi } from '@shared/api';
+import { useAppContext } from '@shared/lib';
 import type { UserProfile } from './types';
 
 let TZ_LIST: string[] = [];
@@ -39,6 +40,7 @@ interface PreferencesSectionProps {
 }
 
 export function PreferencesSection({ user, invalidateUser }: PreferencesSectionProps) {
+  const { t } = useAppContext();
   const [timezone, setTimezone] = useState(user.timezone ?? '');
   const [selectedTags, setSelectedTags] = useState<string[]>(user.interests ?? []);
 
@@ -54,8 +56,8 @@ export function PreferencesSection({ user, invalidateUser }: PreferencesSectionP
         timezone: timezone || undefined,
         interests: selectedTags,
       }),
-    onSuccess: async () => { await invalidateUser(); toast.success('Preferences saved'); },
-    onError: () => toast.error('Failed to save preferences'),
+    onSuccess: async () => { await invalidateUser(); toast.success(t.profileSettings.preferences.saved); },
+    onError: () => toast.error(t.profileSettings.preferences.saveFailed),
   });
 
   const toggleTag = (name: string) => {
@@ -74,35 +76,35 @@ export function PreferencesSection({ user, invalidateUser }: PreferencesSectionP
       {/* Timezone */}
       <Field>
         <FieldLabel htmlFor="timezone">
-          <Clock className="inline h-3.5 w-3.5" /> Timezone
+          <Clock className="inline h-3.5 w-3.5" /> {t.profileSettings.preferences.timezone}
         </FieldLabel>
         <Select value={timezone} onValueChange={(v) => setTimezone(v ?? '')}>
           <SelectTrigger id="timezone" className="w-full" size="default">
-            <SelectValue placeholder="Select your timezone…" />
+            <SelectValue placeholder={t.profileSettings.preferences.timezonePlaceholder} />
           </SelectTrigger>
           <SelectContent className="max-h-60">
             <SelectGroup>
-              <SelectLabel>Timezones</SelectLabel>
+              <SelectLabel>{t.profileSettings.preferences.timezones}</SelectLabel>
               {TZ_LIST.map((tz) => (
                 <SelectItem key={tz} value={tz}>{tz}</SelectItem>
               ))}
             </SelectGroup>
           </SelectContent>
         </Select>
-        <FieldDescription>Used to display event times in your local time.</FieldDescription>
+        <FieldDescription>{t.profileSettings.preferences.timezoneHint}</FieldDescription>
       </Field>
 
       {/* Favorite tags */}
       <Field>
         <FieldLabel>
-          <Tag className="inline h-3.5 w-3.5" /> Favorite topics
+          <Tag className="inline h-3.5 w-3.5" /> {t.profileSettings.preferences.favoriteTopics}
         </FieldLabel>
         <FieldDescription className="mb-3">
-          Select topics you're interested in to get better event recommendations.
+          {t.profileSettings.preferences.topicsHint}
         </FieldDescription>
         <div className="flex flex-wrap gap-2">
           {allTags.length === 0 && (
-            <p className="text-xs text-muted-foreground">No tags available.</p>
+            <p className="text-xs text-muted-foreground">{t.profileSettings.preferences.noTags}</p>
           )}
           {allTags.map((tag) => {
             const selected = selectedTags.includes(tag.name);
@@ -126,7 +128,7 @@ export function PreferencesSection({ user, invalidateUser }: PreferencesSectionP
         </div>
         {selectedTags.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-foreground">Selected:</span>
+            <span className="text-xs text-muted-foreground">{t.profileSettings.preferences.selected}</span>
             {selectedTags.map((t) => (
               <Badge
                 key={t}
@@ -145,7 +147,7 @@ export function PreferencesSection({ user, invalidateUser }: PreferencesSectionP
       <div className="flex justify-end">
         <Button type="submit" className="gap-1.5" disabled={preferencesMutation.isPending}>
           <Save className="h-3.5 w-3.5" />
-          {preferencesMutation.isPending ? 'Saving…' : 'Save preferences'}
+          {preferencesMutation.isPending ? t.common.saving : t.profileSettings.preferences.savePreferences}
         </Button>
       </div>
     </form>

@@ -16,8 +16,15 @@ import {
   PopoverTrigger,
 } from '@shared/components';
 import { FORMAT_OPTIONS, type Format } from '../model/types';
+import { useAppContext } from '@shared/lib';
 
 export function FilterFormatField({ format, onFormatChange }: { format: Format; onFormatChange: (v: Format) => void }) {
+  const { t } = useAppContext();
+  const FORMAT_LABELS: Record<string, string> = {
+    all: t.filters.all,
+    online: t.common.online,
+    offline: t.common.offline,
+  };
   return (
     <div className="flex gap-1.5">
       {FORMAT_OPTIONS.map((option) => (
@@ -31,7 +38,7 @@ export function FilterFormatField({ format, onFormatChange }: { format: Format; 
               : 'border border-border text-muted-foreground hover:border-primary/60 hover:text-foreground'
           }`}
         >
-          {option.label}
+          {FORMAT_LABELS[option.value]}
         </button>
       ))}
     </div>
@@ -46,6 +53,7 @@ interface FilterTagsFieldProps {
 }
 
 export function FilterTagsField({ selectedTags, onTagsChange, tagsAnchor, tags }: FilterTagsFieldProps) {
+  const { t } = useAppContext();
   return (
     <Combobox value={selectedTags} onValueChange={onTagsChange} multiple>
       <div ref={tagsAnchor} className="w-full">
@@ -54,7 +62,7 @@ export function FilterTagsField({ selectedTags, onTagsChange, tagsAnchor, tags }
             {selectedTags.length === 0 ? (
               <span className="flex items-center gap-2 text-muted-foreground">
                 <Tag className="h-3.5 w-3.5 shrink-0" />
-                Filter by tags…
+                {t.filters.filterByTags}
               </span>
             ) : (
               <>
@@ -80,14 +88,14 @@ export function FilterTagsField({ selectedTags, onTagsChange, tagsAnchor, tags }
         </ComboboxTrigger>
       </div>
       <ComboboxContent anchor={tagsAnchor} align="start">
-        <ComboboxInput placeholder="Search tags…" showTrigger={false} />
+        <ComboboxInput placeholder={t.filters.searchTags} showTrigger={false} />
         <ComboboxList>
           {tags.map((tag) => (
             <ComboboxItem key={tag} value={tag}>
               {tag}
             </ComboboxItem>
           ))}
-          <ComboboxEmpty>No tags found</ComboboxEmpty>
+          <ComboboxEmpty>{t.filters.noTags}</ComboboxEmpty>
         </ComboboxList>
       </ComboboxContent>
     </Combobox>
@@ -107,6 +115,8 @@ export function FilterDateRangeField({
   numberOfMonths = 1,
   placeholder = 'Pick a date range',
 }: FilterDateRangeFieldProps) {
+  const { t } = useAppContext();
+  const displayPlaceholder = placeholder === 'Pick a date range' ? t.filters.pickDateRange : placeholder;
   return (
     <Popover>
       <PopoverTrigger
@@ -123,7 +133,7 @@ export function FilterDateRangeField({
             {dateRange.to ? ` – ${formatDate(dateRange.to, 'MMM d')}` : ''}
           </span>
         ) : (
-          <span>{placeholder}</span>
+          <span>{displayPlaceholder}</span>
         )}
         {dateRange?.from && (
           <X
@@ -153,6 +163,7 @@ interface FilterLocationFieldProps {
 }
 
 export function FilterLocationField({ location, onLocationChange, locationAnchor, cities }: FilterLocationFieldProps) {
+  const { t } = useAppContext();
   return (
     <div className="flex items-center gap-2 rounded-md border border-input bg-background px-2 text-sm">
       <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -163,7 +174,7 @@ export function FilterLocationField({ location, onLocationChange, locationAnchor
       >
         <div ref={locationAnchor} className="flex-1">
           <ComboboxInput
-            placeholder="Location…"
+            placeholder={t.filters.locationPlaceholder}
             showTrigger={false}
             showClear={location !== ''}
             className="h-9 w-full border-none bg-transparent shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0"
@@ -174,7 +185,7 @@ export function FilterLocationField({ location, onLocationChange, locationAnchor
             {cities.map((city) => (
               <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
             ))}
-            <ComboboxEmpty>No locations found</ComboboxEmpty>
+            <ComboboxEmpty>{t.filters.noLocations}</ComboboxEmpty>
           </ComboboxList>
         </ComboboxContent>
       </Combobox>

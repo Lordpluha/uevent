@@ -43,6 +43,7 @@ export const AuthModal = ({ defaultTab = 'login', variant = 'pill', triggerLabel
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<AuthView>('main');
   const [tempToken, setTempToken] = useState('');
+  const [twoFaAccountType, setTwoFaAccountType] = useState<AccountType>('user');
   const [resetEmail, setResetEmail] = useState('');
 
   const handleClose = () => {
@@ -52,8 +53,9 @@ export const AuthModal = ({ defaultTab = 'login', variant = 'pill', triggerLabel
     setResetEmail('');
   };
 
-  const handle2faRequired = (token: string) => {
+  const handle2faRequired = (token: string, type: AccountType = 'user') => {
     setTempToken(token);
+    setTwoFaAccountType(type);
     setView('2fa');
   };
 
@@ -67,6 +69,7 @@ export const AuthModal = ({ defaultTab = 'login', variant = 'pill', triggerLabel
         {view === '2fa' ? (
           <TwoFaChallengeForm
             tempToken={tempToken}
+            accountType={twoFaAccountType}
             onSuccess={handleClose}
             onBack={() => { setView('main'); setTempToken(''); }}
           />
@@ -140,7 +143,12 @@ export const AuthModal = ({ defaultTab = 'login', variant = 'pill', triggerLabel
                 <RegisterForm t={t.auth.register} onSwitch={() => setTab('login')} onSuccess={handleClose} />
               )
             ) : tab === 'login' ? (
-              <OrgLoginForm t={t.auth.orgLogin} onSwitch={() => setTab('register')} onSuccess={handleClose} />
+              <OrgLoginForm
+                t={t.auth.orgLogin}
+                onSwitch={() => setTab('register')}
+                onSuccess={handleClose}
+                on2faRequired={(token) => handle2faRequired(token, 'organization')}
+              />
             ) : (
               <OrgRegisterForm t={t.auth.orgRegister} onSwitch={() => setTab('login')} onSuccess={handleClose} />
             )}

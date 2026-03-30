@@ -33,6 +33,7 @@ import {
   type TextFormatType,
 } from 'lexical';
 
+import { useAppContext } from '@shared/lib';
 import { cn } from '@shared/lib/utils';
 
 /* ── Types ────────────────────────────────────────────────────────────── */
@@ -72,6 +73,7 @@ function ToolbarBtn({ active, title, onPress, children }: ToolbarBtnProps) {
 /* ── Toolbar plugin ───────────────────────────────────────────────────── */
 
 function ToolbarPlugin() {
+  const { t } = useAppContext();
   const [editor] = useLexicalComposerContext();
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
@@ -155,43 +157,43 @@ function ToolbarPlugin() {
 
   return (
     <div className="flex flex-wrap gap-0.5 border-b border-border bg-muted/30 p-1.5">
-      <ToolbarBtn active={blockType === 'h1'} title="Heading 1" onPress={() => formatBlock('h1')}>
+      <ToolbarBtn active={blockType === 'h1'} title={t.richTextEditor.heading1} onPress={() => formatBlock('h1')}>
         <span className="text-xs font-bold leading-none">H1</span>
       </ToolbarBtn>
-      <ToolbarBtn active={blockType === 'h2'} title="Heading 2" onPress={() => formatBlock('h2')}>
+      <ToolbarBtn active={blockType === 'h2'} title={t.richTextEditor.heading2} onPress={() => formatBlock('h2')}>
         <span className="text-xs font-bold leading-none">H2</span>
       </ToolbarBtn>
-      <ToolbarBtn active={blockType === 'h3'} title="Heading 3" onPress={() => formatBlock('h3')}>
+      <ToolbarBtn active={blockType === 'h3'} title={t.richTextEditor.heading3} onPress={() => formatBlock('h3')}>
         <span className="text-xs font-bold leading-none">H3</span>
       </ToolbarBtn>
-      <ToolbarBtn active={blockType === 'quote'} title="Quote" onPress={() => formatBlock('quote')}>
+      <ToolbarBtn active={blockType === 'quote'} title={t.richTextEditor.quote} onPress={() => formatBlock('quote')}>
         <span className="text-xs font-bold leading-none">❝</span>
       </ToolbarBtn>
 
       <div className="mx-1 w-px self-stretch bg-border" />
 
-      <ToolbarBtn active={isBold} title="Bold" onPress={() => dispatchFmt('bold')}>
+      <ToolbarBtn active={isBold} title={t.richTextEditor.bold} onPress={() => dispatchFmt('bold')}>
         <span className="text-xs font-bold leading-none">B</span>
       </ToolbarBtn>
-      <ToolbarBtn active={isItalic} title="Italic" onPress={() => dispatchFmt('italic')}>
+      <ToolbarBtn active={isItalic} title={t.richTextEditor.italic} onPress={() => dispatchFmt('italic')}>
         <span className="text-xs italic font-bold leading-none">I</span>
       </ToolbarBtn>
-      <ToolbarBtn active={isUnderline} title="Underline" onPress={() => dispatchFmt('underline')}>
+      <ToolbarBtn active={isUnderline} title={t.richTextEditor.underline} onPress={() => dispatchFmt('underline')}>
         <span className="text-xs underline font-bold leading-none">U</span>
       </ToolbarBtn>
-      <ToolbarBtn active={isStrike} title="Strikethrough" onPress={() => dispatchFmt('strikethrough')}>
+      <ToolbarBtn active={isStrike} title={t.richTextEditor.strikethrough} onPress={() => dispatchFmt('strikethrough')}>
         <span className="text-xs line-through font-bold leading-none">S</span>
       </ToolbarBtn>
-      <ToolbarBtn active={isCode} title="Inline code" onPress={() => dispatchFmt('code')}>
+      <ToolbarBtn active={isCode} title={t.richTextEditor.inlineCode} onPress={() => dispatchFmt('code')}>
         <span className="font-mono text-xs font-bold leading-none">`</span>
       </ToolbarBtn>
 
       <div className="mx-1 w-px self-stretch bg-border" />
 
-      <ToolbarBtn active={blockType === 'bullet'} title="Bullet list" onPress={() => formatBlock('bullet')}>
+      <ToolbarBtn active={blockType === 'bullet'} title={t.richTextEditor.bulletList} onPress={() => formatBlock('bullet')}>
         <span className="text-xs font-bold leading-none">•≡</span>
       </ToolbarBtn>
-      <ToolbarBtn active={blockType === 'number'} title="Numbered list" onPress={() => formatBlock('number')}>
+      <ToolbarBtn active={blockType === 'number'} title={t.richTextEditor.numberedList} onPress={() => formatBlock('number')}>
         <span className="text-xs font-bold leading-none">1≡</span>
       </ToolbarBtn>
     </div>
@@ -264,7 +266,7 @@ export interface RichTextEditorProps {
 export function RichTextEditor({
   defaultValue,
   onChange,
-  placeholder = 'Start writing…',
+  placeholder,
   className,
   disabled = false,
   readOnly = false,
@@ -272,6 +274,7 @@ export function RichTextEditor({
   autoFocus = false,
   'aria-invalid': ariaInvalid,
 }: RichTextEditorProps) {
+  const { t } = useAppContext();
   const handleChange = useCallback(
     (editorState: EditorState) => {
       if (!onChange) return;
@@ -308,10 +311,10 @@ export function RichTextEditor({
           contentEditable={
             <ContentEditable
               className="min-h-[160px] px-3 py-2 text-sm leading-relaxed outline-none"
-              aria-placeholder={placeholder}
+              aria-placeholder={placeholder ?? t.richTextEditor.startWriting}
               placeholder={
                 <div className="pointer-events-none absolute top-[calc(2.25rem+0.5rem)] left-0 px-3 text-sm text-muted-foreground select-none">
-                  {placeholder}
+                  {placeholder ?? t.richTextEditor.startWriting}
                 </div>
               }
             />

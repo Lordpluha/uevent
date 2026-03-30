@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Tag, Check, X } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
+import { useAppContext } from '@shared/lib';
 
 interface PromoCodeSectionProps {
   onApplyPromo: (code: string, discountPercent: number) => void;
@@ -24,6 +25,7 @@ export function PromoCodeSection({
   appliedCode,
   appliedDiscount,
 }: PromoCodeSectionProps) {
+  const { t } = useAppContext();
   const [promoInput, setPromoInput] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ export function PromoCodeSection({
   const handleApply = async () => {
     const code = promoInput.trim().toUpperCase();
     if (!code) {
-      setError('Enter a promo code');
+      setError(t.promoCode.enterCode);
       return;
     }
 
@@ -46,7 +48,7 @@ export function PromoCodeSection({
       onApplyPromo(code, discount);
       setPromoInput('');
     } else {
-      setError('Invalid promo code');
+      setError(t.promoCode.invalidCode);
     }
 
     setLoading(false);
@@ -69,16 +71,16 @@ export function PromoCodeSection({
             </div>
             <div>
               <p className="text-sm font-semibold text-green-900 dark:text-green-200">
-                Promo applied: <span className="font-mono">{appliedCode}</span>
+                {t.promoCode.applied.replace('{{code}}', appliedCode)}
               </p>
-              <p className="text-xs text-green-700 dark:text-green-300">{appliedDiscount}% discount</p>
+              <p className="text-xs text-green-700 dark:text-green-300">{t.promoCode.discountValue.replace('{{discount}}', String(appliedDiscount))}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleRemove}
             className="text-green-700 transition-colors hover:text-green-900 dark:text-green-300 dark:hover:text-green-200"
-            aria-label="Remove promo"
+            aria-label={t.promoCode.remove}
           >
             <X className="h-4 w-4" />
           </button>
@@ -92,13 +94,13 @@ export function PromoCodeSection({
       <div className="mb-3 flex items-center gap-2">
         <Tag className="h-4 w-4 text-muted-foreground" />
         <label htmlFor="promo-input" className="text-sm font-semibold text-foreground">
-          Have a promo code?
+          {t.promoCode.label}
         </label>
       </div>
       <div className="flex gap-2">
         <Input
           id="promo-input"
-          placeholder="Enter promo code"
+          placeholder={t.promoCode.inputPlaceholder}
           value={promoInput}
           onChange={(e) => {
             setPromoInput(e.target.value);
@@ -114,13 +116,16 @@ export function PromoCodeSection({
           disabled={loading || !promoInput.trim()}
           variant="outline"
         >
-          {loading ? 'Checking...' : 'Apply'}
+          {loading ? t.promoCode.checking : t.promoCode.apply}
         </Button>
       </div>
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
       <p className="mt-2 text-xs text-muted-foreground">
-        Try: <span className="font-mono text-xs">UEVENT15</span> (15% off) or{' '}
-        <span className="font-mono text-xs">SUMMER25</span> (25% off)
+        {t.promoCode.examples
+          .replace('{{code1}}', 'UEVENT15')
+          .replace('{{discount1}}', '15')
+          .replace('{{code2}}', 'SUMMER25')
+          .replace('{{discount2}}', '25')}
       </p>
     </div>
   );

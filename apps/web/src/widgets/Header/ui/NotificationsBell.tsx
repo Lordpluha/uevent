@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { useMarkNotificationRead, useMyNotifications } from '@entities/Notification';
 
 type NotificationsBellProps = {
@@ -22,6 +23,7 @@ function formatNotificationDate(value: string) {
 }
 
 export function NotificationsBell({ enabled }: NotificationsBellProps) {
+  const { t } = useAppContext();
   const { data: notifications = [], isLoading } = useMyNotifications(enabled, 20);
   const markReadMutation = useMarkNotificationRead();
 
@@ -34,7 +36,7 @@ export function NotificationsBell({ enabled }: NotificationsBellProps) {
     <DropdownMenu>
       <DropdownMenuTrigger
         className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/60 bg-card text-muted-foreground transition-colors hover:text-foreground"
-        aria-label="Notifications"
+        aria-label={t.notificationsBell.title}
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
@@ -45,14 +47,14 @@ export function NotificationsBell({ enabled }: NotificationsBellProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 max-w-[90vw]">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifications</span>
-          <Badge variant="secondary">{unreadCount} unread</Badge>
+          <span>{t.notificationsBell.title}</span>
+          <Badge variant="secondary">{unreadCount} {t.notificationsBell.unread}</Badge>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {isLoading ? (
-          <DropdownMenuItem disabled>Loading...</DropdownMenuItem>
+          <DropdownMenuItem disabled>{t.common.loading}</DropdownMenuItem>
         ) : notifications.length === 0 ? (
-          <DropdownMenuItem disabled>No notifications yet</DropdownMenuItem>
+          <DropdownMenuItem disabled>{t.notificationsBell.noNotifications}</DropdownMenuItem>
         ) : (
           notifications.map((item) => (
             <DropdownMenuItem

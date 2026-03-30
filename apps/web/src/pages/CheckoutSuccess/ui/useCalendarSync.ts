@@ -1,10 +1,12 @@
 import { authApi } from '@shared/api/auth.api'
+import { useAppContext } from '@shared/lib'
 import { useAuth } from '@shared/lib/auth-context'
 import { useMutation } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 
 export function useCalendarSync(eventId?: string, ticketId?: string | null) {
+  const { t } = useAppContext()
   const { isAuthenticated, accountType } = useAuth()
   const autoAddedRef = useRef(false)
 
@@ -17,11 +19,11 @@ export function useCalendarSync(eventId?: string, ticketId?: string | null) {
     },
     onSuccess: (data) => {
       localStorage.removeItem('pendingPayment')
-      toast.success('Event and ticket added to Google Calendar!', {
+      toast.success(t.checkoutSuccess.calendarAdded, {
         action:
           data.ticketResult?.htmlLink || data.eventResult?.htmlLink
             ? {
-                label: 'Open',
+                label: t.common.open,
                 onClick: () => window.open(data.ticketResult?.htmlLink ?? data.eventResult?.htmlLink ?? '', '_blank'),
               }
             : undefined,
@@ -31,9 +33,7 @@ export function useCalendarSync(eventId?: string, ticketId?: string | null) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? ''
       const lower = msg.toLowerCase()
       if (lower.includes('google calendar api is disabled')) {
-        toast.error(
-          'Google Calendar API is disabled in Google Cloud. Enable calendar-json.googleapis.com and try again.',
-        )
+        toast.error(t.events.details.calendarApiDisabled)
         return
       }
       if (
@@ -41,11 +41,11 @@ export function useCalendarSync(eventId?: string, ticketId?: string | null) {
         lower.includes('please re-login') ||
         lower.includes('google calendar access denied')
       ) {
-        toast.error('Google account not linked. Log in with Google to enable calendar sync.', {
-          action: { label: 'Link Google', onClick: () => window.location.assign('/api/auth/google') },
+        toast.error(t.events.details.calendarAccessDenied, {
+          action: { label: t.events.details.calendarLinkGoogle, onClick: () => window.location.assign('/api/auth/google') },
         })
       } else {
-        toast.error('Could not add to Google Calendar.')
+        toast.error(t.events.details.calendarFailed)
       }
     },
   })

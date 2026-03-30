@@ -1,7 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common'
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import * as speakeasy from 'speakeasy'
+import { toDataURL } from 'qrcode'
 import { Organization } from '../organizations/entities/organization.entity'
 import { OrganizationSession } from '../organizations/entities/organization-session.entity'
 import { LoginDto } from './dto/login.dto'
@@ -12,7 +14,6 @@ import {
   ChangeOrgPasswordDto,
   UpdateOrgEmailDto,
   UpdateOrgProfileDto,
-  UpdateOrgSecurityDto,
 } from './dto/org-settings.dto'
 
 const ACCESS_EXPIRES = '15m'
@@ -49,6 +50,44 @@ export class OrgsAuthService {
     const valid = await verifyPassword(org.password, dto.password)
     if (!valid) throw new UnauthorizedException('Invalid credentials')
 
+    // If 2FA is enabled, return a temporary token instead of full auth
+    if (org.two_factor_enabled && org.two_fa_secret) {
+      const tempToken = await this.jwtService.signAsync(
+        { sub: org.id, type: '2fa_pending' },
+        { expiresIn: '5m' },
+      )
+      return { requires2fa: true, tempToken }
+    }
+
+    return this.createSession(org)
+  }
+
+  async verify2fa(tempToken: string, code: string) {
+    let payload: { sub: string; type: string }
+    try {
+      payload = await this.jwtService.verifyAsync(tempToken)
+    } catch {
+      throw new UnauthorizedException('Invalid or expired 2FA token')
+    }
+
+    if (payload.type !== '2fa_pending') {
+      throw new UnauthorizedException('Invalid token type')
+    }
+
+    const org = await this.orgsRepo.findOneBy({ id: payload.sub })
+    if (!org || !org.two_fa_secret) {
+      throw new UnauthorizedException('Invalid credentials')
+    }
+
+    const isValid = speakeasy.totp.verify({ secret: org.two_fa_secret, encoding: 'base32', token: code, window: 1 })
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid 2FA code')
+    }
+
+    return this.createSession(org)
+  }
+
+  private async createSession(org: Organization) {
     const session = this.sessionsRepo.create({
       organization_id: org.id,
       expiration: new Date(Date.now() + REFRESH_EXPIRES_MS),
@@ -132,17 +171,57 @@ export class OrgsAuthService {
     return { message: 'Password updated' }
   }
 
-  async updateSecurity(id: string, dto: UpdateOrgSecurityDto) {
-    const org = await this.orgsRepo.findOneBy({ id })
-    if (!org) throw new NotFoundException('Organization not found')
-
-    org.two_factor_enabled = dto.two_factor_enabled
-    const updated = await this.orgsRepo.save(org)
-    return this.toSafeOrganization(updated)
-  }
-
   async logout(sessionId: string) {
     await this.sessionsRepo.delete(sessionId)
+  }
+
+  // ── 2FA Setup ──────────────────────────────────────────────
+
+  async setup2fa(orgId: string) {
+    const org = await this.orgsRepo.findOneBy({ id: orgId })
+    if (!org) throw new NotFoundException('Organization not found')
+
+    const generated = speakeasy.generateSecret({ name: `UEvent:${org.email}`, issuer: 'UEvent' })
+    const secret = generated.base32
+    const otpauthUrl = generated.otpauth_url!
+    const qrCodeDataUrl = await toDataURL(otpauthUrl)
+
+    // Store secret temporarily (not enabled until confirmed)
+    await this.orgsRepo.update(orgId, { two_fa_secret: secret })
+
+    return { secret, qrCodeDataUrl }
+  }
+
+  async confirm2fa(orgId: string, code: string) {
+    const org = await this.orgsRepo.findOneBy({ id: orgId })
+    if (!org || !org.two_fa_secret) {
+      throw new BadRequestException('2FA setup not initiated')
+    }
+
+    const isValid = speakeasy.totp.verify({ secret: org.two_fa_secret, encoding: 'base32', token: code, window: 1 })
+    if (!isValid) {
+      throw new BadRequestException('Invalid verification code')
+    }
+
+    await this.orgsRepo.update(orgId, { two_factor_enabled: true })
+    return { enabled: true }
+  }
+
+  async disable2fa(orgId: string, code: string) {
+    const org = await this.orgsRepo.findOneBy({ id: orgId })
+    if (!org) throw new NotFoundException('Organization not found')
+
+    if (!org.two_factor_enabled || !org.two_fa_secret) {
+      throw new BadRequestException('2FA is not enabled')
+    }
+
+    const isValid = speakeasy.totp.verify({ secret: org.two_fa_secret, encoding: 'base32', token: code, window: 1 })
+    if (!isValid) {
+      throw new BadRequestException('Invalid verification code')
+    }
+
+    await this.orgsRepo.update(orgId, { two_factor_enabled: false, two_fa_secret: null })
+    return { enabled: false }
   }
 
   private async signTokens(payload: JwtPayload) {
@@ -154,7 +233,8 @@ export class OrgsAuthService {
   }
 
   private toSafeOrganization(org: Organization) {
-    const { password, ...safe } = org
+    const { password, two_fa_secret, ...safe } = org
     return safe
   }
 }
+

@@ -19,6 +19,7 @@ import {
   buttonVariants,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
+import { useAppContext } from '@shared/lib';
 import { usersApi } from '@entities/User';
 
 interface Props {
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export function ProfileEditForm({ user }: Props) {
+  const { t } = useAppContext();
   const queryClient = useQueryClient();
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,8 +60,8 @@ export function ProfileEditForm({ user }: Props) {
 
   const uploadAvatarMutation = useMutation({
     mutationFn: (file: File) => usersApi.uploadAvatar(file),
-    onSuccess: async () => { await invalidate(); toast.success('Profile photo updated'); },
-    onError: () => toast.error('Failed to upload profile photo'),
+    onSuccess: async () => { await invalidate(); toast.success(t.profileEdit.photoUpdated); },
+    onError: () => toast.error(t.profileEdit.photoFailed),
   });
 
   const saveProfileMutation = useMutation({
@@ -70,8 +72,8 @@ export function ProfileEditForm({ user }: Props) {
       location: form.location.trim() || undefined,
       website: form.website.trim() || undefined,
     }),
-    onSuccess: async () => { await invalidate(); toast.success('Profile updated'); },
-    onError: () => toast.error('Failed to save profile'),
+    onSuccess: async () => { await invalidate(); toast.success(t.profileEdit.profileUpdated); },
+    onError: () => toast.error(t.profileEdit.saveFailed),
   });
 
   const set = (field: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -100,15 +102,15 @@ export function ProfileEditForm({ user }: Props) {
             type="button"
             onClick={() => avatarInputRef.current?.click()}
             className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow"
-            title="Change photo"
+            title={t.profileEdit.changePhoto}
           >
             <Camera className="h-3 w-3" />
           </button>
           <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         </div>
         <div>
-          <p className="text-sm font-medium">Profile photo</p>
-          <p className="text-xs text-muted-foreground">JPG, PNG or GIF · max 2 MB</p>
+          <p className="text-sm font-medium">{t.profileEdit.profilePhoto}</p>
+          <p className="text-xs text-muted-foreground">{t.profileEdit.photoHint}</p>
         </div>
       </div>
 
@@ -117,39 +119,39 @@ export function ProfileEditForm({ user }: Props) {
       <FieldGroup>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="name">Full name</FieldLabel>
-            <Input id="name" value={form.name} onChange={set('name')} placeholder="Your name" />
+            <FieldLabel htmlFor="name">{t.profileEdit.fullName}</FieldLabel>
+            <Input id="name" value={form.name} onChange={set('name')} placeholder={t.profileEdit.fullNamePlaceholder} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="username">Username</FieldLabel>
-            <Input id="username" value={form.username} onChange={set('username')} placeholder="username" />
-            <FieldDescription>Used in your public profile URL.</FieldDescription>
+            <FieldLabel htmlFor="username">{t.profileEdit.username}</FieldLabel>
+            <Input id="username" value={form.username} onChange={set('username')} placeholder={t.profileEdit.usernamePlaceholder} />
+            <FieldDescription>{t.profileEdit.usernameHint}</FieldDescription>
           </Field>
         </div>
 
         <Field>
-          <FieldLabel htmlFor="bio">Bio</FieldLabel>
-          <Textarea id="bio" value={form.bio} onChange={set('bio')} placeholder="Tell something about yourself" className="min-h-24" />
-          <FieldDescription>Max 300 characters.</FieldDescription>
+          <FieldLabel htmlFor="bio">{t.profileEdit.bio}</FieldLabel>
+          <Textarea id="bio" value={form.bio} onChange={set('bio')} placeholder={t.profileEdit.bioPlaceholder} className="min-h-24" />
+          <FieldDescription>{t.profileEdit.bioMaxChars}</FieldDescription>
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="location">Location</FieldLabel>
-            <Input id="location" value={form.location} onChange={set('location')} placeholder="City, Country" />
+            <FieldLabel htmlFor="location">{t.profileEdit.location}</FieldLabel>
+            <Input id="location" value={form.location} onChange={set('location')} placeholder={t.profileEdit.locationPlaceholder} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="website">Website</FieldLabel>
-            <Input id="website" value={form.website} onChange={set('website')} placeholder="https://your.site" />
+            <FieldLabel htmlFor="website">{t.profileEdit.website}</FieldLabel>
+            <Input id="website" value={form.website} onChange={set('website')} placeholder={t.profileEdit.websitePlaceholder} />
           </Field>
         </div>
       </FieldGroup>
 
       <div className="flex justify-end gap-3">
-        <Link to="/profile" className={cn(buttonVariants({ variant: 'ghost' }))}>Cancel</Link>
+        <Link to="/profile" className={cn(buttonVariants({ variant: 'ghost' }))}>{t.common.cancel}</Link>
         <Button type="submit" className="gap-1.5" disabled={saveProfileMutation.isPending}>
           <Save className="h-3.5 w-3.5" />
-          {saveProfileMutation.isPending ? 'Saving...' : 'Save changes'}
+          {saveProfileMutation.isPending ? t.common.saving : t.common.saveChanges}
         </Button>
       </div>
     </form>

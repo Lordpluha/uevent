@@ -6,6 +6,7 @@ import {
   FieldTitle,
   Switch,
 } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { useNotificationMutations } from './useNotificationMutations';
 import type { UserProfile } from './types';
 
@@ -15,6 +16,7 @@ interface NotificationsSectionProps {
 }
 
 export function NotificationsSection({ user, invalidateUser }: NotificationsSectionProps) {
+  const { t } = useAppContext();
   const [notificationsEnabled, setNotificationsEnabled] = useState(user.notificationsEnabled ?? true);
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(user.pushNotificationsEnabled ?? false);
   const [paymentEmailEnabled, setPaymentEmailEnabled] = useState(user.paymentEmailEnabled ?? true);
@@ -68,7 +70,7 @@ export function NotificationsSection({ user, invalidateUser }: NotificationsSect
 
     if (typeof window === 'undefined' || !('Notification' in window)) {
       setBrowserPushPermission('unsupported');
-      toast.error('Push notifications are not supported in this browser');
+      toast.error(t.profileSettings.notifications.pushUnsupported);
       return;
     }
 
@@ -82,13 +84,13 @@ export function NotificationsSection({ user, invalidateUser }: NotificationsSect
     if (permission !== 'granted') {
       setPushNotificationsEnabled(false);
       pushNotificationsMutation.mutate(false);
-      toast.error('Push notifications permission was not granted');
+      toast.error(t.profileSettings.notifications.pushDenied);
       return;
     }
 
     setPushNotificationsEnabled(true);
     pushNotificationsMutation.mutate(true);
-    toast.success('Push notifications enabled');
+    toast.success(t.profileSettings.notifications.pushEnabled);
   };
 
   return (
@@ -96,16 +98,16 @@ export function NotificationsSection({ user, invalidateUser }: NotificationsSect
       <div className="rounded-xl border border-border/60 bg-card p-5">
         <Field orientation="horizontal" className="items-center justify-between">
           <div>
-            <FieldTitle>Email notifications</FieldTitle>
+            <FieldTitle>{t.profileSettings.notifications.email}</FieldTitle>
             <FieldDescription className="mt-0.5">
-              Receive updates about events, tickets, and account activity.
+              {t.profileSettings.notifications.emailDesc}
             </FieldDescription>
           </div>
           <Switch
             checked={notificationsEnabled}
             onCheckedChange={handleNotificationsChange}
             disabled={notificationsMutation.isPending}
-            aria-label="Toggle email notifications"
+            aria-label={t.profileSettings.notifications.toggleEmail}
           />
         </Field>
       </div>
@@ -113,16 +115,16 @@ export function NotificationsSection({ user, invalidateUser }: NotificationsSect
       <div className="rounded-xl border border-border/60 bg-card p-5">
         <Field orientation="horizontal" className="items-center justify-between">
           <div>
-            <FieldTitle>Browser push notifications</FieldTitle>
+            <FieldTitle>{t.profileSettings.notifications.push}</FieldTitle>
             <FieldDescription className="mt-0.5">
-              Permission status: {browserPushPermission === 'unsupported' ? 'unsupported' : browserPushPermission}
+              {t.profileSettings.notifications.permissionStatus} {browserPushPermission === 'unsupported' ? t.profileSettings.notifications.permissionUnsupported : browserPushPermission}
             </FieldDescription>
           </div>
           <Switch
             checked={pushNotificationsEnabled}
             onCheckedChange={handlePushNotificationsChange}
             disabled={pushNotificationsMutation.isPending || browserPushPermission === 'unsupported'}
-            aria-label="Toggle browser push notifications"
+            aria-label={t.profileSettings.notifications.togglePush}
           />
         </Field>
       </div>
@@ -130,16 +132,16 @@ export function NotificationsSection({ user, invalidateUser }: NotificationsSect
       <div className="rounded-xl border border-border/60 bg-card p-5">
         <Field orientation="horizontal" className="items-center justify-between">
           <div>
-            <FieldTitle>Payment confirmation emails</FieldTitle>
+            <FieldTitle>{t.profileSettings.notifications.paymentEmail}</FieldTitle>
             <FieldDescription className="mt-0.5">
-              Receive email confirmations after successful payments.
+              {t.profileSettings.notifications.paymentEmailDesc}
             </FieldDescription>
           </div>
           <Switch
             checked={paymentEmailEnabled}
             onCheckedChange={handlePaymentEmailChange}
             disabled={paymentEmailMutation.isPending}
-            aria-label="Toggle payment confirmation emails"
+            aria-label={t.profileSettings.notifications.togglePaymentEmail}
           />
         </Field>
       </div>
@@ -147,16 +149,16 @@ export function NotificationsSection({ user, invalidateUser }: NotificationsSect
       <div className="rounded-xl border border-border/60 bg-card p-5">
         <Field orientation="horizontal" className="items-center justify-between">
           <div>
-            <FieldTitle>Subscription notifications</FieldTitle>
+            <FieldTitle>{t.profileSettings.notifications.subscription}</FieldTitle>
             <FieldDescription className="mt-0.5">
-              Get notified about updates from organizations you follow.
+              {t.profileSettings.notifications.subscriptionDesc}
             </FieldDescription>
           </div>
           <Switch
             checked={subscriptionNotificationsEnabled}
             onCheckedChange={handleSubscriptionNotificationsChange}
             disabled={subscriptionNotificationsMutation.isPending}
-            aria-label="Toggle subscription notifications"
+            aria-label={t.profileSettings.notifications.toggleSubscription}
           />
         </Field>
       </div>
@@ -164,16 +166,16 @@ export function NotificationsSection({ user, invalidateUser }: NotificationsSect
       <div className="rounded-xl border border-border/60 bg-card p-5">
         <Field orientation="horizontal" className="items-center justify-between">
           <div>
-            <FieldTitle>Login notifications</FieldTitle>
+            <FieldTitle>{t.profileSettings.notifications.login}</FieldTitle>
             <FieldDescription className="mt-0.5">
-              Get an email when a new login is detected on your account.
+              {t.profileSettings.notifications.loginDesc}
             </FieldDescription>
           </div>
           <Switch
             checked={loginNotificationsEnabled}
             onCheckedChange={handleLoginNotificationsChange}
             disabled={loginNotificationsMutation.isPending}
-            aria-label="Toggle login notifications"
+            aria-label={t.profileSettings.notifications.toggleLogin}
           />
         </Field>
       </div>

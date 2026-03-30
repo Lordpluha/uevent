@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router';
+import { useAppContext } from '@shared/lib';
 
 export const NotFound = () => {
   const navigate = useNavigate();
+  const { t } = useAppContext();
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 bg-background px-6 text-center">
@@ -16,9 +18,9 @@ export const NotFound = () => {
       </div>
 
       <div className="flex flex-col items-center gap-3">
-        <h1 className="text-2xl font-semibold text-foreground">Page not found</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{t.errors.pageNotFound}</h1>
         <p className="max-w-sm text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved to another address.
+          {t.errors.pageNotFoundDesc}
         </p>
       </div>
 
@@ -28,13 +30,13 @@ export const NotFound = () => {
           onClick={() => navigate(-1)}
           className="rounded-full border border-border bg-card px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
         >
-          ← Go back
+          {t.common.goBack}
         </button>
         <a
           href="/"
           className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
-          Home
+          {t.common.home}
         </a>
       </div>
     </div>

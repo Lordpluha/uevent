@@ -1,6 +1,7 @@
 import { Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 
 interface ShareButtonProps {
   url?: string;
@@ -11,6 +12,7 @@ interface ShareButtonProps {
 }
 
 export function ShareButton({ url, title, text, variant = 'circle', className }: ShareButtonProps) {
+  const { t } = useAppContext();
   const shareUrl = url ?? (typeof window !== 'undefined' ? window.location.href : '');
 
   const handleShare = async () => {
@@ -25,9 +27,9 @@ export function ShareButton({ url, title, text, variant = 'circle', className }:
 
     try {
       await navigator.clipboard.writeText(shareUrl);
-      toast.success('Link copied to clipboard');
+      toast.success(t.common.linkCopied);
     } catch {
-      toast.error('Failed to copy link');
+      toast.error(t.common.copyFailed);
     }
   };
 
@@ -35,7 +37,7 @@ export function ShareButton({ url, title, text, variant = 'circle', className }:
     return (
       <button
         type="button"
-        aria-label="Share"
+        aria-label={t.common.share}
         onClick={handleShare}
         className={`flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent ${className ?? ''}`}
       >
@@ -47,7 +49,7 @@ export function ShareButton({ url, title, text, variant = 'circle', className }:
   return (
     <Button variant="outline" size="sm" className={`gap-1.5 ${className ?? ''}`} onClick={handleShare}>
       <Share2 className="h-4 w-4" />
-      Share
+      {t.common.share}
     </Button>
   );
 }

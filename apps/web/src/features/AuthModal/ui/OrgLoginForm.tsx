@@ -2,12 +2,12 @@ import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { z } from 'zod';
 import { Button, Input, Label } from '@shared/components';
+import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { authApi } from '@shared/api/auth.api';
-import { organizationsApi } from '@entities/Organization';
 import { SwitchPrompt, FieldError } from './shared';
 
 const loginSchema = z.object({
@@ -33,9 +33,10 @@ export const OrgLoginForm = ({
   t,
   onSwitch,
   onSuccess,
-}: { t: OrgLoginDict; onSwitch: () => void; onSuccess: () => void }) => {
+  on2faRequired,
+}: { t: OrgLoginDict; onSwitch: () => void; onSuccess: () => void; on2faRequired?: (tempToken: string) => void }) => {
   const { setAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
+  const { t: appT } = useAppContext();
   const { register, handleSubmit, formState: { errors } } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
   });
@@ -43,12 +44,15 @@ export const OrgLoginForm = ({
   const { mutate, isPending } = useMutation({
     mutationFn: (v: LoginValues) => authApi.loginOrg(v.email, v.password),
     onSuccess: (data) => {
+      if ('requires2fa' in data) {
+        on2faRequired?.(data.tempToken);
+        return;
+      }
       setAuthenticated(data.accountType);
-      queryClient.prefetchQuery({ queryKey: ['me'], queryFn: () => organizationsApi.getMe() });
-      toast.success('Logged in successfully');
+      toast.success(appT.authExtra.loginSuccess);
       onSuccess();
     },
-    onError: () => toast.error('Invalid email or password'),
+    onError: () => toast.error(appT.authExtra.invalidCredentials),
   });
 
   return (
