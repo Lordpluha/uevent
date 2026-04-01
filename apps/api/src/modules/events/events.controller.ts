@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, UseInterceptors, UploadedFiles, BadRequestException } from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, UseInterceptors, UploadedFiles, BadRequestException, Headers, UseGuards, ForbiddenException } from '@nestjs/common'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { diskStorage } from 'multer'
 import { extname, join } from 'node:path'
@@ -7,44 +7,117 @@ import { EventsService } from './events.service'
 import { CreateEventDto, CreateEventDtoSchema, UpdateEventDto, UpdateEventDtoSchema } from './dto'
 import { GetEventsParams, GetEventsParamsSchema } from './params'
 import { ZodValidationPipe } from 'nestjs-zod'
+import { ApiBadRequestResponse, ApiCreatedResponse, ApiExtraModels, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
+import { ApiConfigService } from '../../config/api-config.service'
+import { JwtGuard } from '../auth/guards/jwt.guard'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
+import { JwtPayload } from '../auth/types/jwt-payload.interface'
+import { ApiAcceptLanguageHeader, ApiAccessCookieAuth, ApiMultipartFile, ApiUuidParam, ApiZodBody, eventResponseSchema, messageSchema, paginatedResponseSchema } from '../../common/swagger/openapi.util'
+import { Event } from './entities/event.entity'
+import { Tag } from '../tags/entities/tag.entity'
+import { Ticket } from '../users/entities/ticket.entity'
 
 @Controller('events')
+@ApiTags('Events')
+@ApiExtraModels(Event, Tag, Ticket)
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly apiConfig: ApiConfigService,
+  ) {}
 
   @Post()
-  create(@Body(new ZodValidationPipe(CreateEventDtoSchema)) dto: CreateEventDto) {
-    return this.eventsService.create(dto)
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Create event' })
+  @ApiAccessCookieAuth()
+  @ApiZodBody(CreateEventDtoSchema)
+  @ApiCreatedResponse({ description: 'Event created successfully.', schema: eventResponseSchema })
+  create(
+    @Body(new ZodValidationPipe(CreateEventDtoSchema)) dto: CreateEventDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    if (user.type !== 'organization') {
+      throw new ForbiddenException('Only organizations can create events')
+    }
+
+    return this.eventsService.create(dto, user)
   }
 
   @Get()
-  findAll(@Query(new ZodValidationPipe(GetEventsParamsSchema)) query: GetEventsParams) {
-    return this.eventsService.findAll(query)
+  @ApiOperation({ summary: 'List events' })
+  @ApiAcceptLanguageHeader()
+  @ApiQuery({ name: 'page', required: false, schema: { type: 'integer', default: 1, minimum: 1 } })
+  @ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', default: 20, minimum: 1, maximum: 100 } })
+  @ApiQuery({ name: 'search', required: false, schema: { type: 'string' } })
+  @ApiQuery({ name: 'format', required: false, enum: ['online', 'offline'] })
+  @ApiQuery({ name: 'tags', required: false, isArray: true, schema: { type: 'array', items: { type: 'string' } } })
+  @ApiQuery({ name: 'date_from', required: false, schema: { type: 'string', format: 'date-time' } })
+  @ApiQuery({ name: 'date_to', required: false, schema: { type: 'string', format: 'date-time' } })
+  @ApiQuery({ name: 'location', required: false, schema: { type: 'string' } })
+  @ApiQuery({ name: 'location_from', required: false, schema: { type: 'string' } })
+  @ApiQuery({ name: 'location_to', required: false, schema: { type: 'string' } })
+  @ApiQuery({ name: 'organization_id', required: false, schema: { type: 'string', format: 'uuid' } })
+  @ApiQuery({ name: 'user_id', required: false, schema: { type: 'string', format: 'uuid' } })
+  @ApiOkResponse({ description: 'Paginated list of events.', schema: paginatedResponseSchema(eventResponseSchema) })
+  findAll(
+    @Query(new ZodValidationPipe(GetEventsParamsSchema)) query: GetEventsParams,
+    @Headers('accept-language') acceptLanguage?: string,
+  ) {
+    return this.eventsService.findAll(query, acceptLanguage)
   }
 
   @Get(':id')
-  findById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.eventsService.findOne(id)
+  @ApiOperation({ summary: 'Get event by id' })
+  @ApiUuidParam('id', 'Event id')
+  @ApiAcceptLanguageHeader()
+  @ApiOkResponse({ description: 'Event details.', schema: eventResponseSchema })
+  findById(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Headers('accept-language') acceptLanguage?: string,
+  ) {
+    return this.eventsService.findOne(id, acceptLanguage)
   }
 
   @Patch(':id')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Update event' })
+  @ApiAccessCookieAuth()
+  @ApiUuidParam('id', 'Event id')
+  @ApiZodBody(UpdateEventDtoSchema)
+  @ApiOkResponse({ description: 'Updated event.', schema: eventResponseSchema })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(UpdateEventDtoSchema)) dto: UpdateEventDto,
+    @CurrentUser() user: JwtPayload,
   ) {
-    return this.eventsService.update(id, dto)
+    return this.eventsService.update(id, dto, user)
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.eventsService.remove(id)
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Delete event' })
+  @ApiAccessCookieAuth()
+  @ApiUuidParam('id', 'Event id')
+  @ApiOkResponse({ description: 'Event deleted.', schema: messageSchema('Event deleted') })
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.eventsService.remove(id, user)
   }
 
   @Post(':id/cover')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Upload event images' })
+  @ApiAccessCookieAuth()
+  @ApiUuidParam('id', 'Event id')
+  @ApiMultipartFile('images', true, 'One or more event images.')
+  @ApiBadRequestResponse({ description: 'Invalid file payload.' })
+  @ApiOkResponse({ description: 'Updated event with gallery images.', schema: eventResponseSchema })
   @UseInterceptors(
     FilesInterceptor('images', 20, {
       storage: diskStorage({
-        destination: join(process.cwd(), 'uploads'),
+        destination: join(process.cwd(), 'storage', 'events'),
         filename: (_req, file, cb) => {
           cb(null, `${randomUUID()}${extname(file.originalname)}`)
         },
@@ -61,10 +134,11 @@ export class EventsController {
   uploadCover(
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFiles() files: Express.Multer.File[],
+    @CurrentUser() user: JwtPayload,
   ) {
     if (!files?.length) throw new BadRequestException('No files uploaded')
-    const base = process.env.API_URL ?? 'http://localhost:3000'
-    const imageUrls = files.map((f) => `${base}/uploads/${f.filename}`)
-    return this.eventsService.addGalleryImages(id, imageUrls)
+    const base = this.apiConfig.apiUrl
+    const imageUrls = files.map((f) => `${base}/storage/events/${f.filename}`)
+    return this.eventsService.addGalleryImages(id, imageUrls, user)
   }
 }

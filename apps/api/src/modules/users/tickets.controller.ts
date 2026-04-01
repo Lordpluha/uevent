@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseUUIDPipe, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseUUIDPipe, UseGuards, Headers } from '@nestjs/common'
 import { ZodValidationPipe } from 'nestjs-zod'
+import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { TicketsService } from './tickets.service'
 import { CreateTicketDto, CreateTicketDtoSchema } from './dto/create-ticket.dto'
 import { UpdateTicketDto, UpdateTicketDtoSchema } from './dto/update-ticket.dto'
@@ -7,13 +8,22 @@ import { GetTicketsParams, GetTicketsParamsSchema } from './params/get-tickets.p
 import { JwtGuard } from '../auth/guards/jwt.guard'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { JwtPayload } from '../auth/types/jwt-payload.interface'
+import { ApiAcceptLanguageHeader, ApiAccessCookieAuth, ApiUuidParam, ApiZodBody, messageSchema, paginatedResponseSchema, ticketResponseSchema } from '../../common/swagger/openapi.util'
+import { Ticket } from './entities/ticket.entity'
+import { Event } from '../events/entities/event.entity'
 
 @Controller('tickets')
+@ApiTags('Tickets')
+@ApiExtraModels(Ticket, Event)
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
   @Post()
   @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Create ticket' })
+  @ApiAccessCookieAuth()
+  @ApiZodBody(CreateTicketDtoSchema)
+  @ApiOkResponse({ description: 'Created ticket.', schema: ticketResponseSchema })
   create(
     @Body(new ZodValidationPipe(CreateTicketDtoSchema)) dto: CreateTicketDto,
     @CurrentUser() user: JwtPayload,
@@ -22,25 +32,58 @@ export class TicketsController {
   }
 
   @Get()
-  findAll(@Query(new ZodValidationPipe(GetTicketsParamsSchema)) query: GetTicketsParams) {
-    return this.ticketsService.findAll(query)
+  @ApiOperation({ summary: 'List tickets' })
+  @ApiAcceptLanguageHeader()
+  @ApiQuery({ name: 'page', required: false, schema: { type: 'integer', default: 1, minimum: 1 } })
+  @ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', default: 20, minimum: 1, maximum: 100 } })
+  @ApiQuery({ name: 'event_id', required: false, schema: { type: 'string', format: 'uuid' } })
+  @ApiQuery({ name: 'user_id', required: false, schema: { type: 'string', format: 'uuid' } })
+  @ApiQuery({ name: 'status', required: false, schema: { type: 'string' } })
+  @ApiOkResponse({ description: 'Paginated list of tickets.', schema: paginatedResponseSchema(ticketResponseSchema) })
+  findAll(
+    @Query(new ZodValidationPipe(GetTicketsParamsSchema)) query: GetTicketsParams,
+    @Headers('accept-language') acceptLanguage?: string,
+  ) {
+    return this.ticketsService.findAll(query, acceptLanguage)
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.ticketsService.findOne(id)
+  @ApiOperation({ summary: 'Get ticket by id' })
+  @ApiUuidParam('id', 'Ticket id')
+  @ApiAcceptLanguageHeader()
+  @ApiOkResponse({ description: 'Ticket details.', schema: ticketResponseSchema })
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Headers('accept-language') acceptLanguage?: string,
+  ) {
+    return this.ticketsService.findOne(id, acceptLanguage)
   }
 
   @Patch(':id')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Update ticket' })
+  @ApiAccessCookieAuth()
+  @ApiUuidParam('id', 'Ticket id')
+  @ApiZodBody(UpdateTicketDtoSchema)
+  @ApiOkResponse({ description: 'Updated ticket.', schema: ticketResponseSchema })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(UpdateTicketDtoSchema)) dto: UpdateTicketDto,
+    @CurrentUser() user: JwtPayload,
   ) {
-    return this.ticketsService.update(id, dto)
+    return this.ticketsService.update(id, dto, user)
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.ticketsService.remove(id)
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Delete ticket' })
+  @ApiAccessCookieAuth()
+  @ApiUuidParam('id', 'Ticket id')
+  @ApiOkResponse({ description: 'Ticket removed.', schema: messageSchema('Ticket removed') })
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.ticketsService.remove(id, user)
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Headers, RawBodyRequest, Req, HttpCode, Logger, BadRequestException } from '@nestjs/common'
+import { Controller, Post, Get, Body, Param, Headers, RawBodyRequest, Req, HttpCode, Logger, BadRequestException, InternalServerErrorException, UseGuards } from '@nestjs/common'
 import { Request } from 'express'
 import { PaymentsService } from './payments.service'
 import { EmailService } from '../notifications/email.service'
@@ -6,19 +6,49 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { User } from '../users/entities/user.entity'
 import Stripe from 'stripe'
+import { ApiConfigService } from '../../config/api-config.service'
+import { JwtGuard } from '../auth/guards/jwt.guard'
+import { ApiBody, ApiExtraModels, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
+import { ApiAccessCookieAuth, createPaymentIntentResponseSchema, emailSendResultSchema, paymentIntentStatusResponseSchema } from '../../common/swagger/openapi.util'
+import { Payment } from './entities/payment.entity'
 
 @Controller('payments')
+@ApiTags('Payments')
+@ApiExtraModels(Payment)
 export class PaymentsController {
   private readonly logger = new Logger(PaymentsController.name)
 
   constructor(
     private readonly paymentsService: PaymentsService,
     private readonly emailService: EmailService,
+    private readonly apiConfig: ApiConfigService,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
   ) {}
 
   @Post('create-intent')
+  @ApiOperation({ summary: 'Create Stripe payment intent' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        amount: { type: 'number', example: 5000 },
+        currency: { type: 'string', example: 'usd' },
+        orderId: { type: 'string' },
+        ticketId: { type: 'string', format: 'uuid' },
+        quantity: { type: 'integer' },
+        userEmail: { type: 'string', format: 'email' },
+        userName: { type: 'string' },
+        eventTitle: { type: 'string' },
+        ticketName: { type: 'string' },
+        eventDate: { type: 'string' },
+        eventLocation: { type: 'string' },
+        organizationName: { type: 'string' },
+      },
+      required: ['amount'],
+    },
+  })
+  @ApiOkResponse({ description: 'Stripe payment intent created.', schema: createPaymentIntentResponseSchema })
   async createPaymentIntent(@Body() body: {
     amount: number
     currency?: string
@@ -77,6 +107,9 @@ export class PaymentsController {
   }
 
   @Get(':paymentIntentId')
+  @ApiOperation({ summary: 'Get Stripe payment status' })
+  @ApiParam({ name: 'paymentIntentId', description: 'Stripe payment intent id', schema: { type: 'string' } })
+  @ApiOkResponse({ description: 'Payment intent status.', schema: paymentIntentStatusResponseSchema })
   async getPaymentStatus(@Param('paymentIntentId') paymentIntentId: string) {
     const paymentIntent = await this.paymentsService.getPaymentIntent(paymentIntentId)
 
@@ -89,6 +122,11 @@ export class PaymentsController {
   }
 
   @Post('test-email')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Send payment confirmation test email' })
+  @ApiAccessCookieAuth()
+  @ApiBody({ schema: { type: 'object', properties: { email: { type: 'string', format: 'email' } }, required: ['email'] } })
+  @ApiOkResponse({ description: 'Email send result.', schema: emailSendResultSchema })
   async sendTestEmail(@Body() body: { email: string }) {
     this.logger.log(`Testing email sending to: ${body.email}`)
 
@@ -127,6 +165,27 @@ export class PaymentsController {
   }
 
   @Post('send-confirmation')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Send payment confirmation email' })
+  @ApiAccessCookieAuth()
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        userEmail: { type: 'string', format: 'email' },
+        userName: { type: 'string' },
+        eventTitle: { type: 'string' },
+        ticketName: { type: 'string' },
+        price: { type: 'number' },
+        eventDate: { type: 'string' },
+        eventLocation: { type: 'string' },
+        organizationName: { type: 'string' },
+        paymentIntentId: { type: 'string' },
+      },
+      required: ['userEmail'],
+    },
+  })
+  @ApiOkResponse({ description: 'Email send result.', schema: emailSendResultSchema })
   async sendPaymentConfirmation(@Body() body: {
     userEmail: string
     userName?: string
@@ -188,18 +247,21 @@ export class PaymentsController {
 
   @Post('webhook')
   @HttpCode(200)
+  @ApiOperation({ summary: 'Stripe webhook endpoint' })
+  @ApiHeader({ name: 'stripe-signature', required: true, description: 'Stripe webhook signature header.' })
+  @ApiOkResponse({ description: 'Webhook accepted.', schema: { type: 'object', properties: { received: { type: 'boolean' } }, required: ['received'] } })
   async handleWebhook(@Req() req: RawBodyRequest<Request>, @Headers('stripe-signature') signature: string) {
 
     if(!signature) {
       this.logger.error('Missing stripe-signature header')
-      return { received: false }
+      throw new BadRequestException('Missing stripe-signature header')
     }
 
     try {
       const event = this.paymentsService.constructWebhookEvent(
         req.rawBody || Buffer.from(''),
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET || '',
+        this.apiConfig.stripeConfig.webhookSecret,
       )
 
       await this.paymentsService.handleWebhookEvent(event)
@@ -207,7 +269,7 @@ export class PaymentsController {
       return { received: true }
     } catch(error) {
       this.logger.error(`Webhook error: ${error.message}`)
-      return { received: false }
+      throw new InternalServerErrorException('Webhook handling failed')
     }
   }
 }

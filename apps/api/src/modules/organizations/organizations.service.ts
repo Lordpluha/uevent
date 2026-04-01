@@ -1,11 +1,28 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { FindOptionsSelect, Repository } from 'typeorm'
 import { Organization } from './entities'
 import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
 import { GetOrganizationsParams } from './params'
-import { hashPassword } from '../../common/password.util'
-import { User } from '../users/entities/user.entity'
+import { ContentLocalizationService } from '../../common/localization/content-localization.service'
+import { OrganizationsPrivateService } from './organizations-private.service'
+
+const PUBLIC_ORG_SELECT: FindOptionsSelect<Organization> = {
+  id: true,
+  name: true,
+  slogan: true,
+  description: true,
+  avatar: true,
+  coverUrl: true,
+  phone: true,
+  email: true,
+  category: true,
+  verified: true,
+  two_factor_enabled: true,
+  tags: true,
+  city: true,
+  created_at: true,
+}
 
 @Injectable()
 export class OrganizationsService {
@@ -13,8 +30,8 @@ export class OrganizationsService {
     @InjectRepository(Organization)
     private readonly orgsRepo: Repository<Organization>,
 
-    @InjectRepository(User)
-    private readonly usersRepo: Repository<User>,
+    private readonly contentLocalization: ContentLocalizationService,
+    private readonly organizationsPrivateService: OrganizationsPrivateService,
   ) {}
 
   private async enrichOrganization(org: Organization, currentUserId?: string) {
@@ -49,10 +66,44 @@ export class OrganizationsService {
     }
   }
 
-  private async findOneEntity(id: string) {
+  private async enrichOrganizationsList(orgs: Organization[]) {
+    if (orgs.length === 0) return []
+
+    const orgIds = orgs.map((org) => org.id)
+
+    const [followersCounts, eventsCounts] = await Promise.all([
+      this.orgsRepo
+        .createQueryBuilder('org')
+        .leftJoin('org.followers', 'f')
+        .where('org.id IN (:...orgIds)', { orgIds })
+        .select('org.id', 'orgId')
+        .addSelect('COUNT(f.id)', 'count')
+        .groupBy('org.id')
+        .getRawMany<{ orgId: string; count: string }>(),
+      this.orgsRepo
+        .createQueryBuilder('org')
+        .leftJoin('org.events', 'e')
+        .where('org.id IN (:...orgIds)', { orgIds })
+        .select('org.id', 'orgId')
+        .addSelect('COUNT(e.id)', 'count')
+        .groupBy('org.id')
+        .getRawMany<{ orgId: string; count: string }>(),
+    ])
+
+    const followersByOrgId = new Map(followersCounts.map((item) => [item.orgId, Number(item.count)]))
+    const eventsByOrgId = new Map(eventsCounts.map((item) => [item.orgId, Number(item.count)]))
+
+    return orgs.map((org) => ({
+      ...org,
+      followers: followersByOrgId.get(org.id) ?? 0,
+      eventsCount: eventsByOrgId.get(org.id) ?? 0,
+    }))
+  }
+
+  private async findOnePublicEntity(id: string) {
     const org = await this.orgsRepo.findOne({
       where: { id },
-      relations: ['sessions', 'otps', 'followers', 'events'],
+      select: PUBLIC_ORG_SELECT,
     })
 
     if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
@@ -60,18 +111,28 @@ export class OrganizationsService {
   }
 
   async create(dto: CreateOrganizationDto) {
-    const exists = await this.orgsRepo.findOneBy({ email: dto.email })
-
-    if (exists) throw new ConflictException('Email already in use')
-
-    const password = await hashPassword(dto.password)
-    const org = this.orgsRepo.create({ ...dto, password })
-    return await this.orgsRepo.save(org)
+    const org = await this.organizationsPrivateService.create(dto)
+    return this.findOne(org.id)
   }
 
-  async findAll({ page, limit, category, verified, search, tags, city }: GetOrganizationsParams) {
+  async findAll({ page, limit, category, verified, search, tags, city }: GetOrganizationsParams, acceptLanguage?: string) {
     const qb = this.orgsRepo.createQueryBuilder('org')
-      .leftJoinAndSelect('org.sessions', 'session')
+      .select([
+        'org.id',
+        'org.name',
+        'org.slogan',
+        'org.description',
+        'org.avatar',
+        'org.coverUrl',
+        'org.phone',
+        'org.email',
+        'org.category',
+        'org.verified',
+        'org.two_factor_enabled',
+        'org.tags',
+        'org.city',
+        'org.created_at',
+      ])
       .skip((page - 1) * limit)
       .take(limit)
 
@@ -93,7 +154,11 @@ export class OrganizationsService {
 
     const [data, total] = await qb.getManyAndCount()
 
-    const dataWithStats = await Promise.all(data.map((org) => this.enrichOrganization(org)))
+    const locale = this.contentLocalization.resolveRequestedLocale(acceptLanguage)
+    const enriched = await this.enrichOrganizationsList(data)
+    const dataWithStats = await Promise.all(
+      enriched.map(async (org) => await this.contentLocalization.localizeOrganization(org, locale)),
+    )
 
     return {
       data: dataWithStats,
@@ -106,58 +171,41 @@ export class OrganizationsService {
     }
   }
 
-  async findOne(id: string, currentUserId?: string) {
-    const org = await this.findOneEntity(id)
-    return this.enrichOrganization(org, currentUserId)
+  async findOne(id: string, currentUserId?: string, acceptLanguage?: string) {
+    const org = await this.findOnePublicEntity(id)
+    const locale = this.contentLocalization.resolveRequestedLocale(acceptLanguage)
+    return await this.contentLocalization.localizeOrganization(
+      await this.enrichOrganization(org, currentUserId),
+      locale,
+      { includeEvents: true },
+    )
   }
 
   async update(id: string, dto: UpdateOrganizationDto) {
-    const org = await this.findOneEntity(id)
-    if (dto.password) dto.password = await hashPassword(dto.password)
-    Object.assign(org, dto)
-    return await this.orgsRepo.save(org)
+    await this.organizationsPrivateService.update(id, dto)
+    return this.findOne(id)
   }
 
   async remove(id: string) {
-    const org = await this.findOneEntity(id)
-    await this.orgsRepo.remove(org)
+    await this.organizationsPrivateService.remove(id)
   }
 
   async setAvatar(id: string, avatarUrl: string) {
-    const org = await this.findOneEntity(id)
-    org.avatar = avatarUrl
-    return await this.orgsRepo.save(org)
+    await this.organizationsPrivateService.setAvatar(id, avatarUrl)
+    return this.findOne(id)
   }
 
   async setCover(id: string, coverUrl: string) {
-    const org = await this.findOneEntity(id)
-    org.coverUrl = coverUrl
-    return await this.orgsRepo.save(org)
+    await this.organizationsPrivateService.setCover(id, coverUrl)
+    return this.findOne(id)
   }
 
-  async follow(id: string, userId: string) {
-    const org = await this.orgsRepo.findOne({ where: { id }, relations: ['followers'] })
-    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
-
-    const user = await this.usersRepo.findOneBy({ id: userId })
-    if (!user) throw new NotFoundException(`User with id #${userId} not found`)
-
-    if (!org.followers?.some((f) => f.id === userId)) {
-      org.followers = [...(org.followers ?? []), user]
-      await this.orgsRepo.save(org)
-    }
-
-    return { followed: true }
+  follow(id: string, userId: string) {
+    return this.organizationsPrivateService.follow(id, userId)
   }
 
-  async unfollow(id: string, userId: string) {
-    const org = await this.orgsRepo.findOne({ where: { id }, relations: ['followers'] })
-    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
-
-    org.followers = (org.followers ?? []).filter((f) => f.id !== userId)
-    await this.orgsRepo.save(org)
-
-    return { followed: false }
+  unfollow(id: string, userId: string) {
+    return this.organizationsPrivateService.unfollow(id, userId)
   }
 
   async isFollowing(id: string, userId: string) {
@@ -170,4 +218,5 @@ export class OrganizationsService {
 
     return { followed: count > 0 }
   }
+
 }

@@ -7,31 +7,63 @@ import { UsersService } from './users.service'
 import { GetUsersParams, GetUsersParamsSchema } from './params'
 import { UpdateUserDto, UpdateUserDtoSchema } from './dto/update-user.dto'
 import { ZodValidationPipe } from 'nestjs-zod'
+import { ApiBadRequestResponse, ApiExtraModels, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { JwtGuard } from '../auth/guards/jwt.guard'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { JwtPayload } from '../auth/types/jwt-payload.interface'
+import { ApiConfigService } from '../../config/api-config.service'
+import { ApiAccessCookieAuth, ApiMultipartFile, ApiUuidParam, ApiZodBody, messageSchema, paginatedResponseSchema, userResponseSchema } from '../../common/swagger/openapi.util'
+import { User } from './entities/user.entity'
 
 @Controller('users')
+@ApiTags('Users')
+@ApiExtraModels(User)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly apiConfig: ApiConfigService,
+  ) {}
 
   @Get()
+  @ApiOperation({ summary: 'List users' })
+  @ApiQuery({ name: 'page', required: false, schema: { type: 'integer', default: 1, minimum: 1 } })
+  @ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', default: 20, minimum: 1, maximum: 100 } })
+  @ApiOkResponse({ description: 'Paginated list of users.', schema: paginatedResponseSchema(userResponseSchema) })
   findAll(@Query(new ZodValidationPipe(GetUsersParamsSchema)) query: GetUsersParams) {
     return this.usersService.findAll(query)
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get user by id' })
+  @ApiUuidParam('id', 'User id')
+  @ApiOkResponse({ description: 'User details.', schema: userResponseSchema })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findOne(id)
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Delete own user profile' })
+  @ApiAccessCookieAuth()
+  @ApiUuidParam('id', 'User id')
+  @ApiOkResponse({ description: 'User removed.', schema: messageSchema('User removed') })
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    if (user.type !== 'user' || user.sub !== id) {
+      throw new ForbiddenException('You can delete only your user profile')
+    }
     return this.usersService.remove(id)
   }
 
   @Patch(':id')
   @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Update own user profile' })
+  @ApiAccessCookieAuth()
+  @ApiUuidParam('id', 'User id')
+  @ApiZodBody(UpdateUserDtoSchema)
+  @ApiOkResponse({ description: 'Updated user profile.', schema: userResponseSchema })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(UpdateUserDtoSchema)) dto: UpdateUserDto,
@@ -45,10 +77,15 @@ export class UsersController {
 
   @Post('me/avatar')
   @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Upload own avatar' })
+  @ApiAccessCookieAuth()
+  @ApiMultipartFile('avatar', false, 'User avatar image.')
+  @ApiBadRequestResponse({ description: 'Invalid file payload.' })
+  @ApiOkResponse({ description: 'Avatar URL.', schema: { type: 'object', properties: { avatarUrl: { type: 'string' } }, required: ['avatarUrl'] } })
   @UseInterceptors(
     FileInterceptor('avatar', {
       storage: diskStorage({
-        destination: join(process.cwd(), 'uploads'),
+        destination: join(process.cwd(), 'storage', 'users'),
         filename: (_req, file, cb) => cb(null, `${randomUUID()}${extname(file.originalname)}`),
       }),
       fileFilter: (_req, file, cb) => {
@@ -69,8 +106,8 @@ export class UsersController {
     }
     if (!file) throw new BadRequestException('No file uploaded')
 
-    const base = process.env.API_URL ?? 'http://localhost:3000'
-    const avatarUrl = `${base}/uploads/${file.filename}`
+    const base = this.apiConfig.apiUrl
+    const avatarUrl = `${base}/storage/users/${file.filename}`
     await this.usersService.setAvatar(user.sub, avatarUrl)
     return { avatarUrl }
   }

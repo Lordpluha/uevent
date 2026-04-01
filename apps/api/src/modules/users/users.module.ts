@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common'
 import { UsersService } from './users.service'
+import { UsersPrivateService } from './users-private.service'
 import { UsersController } from './users.controller'
 import { TicketsController } from './tickets.controller'
 import { TicketsService } from './tickets.service'
+import { TicketsPrivateService } from './tickets-private.service'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { User } from './entities/user.entity'
 import { UserSession } from './entities/user-session.entity'
@@ -14,7 +16,7 @@ import { Event } from '../events/entities/event.entity'
 @Module({
   imports: [TypeOrmModule.forFeature([User, UserSession, UserOtp, Ticket, File, Event])],
   controllers: [UsersController, TicketsController],
-  providers: [UsersService, TicketsService],
-  exports: [UsersService, TicketsService, TypeOrmModule],
+  providers: [UsersService, UsersPrivateService, TicketsService, TicketsPrivateService],
+  exports: [UsersService, UsersPrivateService, TicketsService, TicketsPrivateService, TypeOrmModule],
 })
 export class UsersModule {}

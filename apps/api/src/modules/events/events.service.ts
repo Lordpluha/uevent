@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, In } from 'typeorm'
 import { Event } from './entities/event.entity'
@@ -8,6 +8,8 @@ import { UpdateEventDto } from './dto/update-event.dto'
 import { GetEventsParams } from './params/get-events.params'
 import { Organization } from '../organizations/entities/organization.entity'
 import { Notification } from '../notifications/entities/notification.entity'
+import { ContentLocalizationService } from '../../common/localization/content-localization.service'
+import { JwtPayload } from '../auth/types/jwt-payload.interface'
 
 @Injectable()
 export class EventsService {
@@ -23,10 +25,20 @@ export class EventsService {
 
     @InjectRepository(Notification)
     private readonly notificationsRepo: Repository<Notification>,
+
+    private readonly contentLocalization: ContentLocalizationService,
   ) {}
 
-  async create({ tags, ...rest }: CreateEventDto) {
-    const event = this.eventsRepo.create(rest)
+  async create({ tags, ...rest }: CreateEventDto, user: JwtPayload) {
+    if (user.type !== 'organization') {
+      throw new ForbiddenException('Only organizations can create events')
+    }
+
+    if (rest.organization_id && rest.organization_id !== user.sub) {
+      throw new ForbiddenException('You can create events only for your organization')
+    }
+
+    const event = this.eventsRepo.create({ ...rest, organization_id: user.sub })
 
     if (tags?.length) event.tags = await this.tagsRepo.findBy({ id: In(tags) })
     const savedEvent = await this.eventsRepo.save(event)
@@ -53,7 +65,17 @@ export class EventsService {
     return savedEvent
   }
 
-  async findAll(query: GetEventsParams) {
+  private async findOneEntity(id: string) {
+    const event = await this.eventsRepo.findOne({
+      where: { id },
+      relations: ['tags', 'tickets', 'organization', 'recurrence', 'recurrence.overrides'],
+    })
+
+    if (!event) throw new NotFoundException(`Event with id #${id} not found`)
+    return event
+  }
+
+  async findAll(query: GetEventsParams, acceptLanguage?: string) {
     const {
       page,
       limit,
@@ -90,11 +112,14 @@ export class EventsService {
     }
 
     if (tags?.length) {
+      const uniqueTags = [...new Set(tags)]
       const subQb = this.eventsRepo
         .createQueryBuilder('filterEv')
         .select('filterEv.id')
         .innerJoin('filterEv.tags', 'filterTag')
-        .where('filterTag.name IN (:...filterTags)', { filterTags: tags })
+        .where('filterTag.name IN (:...filterTags)', { filterTags: uniqueTags })
+        .groupBy('filterEv.id')
+        .having('COUNT(DISTINCT filterTag.id) = :filterTagsCount', { filterTagsCount: uniqueTags.length })
 
       qb.andWhere(`event.id IN (${subQb.getQuery()})`)
       qb.setParameters(subQb.getParameters())
@@ -129,10 +154,20 @@ export class EventsService {
     }
 
     const total = await qb.getCount()
-    const data = await qb
+    const items = await qb
       .skip((page - 1) * limit)
       .take(limit)
       .getMany()
+    const locale = this.contentLocalization.resolveRequestedLocale(acceptLanguage)
+    const data = await Promise.all(
+      items.map((event) =>
+        this.contentLocalization.localizeEvent(event, locale, {
+          includeOrganization: true,
+          includeTickets: true,
+          includeTags: true,
+        }).then((localized) => this.sanitizeEvent(localized)),
+      ),
+    )
 
     return {
       data,
@@ -145,19 +180,21 @@ export class EventsService {
     }
   }
 
-  async findOne(id: string) {
-    const event = await this.eventsRepo.findOne({
-      where: { id },
-      relations: ['tags', 'tickets', 'organization', 'recurrence', 'recurrence.overrides'],
+  async findOne(id: string, acceptLanguage?: string) {
+    const event = await this.findOneEntity(id)
+    const locale = this.contentLocalization.resolveRequestedLocale(acceptLanguage)
+    const localized = await this.contentLocalization.localizeEvent(event, locale, {
+      includeOrganization: true,
+      includeTickets: true,
+      includeTags: true,
     })
-
-    if (!event) throw new NotFoundException(`Event with id #${id} not found`)
-    return event
+    return this.sanitizeEvent(localized)
   }
 
-  async update(id: string, dto: UpdateEventDto) {
+  async update(id: string, dto: UpdateEventDto, user: JwtPayload) {
     const { tags: tags, ...rest } = dto
-    const event = await this.findOne(id)
+    const event = await this.findOneEntity(id)
+    this.assertOrganizationOwnsEvent(user, event.organization_id)
 
     Object.assign(event, rest)
 
@@ -166,22 +203,70 @@ export class EventsService {
     return await this.eventsRepo.save(event)
   }
 
-  async remove(id: string) {
-    const event = await this.findOne(id)
+  async remove(id: string, user: JwtPayload) {
+    const event = await this.findOneEntity(id)
+    this.assertOrganizationOwnsEvent(user, event.organization_id)
     await this.eventsRepo.remove(event)
   }
 
-  async setCoverUrl(id: string, imageUrl: string) {
-    const event = await this.findOne(id)
-    event.gallery = [imageUrl, ...(event.gallery ?? []).filter((u) => u !== imageUrl)]
-    return await this.eventsRepo.save(event)
-  }
-
-  async addGalleryImages(id: string, imageUrls: string[]) {
-    const event = await this.findOne(id)
+  async addGalleryImages(id: string, imageUrls: string[], user: JwtPayload) {
+    const event = await this.findOneEntity(id)
+    this.assertOrganizationOwnsEvent(user, event.organization_id)
     const existing = event.gallery ?? []
     const newUrls = imageUrls.filter((u) => !existing.includes(u))
     event.gallery = [...existing, ...newUrls]
     return await this.eventsRepo.save(event)
+  }
+
+  private assertOrganizationOwnsEvent(user: JwtPayload, organizationId?: string | null) {
+    if (user.type !== 'organization') {
+      throw new ForbiddenException('Only organizations can manage events')
+    }
+
+    if (!organizationId || user.sub !== organizationId) {
+      throw new ForbiddenException('You can manage only your organization events')
+    }
+  }
+
+  private sanitizeEvent<T extends object>(event: T): T {
+    const sanitized = { ...event } as Record<string, unknown>
+
+    if (this.isRecord(sanitized.organization)) {
+      sanitized.organization = this.sanitizeOrganizationLike(sanitized.organization)
+    }
+
+    if (Array.isArray(sanitized.tickets)) {
+      sanitized.tickets = sanitized.tickets.map((ticket) => {
+        if (!this.isRecord(ticket)) return ticket
+        const normalizedTicket = { ...ticket }
+        if (this.isRecord(normalizedTicket.user)) {
+          normalizedTicket.user = this.sanitizeUserLike(normalizedTicket.user)
+        }
+        return normalizedTicket
+      })
+    }
+
+    return sanitized as T
+  }
+
+  private sanitizeOrganizationLike(organization: Record<string, unknown>): Record<string, unknown> {
+    const sanitized = { ...organization }
+    delete sanitized.password
+    delete sanitized.two_fa_secret
+    delete sanitized.sessions
+    delete sanitized.otps
+    return sanitized
+  }
+
+  private sanitizeUserLike(user: Record<string, unknown>): Record<string, unknown> {
+    const sanitized = { ...user }
+    delete sanitized.password
+    delete sanitized.two_fa_secret
+    delete sanitized.google_refresh_token
+    return sanitized
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null
   }
 }

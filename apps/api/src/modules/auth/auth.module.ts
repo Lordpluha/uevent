@@ -16,13 +16,17 @@ import { OrganizationSession } from '../organizations/entities/organization-sess
 import { Event } from '../events/entities/event.entity'
 import { Ticket } from '../users/entities/ticket.entity'
 import { NotificationsModule } from '../notifications/notifications.module'
+import { ApiConfigService } from '../../config/api-config.service'
 
 @Module({
   imports: [
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: process.env.JWT_SECRET ?? 'changeme',
-      signOptions: { expiresIn: '15m' },
+      inject: [ApiConfigService],
+      useFactory: (apiConfig: ApiConfigService) => ({
+        secret: apiConfig.jwtSecret,
+        signOptions: { expiresIn: '15m' },
+      }),
     }),
     TypeOrmModule.forFeature([User, UserSession, UserOtp, Organization, OrganizationSession, Event, Ticket]),
     NotificationsModule,

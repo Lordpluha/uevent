@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import {type Transporter, createTransport} from 'nodemailer'
 import { toDataURL } from 'qrcode'
+import { ApiConfigService } from '../../config/api-config.service'
 
 interface PaymentConfirmationData {
   userEmail: string
@@ -20,16 +21,14 @@ export class EmailService implements OnModuleInit {
   private readonly logger = new Logger(EmailService.name)
   private static readonly SMTP_VERIFY_TIMEOUT_MS = 5000
 
+  constructor(private readonly apiConfig: ApiConfigService) {}
+
   async onModuleInit() {
     await this.initializeTransporter()
   }
 
   private async initializeTransporter() {
-    const smtpHost = process.env.SMTP_HOST
-    const smtpPort = process.env.SMTP_PORT
-    const smtpUser = process.env.SMTP_USER
-    const smtpPass = process.env.SMTP_PASS
-    const smtpFrom = process.env.SMTP_FROM_EMAIL
+    const { host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass, fromEmail: smtpFrom } = this.apiConfig.smtpConfig
 
     if(!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom) {
       this.logger.warn('Missing SMTP configuration — email sending disabled.')
@@ -91,7 +90,7 @@ export class EmailService implements OnModuleInit {
       const htmlTemplate = this.generatePaymentConfirmationTemplate(data, qrCodeDataUrl)
 
       const mailOptions = {
-        from: process.env.SMTP_FROM_EMAIL || 'noreply@uevent.app',
+        from: this.apiConfig.smtpConfig.fromEmail,
         to: data.userEmail,
         subject: `Payment Confirmed - ${data.eventTitle} Ticket`,
         html: htmlTemplate,
@@ -590,7 +589,7 @@ Event Management Platform
       const htmlTemplate = this.generatePaymentFailedTemplate({ userEmail, userName, eventTitle, ticketName, failureReason, paymentIntentId })
 
       const mailOptions = {
-        from: process.env.SMTP_FROM_EMAIL || 'noreply@uevent.app',
+        from: this.apiConfig.smtpConfig.fromEmail,
         to: userEmail,
         subject: `Payment Failed - ${eventTitle} Ticket`,
         html: htmlTemplate,
@@ -614,7 +613,7 @@ Event Management Platform
       const htmlTemplate = this.generateRefundTemplate({ userEmail, userName, eventTitle, ticketName, amount, paymentIntentId })
 
       const mailOptions = {
-        from: process.env.SMTP_FROM_EMAIL || 'noreply@uevent.app',
+        from: this.apiConfig.smtpConfig.fromEmail,
         to: userEmail,
         subject: `Refund Processed - ${eventTitle}`,
         html: htmlTemplate,
@@ -1367,7 +1366,7 @@ Event Management Platform
 </html>`
 
       const mailOptions = {
-        from: process.env.SMTP_FROM_EMAIL || 'noreply@uevent.app',
+        from: this.apiConfig.smtpConfig.fromEmail,
         to: userEmail,
         subject: 'New Login to Your UEVENT Account',
         html: htmlTemplate,
@@ -1413,7 +1412,7 @@ Event Management Platform
 </html>`
 
       const mailOptions = {
-        from: process.env.SMTP_FROM_EMAIL || 'noreply@uevent.app',
+        from: this.apiConfig.smtpConfig.fromEmail,
         to: userEmail,
         subject: 'Password Reset Code — UEVENT',
         html: htmlTemplate,

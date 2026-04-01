@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Notification } from './entities'
 import { CreateNotificationDto, UpdateNotificationDto } from './dto'
-import { GetNotificationsParamsDto } from './params'
 
 @Injectable()
 export class NotificationsService {
@@ -17,26 +16,6 @@ export class NotificationsService {
     return await this.notificationsRepo.save(notification)
   }
 
-  async findAll(query: GetNotificationsParamsDto) {
-    const { page, limit } = query
-
-    const [data, total] = await this.notificationsRepo.findAndCount({
-      relations: ['user', 'organization'],
-      skip: (page - 1) * limit,
-      take: limit,
-    })
-
-    return {
-      data,
-      meta: {
-        total,
-        page,
-        limit,
-        total_pages: Math.ceil(total / limit),
-      },
-    }
-  }
-
   async findByUser(user_id: string) {
     return await this.notificationsRepo.find({
       where: { user_id },
@@ -44,45 +23,45 @@ export class NotificationsService {
     })
   }
 
-  async findByOrganization(organization_id: string) {
-    return await this.notificationsRepo.find({
-      where: { organization_id },
-      order: { created: 'DESC' },
-    })
-  }
-
-  async findLatestByUser(user_id: string, limit: number) {
+  async findLatestByUser(user_id: string, limit: number, page: number = 1) {
     return await this.notificationsRepo.find({
       where: { user_id },
       order: { created: 'DESC' },
       take: limit,
+      skip: (page - 1) * limit,
     })
   }
 
-  async findLatestByOrganization(organization_id: string, limit: number) {
+  async findLatestByOrganization(organization_id: string, limit: number, page: number = 1) {
     return await this.notificationsRepo.find({
       where: { organization_id },
       order: { created: 'DESC' },
       take: limit,
+      skip: (page - 1) * limit,
     })
   }
 
-  async findOne(id: string) {
-    const notification = await this.notificationsRepo.findOneBy({ id })
-
+  async findOneForUser(id: string, user_id: string) {
+    const notification = await this.notificationsRepo.findOneBy({ id, user_id })
     if (!notification) throw new NotFoundException(`Notification with id #${id} not found`)
     return notification
   }
 
-  async update(id: string, dto: UpdateNotificationDto) {
-    const notification = await this.findOne(id)
+  async findOneForOrganization(id: string, organization_id: string) {
+    const notification = await this.notificationsRepo.findOneBy({ id, organization_id })
+    if (!notification) throw new NotFoundException(`Notification with id #${id} not found`)
+    return notification
+  }
+
+  async updateForUser(id: string, user_id: string, dto: UpdateNotificationDto) {
+    const notification = await this.findOneForUser(id, user_id)
     Object.assign(notification, dto)
     return await this.notificationsRepo.save(notification)
   }
 
-  async markAsRead(id: string) {
-    const notification = await this.findOne(id)
-    notification.had_readed = true
+  async updateForOrganization(id: string, organization_id: string, dto: UpdateNotificationDto) {
+    const notification = await this.findOneForOrganization(id, organization_id)
+    Object.assign(notification, dto)
     return await this.notificationsRepo.save(notification)
   }
 
@@ -102,8 +81,13 @@ export class NotificationsService {
     return await this.notificationsRepo.save(notification)
   }
 
-  async remove(id: string) {
-    const notification = await this.findOne(id)
+  async removeForUser(id: string, user_id: string) {
+    const notification = await this.findOneForUser(id, user_id)
+    await this.notificationsRepo.remove(notification)
+  }
+
+  async removeForOrganization(id: string, organization_id: string) {
+    const notification = await this.findOneForOrganization(id, organization_id)
     await this.notificationsRepo.remove(notification)
   }
 }

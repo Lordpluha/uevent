@@ -13,54 +13,68 @@ import { Recurrence } from './recurrence.entity'
 import { Ticket } from '../../users/entities/ticket.entity'
 import { Organization } from '../../organizations/entities/organization.entity'
 import { UuidEntity } from '../../../common/uuid.entity'
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 @Entity('events')
 export class Event extends UuidEntity {
 
   @Column()
+  @ApiProperty()
   name: string
 
   @Column({ type: 'text', nullable: true })
+  @ApiPropertyOptional({ nullable: true })
   description: string
 
   @Column({ type: 'simple-array', nullable: true })
+  @ApiPropertyOptional({ type: [String], nullable: true })
   gallery: string[]
 
   @Column()
+  @ApiProperty()
   time_zone: string
 
   @Column()
+  @ApiProperty({ format: 'date-time' })
   datetime_start: Date
 
   @Column()
+  @ApiProperty({ format: 'date-time' })
   datetime_end: Date
 
   @Column({ nullable: true })
+  @ApiPropertyOptional({ nullable: true })
   seats: number
 
   @Column({ nullable: true })
+  @ApiPropertyOptional({ nullable: true })
   location: string
 
   @Column({ type: 'text', nullable: true })
+  @ApiPropertyOptional({ nullable: true })
   location_map_url: string | null
 
   @Column({ type: 'text', nullable: true })
+  @ApiPropertyOptional({ nullable: true })
   online_link: string | null
 
   // relations
 
   @ManyToMany(() => Tag)
   @JoinTable({ name: 'event_tags' })
+  @ApiProperty({ type: () => [Tag] })
   tags: Tag[]
 
   @OneToOne(() => Recurrence)
   @JoinColumn()
+  @ApiHideProperty()
   recurrence: Recurrence
 
   @OneToMany(
     () => Ticket,
     (ticket) => ticket.event,
   )
+  @ApiHideProperty()
   tickets: Ticket[]
 
   @ManyToOne(
@@ -68,8 +82,10 @@ export class Event extends UuidEntity {
     (organization) => organization.events,
   )
   @JoinColumn({ name: 'organization_id' })
+  @ApiHideProperty()
   organization: Organization
 
   @Column({ nullable: true })
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
   organization_id: string
 }

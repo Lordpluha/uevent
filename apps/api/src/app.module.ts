@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
 import { AppController } from './app.controller'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { UsersModule } from './modules/users/users.module'
@@ -9,22 +8,25 @@ import { EventsModule } from './modules/events/events.module'
 import { OrganizationsModule } from './modules/organizations/organizations.module'
 import { PaymentsModule } from './modules/payments/payments.module'
 import { AuthModule } from './modules/auth/auth.module'
+import { LocalizationModule } from './common/localization/localization.module'
+import { ApiConfigModule } from './config/api-config.module'
+import { ApiConfigService } from './config/api-config.service'
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.POSTGRES_HOST,
-      port: Number(process.env.POSTGRES_PORT),
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DB,
-      synchronize: true,
-      autoLoadEntities: true,
+    ApiConfigModule,
+    TypeOrmModule.forRootAsync({
+      inject: [ApiConfigService],
+      useFactory: (apiConfig: ApiConfigService) => ({
+        type: 'postgres' as const,
+        host: apiConfig.dbConfig.host,
+        port: apiConfig.dbConfig.port,
+        username: apiConfig.dbConfig.username,
+        password: apiConfig.dbConfig.password,
+        database: apiConfig.dbConfig.database,
+        synchronize: apiConfig.dbConfig.synchronize,
+        autoLoadEntities: true,
+      }),
     }),
     UsersModule,
     NotificationsModule,
@@ -33,6 +35,7 @@ import { AuthModule } from './modules/auth/auth.module'
     OrganizationsModule,
     PaymentsModule,
     AuthModule,
+    LocalizationModule,
   ],
   controllers: [AppController],
 })

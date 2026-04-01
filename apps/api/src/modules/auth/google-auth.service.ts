@@ -14,6 +14,7 @@ import { UserSession } from '../users/entities/user-session.entity'
 import { Event } from '../events/entities/event.entity'
 import { Ticket } from '../users/entities/ticket.entity'
 import { JwtPayload } from './types/jwt-payload.interface'
+import { ApiConfigService } from '../../config/api-config.service'
 
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 const ACCESS_EXPIRES = '15m'
@@ -28,13 +29,9 @@ type GoogleLinkStatePayload = {
 
 @Injectable()
 export class GoogleAuthService {
-  private readonly clientId = process.env.GOOGLE_CLIENT_ID ?? ''
-  private readonly clientSecret = process.env.GOOGLE_CLIENT_SECRET ?? ''
-  private readonly callbackUrl =
-    process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:3000/auth/google/callback'
-
   constructor(
     private readonly jwtService: JwtService,
+    private readonly apiConfig: ApiConfigService,
 
     @InjectRepository(User)
     private readonly usersRepo: Repository<User>,
@@ -50,7 +47,8 @@ export class GoogleAuthService {
   ) {}
 
   private createOAuth2Client() {
-    return new google.auth.OAuth2(this.clientId, this.clientSecret, this.callbackUrl)
+    const { clientId, clientSecret, callbackUrl } = this.apiConfig.googleConfig
+    return new google.auth.OAuth2(clientId, clientSecret, callbackUrl)
   }
 
   async getLinkState(accessToken?: string, refreshToken?: string): Promise<string | undefined> {
@@ -292,7 +290,7 @@ export class GoogleAuthService {
   }
 
   private buildEventDescription(event: Event): string {
-    const clientUrl = process.env.CLIENT_URL ?? 'http://localhost:5173'
+    const clientUrl = this.apiConfig.clientUrl
     const lines: string[] = []
     if (event.description) lines.push(event.description)
     if (event.location) lines.push(`📍 ${event.location}`)

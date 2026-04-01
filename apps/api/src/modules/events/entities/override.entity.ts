@@ -1,22 +1,27 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
 import { Recurrence } from './recurrence.entity'
 import { UuidEntity } from '../../../common/uuid.entity'
+import { ApiProperty } from '@nestjs/swagger'
 
 @Entity('overrides')
 export class Override extends UuidEntity {
 
   @Column()
+  @ApiProperty({ format: 'date-time' })
   new_start: Date
 
   @Column()
+  @ApiProperty({ format: 'date-time' })
   new_end: Date
 
   @Column({ default: false })
+  @ApiProperty()
   is_canceled: boolean
 
   // relations
 
   @Column()
+  @ApiProperty({ format: 'uuid' })
   recurrence_id: string
 
   @ManyToOne(
@@ -24,5 +29,6 @@ export class Override extends UuidEntity {
     (recurrence) => recurrence.overrides,
   )
   @JoinColumn({ name: 'recurrence_id' })
+  @ApiProperty({ type: () => Recurrence })
   recurrence: Recurrence
 }

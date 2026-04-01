@@ -1,0 +1,87 @@
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { Organization } from './entities'
+import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
+import { hashPassword } from '../../common/password.util'
+import { User } from '../users/entities/user.entity'
+
+@Injectable()
+export class OrganizationsPrivateService {
+  constructor(
+    @InjectRepository(Organization)
+    private readonly orgsRepo: Repository<Organization>,
+
+    @InjectRepository(User)
+    private readonly usersRepo: Repository<User>,
+  ) {}
+
+  async findOneEntity(id: string, relations: string[] = []) {
+    const org = await this.orgsRepo.findOne({
+      where: { id },
+      relations,
+    })
+
+    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
+    return org
+  }
+
+  async create(dto: CreateOrganizationDto) {
+    const exists = await this.orgsRepo.findOneBy({ email: dto.email })
+
+    if (exists) throw new ConflictException('Email already in use')
+
+    const password = await hashPassword(dto.password)
+    const org = this.orgsRepo.create({ ...dto, password })
+    return await this.orgsRepo.save(org)
+  }
+
+  async update(id: string, dto: UpdateOrganizationDto) {
+    const org = await this.findOneEntity(id)
+    if (dto.password) dto.password = await hashPassword(dto.password)
+    Object.assign(org, dto)
+    return await this.orgsRepo.save(org)
+  }
+
+  async remove(id: string) {
+    const org = await this.findOneEntity(id)
+    await this.orgsRepo.remove(org)
+  }
+
+  async setAvatar(id: string, avatarUrl: string) {
+    const org = await this.findOneEntity(id)
+    org.avatar = avatarUrl
+    return await this.orgsRepo.save(org)
+  }
+
+  async setCover(id: string, coverUrl: string) {
+    const org = await this.findOneEntity(id)
+    org.coverUrl = coverUrl
+    return await this.orgsRepo.save(org)
+  }
+
+  async follow(id: string, userId: string) {
+    const org = await this.orgsRepo.findOne({ where: { id }, relations: ['followers'] })
+    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
+
+    const user = await this.usersRepo.findOneBy({ id: userId })
+    if (!user) throw new NotFoundException(`User with id #${userId} not found`)
+
+    if (!org.followers?.some((f) => f.id === userId)) {
+      org.followers = [...(org.followers ?? []), user]
+      await this.orgsRepo.save(org)
+    }
+
+    return { followed: true }
+  }
+
+  async unfollow(id: string, userId: string) {
+    const org = await this.orgsRepo.findOne({ where: { id }, relations: ['followers'] })
+    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
+
+    org.followers = (org.followers ?? []).filter((f) => f.id !== userId)
+    await this.orgsRepo.save(org)
+
+    return { followed: false }
+  }
+}

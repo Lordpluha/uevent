@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getAuthState, clearServerCookies } from '@shared/lib/auth-context';
+import { resolveLocale } from '@shared/lib/i18n';
 
 // In the browser: use Vite proxy (/api → localhost:3000) so cookies are same-origin.
 // In SSR: connect directly to the API server.
@@ -14,6 +15,17 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+const getRequestLocale = (): 'en' | 'ua' => {
+  if (typeof window === 'undefined') return 'en';
+  return resolveLocale(localStorage.getItem('locale') || navigator.language || 'en');
+};
+
+api.interceptors.request.use((config) => {
+  config.headers = config.headers ?? {};
+  config.headers['Accept-Language'] = getRequestLocale();
+  return config;
 });
 
 /* ── Token queue for concurrent 401 handling ─────────────── */

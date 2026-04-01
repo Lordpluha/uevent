@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Ticket } from '../users/entities/ticket.entity'
 import { Notification } from '../notifications/entities/notification.entity'
 import { User } from '../users/entities/user.entity'
+import { ApiConfigService } from '../../config/api-config.service'
 
 @Injectable()
 export class PaymentsService {
@@ -28,6 +29,7 @@ export class PaymentsService {
     private readonly usersRepository: Repository<User>,
 
     private readonly emailService: EmailService,
+    private readonly apiConfig: ApiConfigService,
   ) {}
 
   private async markTicketAsSold(metadata?: Record<string, string>) {
@@ -87,7 +89,7 @@ export class PaymentsService {
 
   private getStripe(): Stripe {
     if(!this.stripeInstance) {
-      const apiKey = process.env.STRIPE_SECRET_KEY
+      const apiKey = this.apiConfig.stripeConfig.secretKey
 
       if(!apiKey) throw new BadRequestException('STRIPE_SECRET_KEY is not set in environment variables')
 
@@ -322,7 +324,7 @@ export class PaymentsService {
     }
   }
 
-  constructWebhookEvent(body: Buffer | Record<string, any>, signature: string, secret: string): Stripe.Event {
+  constructWebhookEvent(body: Buffer | Record<string, unknown>, signature: string, secret: string): Stripe.Event {
     try {
       const bodyToUse = typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body)
       return this.getStripe().webhooks.constructEvent(bodyToUse, signature, secret)
