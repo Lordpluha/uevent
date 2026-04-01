@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
-import { BadgeCheck, Search } from 'lucide-react';
+import { BadgeCheck, Building2, Search } from 'lucide-react';
 import { OrgCard, useOrgs } from '@entities/Organization';
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
   Input,
   Pagination,
   PaginationContent,
@@ -134,11 +139,15 @@ export function OrgsPage() {
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
-          <span className="text-5xl">🏛️</span>
-          <p className="text-base font-semibold text-foreground">{t.organizations.noOrgs}</p>
-          <p className="text-sm text-muted-foreground">{t.organizations.noOrgsTip}</p>
-        </div>
+        <Empty className="py-24">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Building2 className="size-4" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base">{t.organizations.noOrgs}</EmptyTitle>
+            <EmptyDescription className="text-sm">{t.organizations.noOrgsTip}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -4,6 +4,7 @@ import { cn } from '@shared/lib/utils';
 
 function Label({ className, ...props }: ComponentProps<'label'>) {
   return (
+    // biome-ignore lint/a11y/noLabelWithoutControl: this wrapper forwards htmlFor/children from consuming form fields.
     <label
       data-slot="label"
       className={cn(

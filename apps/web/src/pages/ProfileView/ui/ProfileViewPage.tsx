@@ -1,26 +1,28 @@
 import { Link, Navigate } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
 import {
   CalendarDays,
   Star,
   Ticket,
   Users,
 } from 'lucide-react';
-import { EventCard, useEvents } from '@entities/Event';
-import { useMe } from '@entities/User';
-import { useMyOrg } from '@entities/Organization';
-import { api } from '@shared/api';
+import { EventCard } from '@entities/Event';
 import {
   Badge,
   Button,
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
   Separator,
   Skeleton,
 } from '@shared/components';
 import { cn } from '@shared/lib/utils';
 import { useAppContext } from '@shared/lib';
-import { useAuth } from '@shared/lib/auth-context';
 import { ProfileHeroCard } from './ProfileHeroCard';
-import { ProfileTicketsList, type ProfileTicket } from './ProfileTicketsList';
+import { ProfileTicketsList } from './ProfileTicketsList';
+import { useProfileViewData } from './useProfileViewData';
 
 const STAT_ITEMS = [
   { key: 'eventsAttended', icon: CalendarDays },
@@ -55,20 +57,7 @@ function ProfileSkeleton() {
 
 export function ProfileViewPage() {
   const { t } = useAppContext();
-  const { isAuthenticated, accountType, isReady } = useAuth();
-  const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
-  const { data: user, isLoading, isError } = useMe();
-  const { data: eventsResult } = useEvents({ page: 1, limit: 4, user_id: user?.id }, !!user?.id);
-  const myEvents = eventsResult?.data ?? [];
-  const { data: ticketsResult, isLoading: ticketsLoading } = useQuery({
-    queryKey: ['my-tickets', user?.id],
-    queryFn: async () =>
-      (await api.get<{ data: ProfileTicket[] }>('/tickets', {
-        params: { user_id: user?.id, page: 1, limit: 20 },
-      })).data,
-    enabled: !!user?.id,
-  });
-  const myTickets = ticketsResult?.data ?? [];
+  const { isAuthenticated, accountType, isReady, myOrg, myOrgLoading, user, isLoading, isError, myEvents } = useProfileViewData();
 
   if (!isReady) return <ProfileSkeleton />;
 
@@ -83,10 +72,18 @@ export function ProfileViewPage() {
 
   if (!user || isError) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-5xl">👤</p>
-        <h1 className="text-xl font-semibold">{t.profile.unavailable}</h1>
-        <Link to="/" className="text-sm text-primary hover:underline">{t.common.backToHome}</Link>
+      <main className="flex min-h-[60vh] items-center justify-center px-4">
+        <Empty className="max-w-md border border-border/60">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Users className="size-4" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base">{t.profile.unavailable}</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Link to="/" className="text-sm text-primary hover:underline">{t.common.backToHome}</Link>
+          </EmptyContent>
+        </Empty>
       </main>
     );
   }
@@ -101,7 +98,7 @@ export function ProfileViewPage() {
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
 
-      <ProfileHeroCard user={user} />
+      <ProfileHeroCard />
 
       {/* ── Stats ──────────────────────────────────────────────────── */}
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -145,15 +142,19 @@ export function ProfileViewPage() {
           </Link>
         </div>
         {myEvents.length === 0 ? (
-          <div className={cn(
-            'flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/60 py-10 text-center'
-          )}>
-            <p className="text-3xl">🗓️</p>
-            <p className="text-sm text-muted-foreground">{t.profile.noEventsYet}</p>
-            <Link to="/events">
-              <Button variant="outline" size="sm">{t.profile.browseEvents}</Button>
-            </Link>
-          </div>
+          <Empty className={cn('rounded-xl border border-border/60 py-10')}>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CalendarDays className="size-4" />
+              </EmptyMedia>
+              <EmptyDescription className="text-sm">{t.profile.noEventsYet}</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Link to="/events">
+                <Button variant="outline" size="sm">{t.profile.browseEvents}</Button>
+              </Link>
+            </EmptyContent>
+          </Empty>
         ) : (
           <div className="flex flex-wrap gap-4">
             {myEvents.map((event) => (
@@ -172,7 +173,7 @@ export function ProfileViewPage() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">{t.profile.myTickets}</h2>
         </div>
-        <ProfileTicketsList tickets={myTickets} isLoading={ticketsLoading} />
+        <ProfileTicketsList />
       </section>
     </main>
   );

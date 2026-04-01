@@ -18,20 +18,16 @@ import {
 } from '@shared/components';
 import { ShareButton } from '@shared/components/ShareButton/ShareButton';
 import { useAppContext } from '@shared/lib';
+import { useProfileViewData } from './useProfileViewData';
 
-interface ProfileHeroUser {
-  name: string;
-  username: string;
-  bio?: string;
-  avatarUrl?: string;
-  location?: string;
-  website?: string;
-  timezone?: string;
-  joinedAt: string;
-}
-
-export function ProfileHeroCard({ user }: { user: ProfileHeroUser }) {
+export function ProfileHeroCard() {
   const { t } = useAppContext();
+  const { user } = useProfileViewData();
+
+  if (!user) {
+    return null;
+  }
+
   const initials = user.name
     .split(' ')
     .map((n) => n[0])

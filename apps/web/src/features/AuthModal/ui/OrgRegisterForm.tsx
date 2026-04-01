@@ -8,7 +8,6 @@ import { Button, Input, Label } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { authApi } from '@shared/api/auth.api';
-import { organizationsApi } from '@entities/Organization';
 import { SwitchPrompt, FieldError } from './shared';
 
 const registerOrgSchema = z

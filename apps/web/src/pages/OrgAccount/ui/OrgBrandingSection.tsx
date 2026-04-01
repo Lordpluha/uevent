@@ -6,27 +6,23 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 import { organizationsApi } from '@entities/Organization';
-import type { OrgModel } from './types';
+import { useRequiredOrgAccountData } from './useOrgAccountData';
 
-interface Props {
-  org: OrgModel;
-  invalidate: () => Promise<void>;
-}
-
-export function OrgBrandingSection({ org, invalidate }: Props) {
+export function OrgBrandingSection() {
   const { t } = useAppContext();
+  const { org, invalidateOrgQueries } = useRequiredOrgAccountData();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const uploadLogoMutation = useMutation({
     mutationFn: (file: File) => organizationsApi.uploadLogo(org.id, file),
-    onSuccess: async () => { await invalidate(); toast.success(t.orgAccount.branding.logoUpdated); },
+    onSuccess: async () => { await invalidateOrgQueries(); toast.success(t.orgAccount.branding.logoUpdated); },
     onError: () => toast.error(t.orgAccount.branding.logoFailed),
   });
 
   const uploadCoverMutation = useMutation({
     mutationFn: (file: File) => organizationsApi.uploadCover(org.id, file),
-    onSuccess: async () => { await invalidate(); toast.success(t.orgAccount.branding.coverUpdated); },
+    onSuccess: async () => { await invalidateOrgQueries(); toast.success(t.orgAccount.branding.coverUpdated); },
     onError: () => toast.error(t.orgAccount.branding.coverFailed),
   });
 

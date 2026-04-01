@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, PropsWithChildren } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
@@ -42,11 +42,10 @@ type BlockType = 'paragraph' | 'h1' | 'h2' | 'h3' | 'bullet' | 'number' | 'quote
 
 /* ── Toolbar button ───────────────────────────────────────────────────── */
 
-interface ToolbarBtnProps {
+interface ToolbarBtnProps extends PropsWithChildren {
   active?: boolean;
   title: string;
   onPress: () => void;
-  children: React.ReactNode;
 }
 
 function ToolbarBtn({ active, title, onPress, children }: ToolbarBtnProps) {

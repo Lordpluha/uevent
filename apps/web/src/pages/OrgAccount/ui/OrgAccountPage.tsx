@@ -1,36 +1,17 @@
 import { Link, Navigate } from 'react-router';
-import { useParams } from 'react-router';
 import { Building2, ChevronLeft, PlusCircle, ShieldCheck } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useOrg, useMyOrg } from '@entities/Organization';
-import { useEvents } from '@entities/Event';
-import { useAuth } from '@shared/lib/auth-context';
-import { Button } from '@shared/components';
+import { Button, Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 import { OrgBrandingSection } from './OrgBrandingSection';
 import { OrgProfileSection } from './OrgProfileSection';
 import { OrgAccountSettings } from './OrgAccountSettings';
 import { OrgSecuritySection } from './OrgSecuritySection';
 import { OrgEventsSection } from './OrgEventsSection';
+import { useOrgAccountData } from './useOrgAccountData';
 
 export function OrgAccountPage() {
   const { t } = useAppContext();
-  const { id } = useParams<{ id: string }>();
-  const queryClient = useQueryClient();
-  const { isAuthenticated, accountType } = useAuth();
-  const { data: org, isLoading, isError } = useOrg(id ?? '');
-  const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
-  const { data: orgEventsResult } = useEvents(org ? { organization_id: org.id, page: 1, limit: 20 } : undefined);
-  const orgEvents = orgEventsResult?.data ?? [];
-
-  const invalidateOrgQueries = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['organizations'] }),
-      queryClient.invalidateQueries({ queryKey: ['organizations', id] }),
-      queryClient.invalidateQueries({ queryKey: ['myOrg'] }),
-      queryClient.invalidateQueries({ queryKey: ['events'] }),
-    ]);
-  };
+  const { id, isAuthenticated, accountType, org, myOrg, myOrgLoading, isLoading, isError, orgEvents } = useOrgAccountData();
 
   if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />;
 
@@ -54,10 +35,18 @@ export function OrgAccountPage() {
 
   if (!org || isError) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-5xl">🏢</p>
-        <h1 className="text-xl font-semibold">{t.orgAccount.unavailable}</h1>
-        <Link to="/organizations" className="text-sm text-primary hover:underline">{t.common.backToOrganizations}</Link>
+      <main className="flex min-h-[60vh] items-center justify-center px-4">
+        <Empty className="max-w-md border border-border/60">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Building2 className="size-4" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base">{t.orgAccount.unavailable}</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Link to="/organizations" className="text-sm text-primary hover:underline">{t.common.backToOrganizations}</Link>
+          </EmptyContent>
+        </Empty>
       </main>
     );
   }
@@ -116,11 +105,11 @@ export function OrgAccountPage() {
         </div>
       </section>
 
-      <OrgEventsSection orgEvents={orgEvents} />
-      <OrgBrandingSection org={org} invalidate={invalidateOrgQueries} />
-      <OrgProfileSection org={org} invalidate={invalidateOrgQueries} />
-      <OrgAccountSettings org={org} invalidate={invalidateOrgQueries} />
-      <OrgSecuritySection org={org} invalidate={invalidateOrgQueries} />
+      <OrgEventsSection />
+      <OrgBrandingSection />
+      <OrgProfileSection />
+      <OrgAccountSettings />
+      <OrgSecuritySection />
     </main>
   );
 }

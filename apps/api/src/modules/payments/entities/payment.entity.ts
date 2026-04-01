@@ -46,7 +46,7 @@ export class Payment {
 
   @Column('jsonb', { nullable: true })
   @ApiPropertyOptional({ nullable: true })
-  metadata: Record<string, any>
+  metadata: Record<string, string>
 
   @Column('text', { nullable: true })
   @ApiPropertyOptional({ nullable: true })

@@ -3,6 +3,7 @@ import { CalendarCheck, CalendarPlus, CheckCircle2, Download, ExternalLink, Load
 import { useQuery } from '@tanstack/react-query';
 import { Badge, Button } from '@shared/components';
 import { api } from '@shared/api';
+import { DEMO_PAYMENT_ORDER_ID, getCurrencySymbol } from '@shared/config/payment';
 import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { useCalendarSync } from './useCalendarSync';
@@ -18,8 +19,8 @@ export function CheckoutSuccessPage() {
   const quantity = Number(searchParams.get('qty') ?? '1');
   const promo = searchParams.get('promo') ?? '';
   const total = Number(searchParams.get('total') ?? '0');
-  const currency = searchParams.get('currency') ?? '$';
-  const orderId = searchParams.get('order') ?? 'DEMO-0001';
+  const currency = getCurrencySymbol(searchParams.get('currency'));
+  const orderId = searchParams.get('order') ?? DEMO_PAYMENT_ORDER_ID;
   const ticketId = searchParams.get('ticketId');
 
   const { data: paymentData, isLoading: isPaymentLoading } = useQuery<{
@@ -32,7 +33,7 @@ export function CheckoutSuccessPage() {
       const res = await api.get(`/payments/${orderId}`);
       return res.data;
     },
-    enabled: !!orderId && orderId !== 'DEMO-0001',
+    enabled: !!orderId && orderId !== DEMO_PAYMENT_ORDER_ID,
     retry: 3,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
@@ -41,7 +42,6 @@ export function CheckoutSuccessPage() {
     },
   });
 
-  const paymentConfirmed = paymentData?.status === 'succeeded';
   const paymentProcessing = isPaymentLoading || paymentData?.status === 'processing';
 
   const { calendarMutation, calendarStatus } = useCalendarSync(eventId, ticketId);

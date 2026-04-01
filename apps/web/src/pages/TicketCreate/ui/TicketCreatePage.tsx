@@ -58,7 +58,7 @@ export function TicketCreatePage() {
     await submitTicket(data, {
       ticketType,
       quantityLimited,
-      eventId: id!,
+      eventId: id,
       onSuccess: () => navigate(`/events/${id}`),
       successMessage: t.ticketCreate.created,
       fallbackError: t.ticketCreate.createFailed,

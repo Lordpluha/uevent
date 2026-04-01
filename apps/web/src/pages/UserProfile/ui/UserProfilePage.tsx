@@ -1,8 +1,8 @@
 import { Link, useParams } from 'react-router';
-import { CalendarDays, ChevronLeft, Globe, MapPin, Star } from 'lucide-react';
+import { CalendarDays, ChevronLeft, Globe, MapPin, Star, UserRoundX } from 'lucide-react';
 import { EventCard, useEvents } from '@entities/Event';
 import { useUser } from '@entities/User';
-import { Avatar, AvatarFallback, AvatarImage, Badge, Separator } from '@shared/components';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, Separator } from '@shared/components';
 import { ShareButton } from '@shared/components/ShareButton/ShareButton';
 import { useAppContext } from '@shared/lib';
 
@@ -23,12 +23,20 @@ export function UserProfilePage() {
 
   if (!user || isError) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-5xl">👤</p>
-        <h1 className="text-xl font-semibold">{t.userProfile.notFound}</h1>
-        <Link to="/" className="text-sm text-primary hover:underline">
-          {t.userProfile.backToHome}
-        </Link>
+      <main className="flex min-h-[60vh] items-center justify-center px-4">
+        <Empty className="max-w-md border border-border/60">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <UserRoundX className="size-4" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base">{t.userProfile.notFound}</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Link to="/" className="text-sm text-primary hover:underline">
+              {t.userProfile.backToHome}
+            </Link>
+          </EmptyContent>
+        </Empty>
       </main>
     );
   }

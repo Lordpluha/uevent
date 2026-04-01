@@ -2,11 +2,19 @@ import axios from 'axios';
 import { getAuthState, clearServerCookies } from '@shared/lib/auth-context';
 import { resolveLocale } from '@shared/lib/i18n';
 
-// In the browser: use Vite proxy (/api → localhost:3000) so cookies are same-origin.
-// In SSR: connect directly to the API server.
+const getServerApiUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  if (!apiUrl) {
+    throw new Error('VITE_API_URL must be set for server-side API requests.');
+  }
+
+  return apiUrl;
+};
+
 const baseURL =
   typeof window === 'undefined'
-    ? (import.meta.env.VITE_API_URL ?? 'http://localhost:3000')
+    ? getServerApiUrl()
     : '/api';
 
 export const api = axios.create({

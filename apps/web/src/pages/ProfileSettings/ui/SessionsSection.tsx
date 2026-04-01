@@ -22,13 +22,11 @@ import type { UserSessionInfo } from '@shared/api';
 import { useAuth } from '@shared/lib/auth-context';
 import { useAppContext } from '@shared/lib';
 import { parseUserAgent, formatSessionDate } from './sessionHelpers';
+import { useProfileSettingsData } from './useProfileSettingsData';
 
-interface SessionsSectionProps {
-  twoFa: boolean;
-}
-
-export function SessionsSection({ twoFa }: SessionsSectionProps) {
+export function SessionsSection() {
   const { t } = useAppContext();
+  const { twoFa } = useProfileSettingsData();
   const { isAuthenticated, logout: authLogout } = useAuth();
   const [revokeSessionId, setRevokeSessionId] = useState<string | null>(null);
   const [revokeSessionCode, setRevokeSessionCode] = useState('');

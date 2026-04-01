@@ -7,9 +7,13 @@ import { Loader2 } from 'lucide-react';
 import { useAppContext } from '@shared/lib';
 import { CheckoutForm } from './CheckoutForm';
 
+type PendingPayment = {
+  clientSecret: string;
+};
+
 export function CheckoutPage() {
   const { t } = useAppContext();
-  const [pendingPayment, setPendingPayment] = useState<any>(null);
+  const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(null);
   const [loading, setLoading] = useState(true);
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
 
@@ -25,7 +29,7 @@ export function CheckoutPage() {
     }
 
     setStripePromise(loadStripe(publishableKey));
-  }, []);
+  }, [t.checkout.configError]);
 
   useEffect(() => {
     const saved = localStorage.getItem('pendingPayment');
@@ -44,7 +48,7 @@ export function CheckoutPage() {
       }
     }
     setLoading(false);
-  }, []);
+  }, [t.checkout.loadFailed]);
 
   if(loading) {
     return (

@@ -1,28 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button, Field, FieldDescription, FieldLabel, Input } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 import { organizationsApi } from '@entities/Organization';
-import type { OrgModel } from './types';
+import { useRequiredOrgAccountData } from './useOrgAccountData';
 
-interface Props {
-  org: OrgModel;
-  invalidate: () => Promise<void>;
-}
-
-export function OrgAccountSettings({ org, invalidate }: Props) {
+export function OrgAccountSettings() {
   const { t } = useAppContext();
-  const [email, setEmail] = useState('');
+  const { org, invalidateOrgQueries } = useRequiredOrgAccountData();
+  const [email, setEmail] = useState(org.email ?? '');
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
-
-  useEffect(() => {
-    if (org) setEmail(org.email ?? '');
-  }, [org]);
 
   const saveEmailMutation = useMutation({
     mutationFn: () => organizationsApi.updateMyEmail({ email }),
-    onSuccess: async () => { await invalidate(); toast.success(t.orgAccount.settings.emailUpdated); },
+    onSuccess: async () => { await invalidateOrgQueries(); toast.success(t.orgAccount.settings.emailUpdated); },
     onError: () => toast.error(t.orgAccount.settings.emailUpdateFailed),
   });
 

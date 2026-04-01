@@ -1,6 +1,7 @@
 import { cva } from 'class-variance-authority';
 import { CalendarDays, Clock, MapPin, Video, QrCode } from 'lucide-react';
 import { Badge } from '@shared/components';
+import { DEFAULT_PAYMENT_CURRENCY_SYMBOL } from '@shared/config/payment';
 import { useAppContext } from '@shared/lib';
 import { cn } from '@shared/lib/utils';
 import type { TicketStatus, TicketType } from '../model/ticket';
@@ -64,7 +65,7 @@ const panelPriceVariants = cva('text-2xl font-black leading-none', {
 export const TicketCard = ({
   ticketType,
   price,
-  currency = '$',
+  currency = DEFAULT_PAYMENT_CURRENCY_SYMBOL,
   eventTitle,
   eventDate,
   eventTime,

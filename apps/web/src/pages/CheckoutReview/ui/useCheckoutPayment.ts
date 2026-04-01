@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { api } from '@shared/api';
+import { DEFAULT_PAYMENT_CURRENCY_CODE } from '@shared/config/payment';
 import { useAppContext } from '@shared/lib';
 
 interface UseCheckoutPaymentOptions {
@@ -65,7 +66,7 @@ export function useCheckoutPayment({
 
       const response = await api.post<{ clientSecret: string; paymentIntentId: string }>('/payments/create-intent', {
         amount: amountInCents,
-        currency: 'usd',
+        currency: DEFAULT_PAYMENT_CURRENCY_CODE,
         orderId,
         ticketId: selectedTicket.id,
         quantity,

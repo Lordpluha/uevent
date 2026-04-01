@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type Dispatch, type SetStateAction, type DragEvent, type KeyboardEvent } from 'react';
 import { ImagePlus, X } from 'lucide-react';
 import { PhotoSwipe } from 'react-pswp';
 import 'react-pswp/dist/index.css';
@@ -10,7 +10,7 @@ export type CoverFileEntry = { file: File; preview: string; w: number; h: number
 
 interface Props {
   coverFiles: CoverFileEntry[];
-  setCoverFiles: React.Dispatch<React.SetStateAction<CoverFileEntry[]>>;
+  setCoverFiles: Dispatch<SetStateAction<CoverFileEntry[]>>;
 }
 
 export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
@@ -50,10 +50,18 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
     });
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsDragging(false);
     addCoverFiles(e.dataTransfer.files);
+  };
+
+  const handlePreviewKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setLightboxIndex(index);
+      setLightboxOpen(true);
+    }
   };
 
   return (
@@ -64,12 +72,22 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {coverFiles.map(({ preview }, index) => (
               <div key={preview} className="relative aspect-square overflow-hidden rounded-lg border border-border/60">
-                <img
-                  src={preview}
-                  alt={t.eventCreate.images.imageAlt.replace('{{index}}', String(index + 1))}
-                  className="h-full w-full cursor-zoom-in object-cover transition-opacity hover:opacity-80"
-                  onClick={() => { setLightboxIndex(index); setLightboxOpen(true); }}
-                />
+                <button
+                  type="button"
+                  className="h-full w-full cursor-zoom-in"
+                  onClick={() => {
+                    setLightboxIndex(index);
+                    setLightboxOpen(true);
+                  }}
+                  onKeyDown={(event) => handlePreviewKeyDown(event, index)}
+                  aria-label={t.eventCreate.images.imageAlt.replace('{{index}}', String(index + 1))}
+                >
+                  <img
+                    src={preview}
+                    alt={t.eventCreate.images.imageAlt.replace('{{index}}', String(index + 1))}
+                    className="h-full w-full object-cover transition-opacity hover:opacity-80"
+                  />
+                </button>
                 <button
                   type="button"
                   onClick={() => removeCoverFile(index)}
@@ -98,7 +116,8 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
           </div>
         )}
         {coverFiles.length === 0 && (
-          <div
+          <button
+            type="button"
             className={`flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
               isDragging ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 hover:border-primary/50 hover:bg-primary/5'
             }`}
@@ -112,7 +131,7 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
               <p className="text-sm font-medium">{t.eventCreate.images.dragDrop}</p>
               <p className="text-xs text-muted-foreground">{t.eventCreate.images.hint}</p>
             </div>
-          </div>
+          </button>
         )}
         <input
           ref={fileInputRef}

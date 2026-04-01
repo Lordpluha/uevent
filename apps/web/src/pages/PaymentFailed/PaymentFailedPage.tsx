@@ -17,7 +17,7 @@ export function PaymentFailedPage() {
       toast.error(t.paymentFailed.invalidLink);
       navigate('/');
     }
-  }, [paymentIntentId, navigate]);
+  }, [paymentIntentId, navigate, t.paymentFailed.invalidLink]);
 
   const handleRetry = () => {
     localStorage.removeItem('pendingPayment');

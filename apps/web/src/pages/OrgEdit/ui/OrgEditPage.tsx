@@ -1,11 +1,16 @@
 import type { ChangeEvent, FormEvent } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { ChevronLeft, Save } from 'lucide-react';
+import { Building2, ChevronLeft, Save } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Button,
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
   Field,
   FieldDescription,
   FieldGroup,
@@ -20,25 +25,57 @@ import { organizationsApi } from '@entities/Organization';
 import { cn } from '@shared/lib/utils';
 import { useAppContext } from '@shared/lib';
 import { OrgEditBranding } from './OrgEditBranding';
+import type { Organization } from '@entities/Organization';
 
 export function OrgEditPage() {
   const { t } = useAppContext();
   const { id } = useParams();
   const { data: org, isLoading } = useOrg(id ?? '');
-  const queryClient = useQueryClient();
 
+  if (isLoading) {
+    return <main className="flex min-h-[60vh] items-center justify-center text-center">{t.orgEdit.loading}</main>;
+  }
+  if (!org) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center px-4">
+        <Empty className="max-w-md border border-border/60">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Building2 className="size-4" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base">{t.orgEdit.notFound}</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Link to="/" className="text-sm text-primary hover:underline">
+              {t.common.backToHome}
+            </Link>
+          </EmptyContent>
+        </Empty>
+      </main>
+    );
+  }
+
+  return (
+    <OrgEditForm org={org} id={id} />
+  );
+}
+
+function OrgEditForm({ org, id }: { org: Organization; id?: string }) {
+  const { t } = useAppContext();
+  const queryClient = useQueryClient();
+  const orgId = id ?? org.id;
   const [form, setForm] = useState({
-    title: '',
-    description: '',
-    location: '',
-    website: '',
-    category: '',
+    title: org.title ?? '',
+    description: org.description ?? '',
+    location: org.location ?? '',
+    website: org.website ?? '',
+    category: org.category ?? '',
   });
 
   const saveOrgMutation = useMutation({
     mutationFn: () => {
-      if (!id) throw new Error('Organization id is missing');
-      return organizationsApi.update(id, {
+      if (!orgId) throw new Error('Organization id is missing');
+      return organizationsApi.update(orgId, {
         title: form.title.trim() || undefined,
         description: form.description.trim() || undefined,
         location: form.location.trim() || undefined,
@@ -57,34 +94,6 @@ export function OrgEditPage() {
       toast.error(t.orgEdit.updateFailed);
     },
   });
-
-  // hydrate form when org loads
-  useEffect(() => {
-    if (org) {
-      setForm({
-        title: org.title ?? '',
-        description: org.description ?? '',
-        location: org.location ?? '',
-        website: org.website ?? '',
-        category: org.category ?? '',
-      });
-    }
-  }, [org]);
-
-  if (isLoading) {
-    return <main className="flex min-h-[60vh] items-center justify-center text-center">{t.orgEdit.loading}</main>;
-  }
-  if (!org) {
-    return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-5xl">🏢</p>
-        <h1 className="text-xl font-semibold">{t.orgEdit.notFound}</h1>
-        <Link to="/" className="text-sm text-primary hover:underline">
-          {t.common.backToHome}
-        </Link>
-      </main>
-    );
-  }
 
   const set =
     (field: keyof typeof form) =>
@@ -111,7 +120,7 @@ export function OrgEditPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <OrgEditBranding
-          orgId={id!}
+          orgId={orgId}
           orgTitle={org.title}
           avatarUrl={org.avatarUrl}
           coverUrl={org.coverUrl}
@@ -178,10 +187,10 @@ export function OrgEditPage() {
         <Separator />
 
         <div className="flex justify-end gap-3">
-          <Link to={`/organizations/${id}`} className={cn(buttonVariants({ variant: 'ghost' }))}>
+          <Link to={`/organizations/${orgId}`} className={cn(buttonVariants({ variant: 'ghost' }))}>
             {t.common.cancel}
           </Link>
-          <Button type="submit" className="gap-1.5" disabled={saveOrgMutation.isPending || !id}>
+          <Button type="submit" className="gap-1.5" disabled={saveOrgMutation.isPending || !orgId}>
             <Save className="h-3.5 w-3.5" />
             {saveOrgMutation.isPending ? t.common.saving : t.common.saveChanges}
           </Button>

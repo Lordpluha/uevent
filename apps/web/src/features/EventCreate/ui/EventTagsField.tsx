@@ -31,13 +31,7 @@ export function EventTagsField({ tags, onAddTag, onRemoveTag }: Props) {
       <FieldTitle>{t.common.tags}</FieldTitle>
       <div className="flex flex-col gap-2">
         <div className="relative">
-          <div
-            className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-md border border-input bg-input/20 px-2 py-1"
-            onClick={(e) => {
-              const input = e.currentTarget.querySelector('input');
-              input?.focus();
-            }}
-          >
+          <div className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-md border border-input bg-input/20 px-2 py-1">
             {tags.map((tag) => (
               <span
                 key={tag}

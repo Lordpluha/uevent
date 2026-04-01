@@ -8,15 +8,11 @@ import {
 } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 import { useNotificationMutations } from './useNotificationMutations';
-import type { UserProfile } from './types';
+import { useProfileSettingsData } from './useProfileSettingsData';
 
-interface NotificationsSectionProps {
-  user: UserProfile;
-  invalidateUser: () => Promise<void>;
-}
-
-export function NotificationsSection({ user, invalidateUser }: NotificationsSectionProps) {
+export function NotificationsSection() {
   const { t } = useAppContext();
+  const { userProfile: user, invalidateUser } = useProfileSettingsData();
   const [notificationsEnabled, setNotificationsEnabled] = useState(user.notificationsEnabled ?? true);
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(user.pushNotificationsEnabled ?? false);
   const [paymentEmailEnabled, setPaymentEmailEnabled] = useState(user.paymentEmailEnabled ?? true);
@@ -40,6 +36,20 @@ export function NotificationsSection({ user, invalidateUser }: NotificationsSect
     }
     setBrowserPushPermission(Notification.permission);
   }, []);
+
+  useEffect(() => {
+    setNotificationsEnabled(user.notificationsEnabled ?? true);
+    setPushNotificationsEnabled(user.pushNotificationsEnabled ?? false);
+    setPaymentEmailEnabled(user.paymentEmailEnabled ?? true);
+    setSubscriptionNotificationsEnabled(user.subscriptionNotificationsEnabled ?? true);
+    setLoginNotificationsEnabled(user.loginNotificationsEnabled ?? true);
+  }, [
+    user.loginNotificationsEnabled,
+    user.notificationsEnabled,
+    user.paymentEmailEnabled,
+    user.pushNotificationsEnabled,
+    user.subscriptionNotificationsEnabled,
+  ]);
 
   const handleNotificationsChange = (enabled: boolean) => {
     setNotificationsEnabled(enabled);

@@ -1,15 +1,13 @@
 import { Link } from 'react-router';
 import { Building2, Ticket } from 'lucide-react';
-import { Button } from '@shared/components';
+import { Button, Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@shared/components';
 import { useAppContext } from '@shared/lib';
-import type { EventModel } from '@entities/Event';
+import { useRequiredOrgAccountData } from './useOrgAccountData';
 
-interface Props {
-  orgEvents: EventModel[];
-}
-
-export function OrgEventsSection({ orgEvents }: Props) {
+export function OrgEventsSection() {
   const { t } = useAppContext();
+  const { orgEvents } = useRequiredOrgAccountData();
+
   return (
     <section className="mt-5 space-y-3 rounded-xl border border-border/60 bg-card p-5">
       <div className="flex items-center gap-2 text-base font-semibold">
@@ -20,7 +18,14 @@ export function OrgEventsSection({ orgEvents }: Props) {
       <div className="pt-2">
         <p className="mb-2 text-sm font-medium">{t.orgAccount.eventsSection.events}</p>
         {orgEvents.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t.orgAccount.eventsSection.noEvents}</p>
+          <Empty className="rounded-lg border border-border/60 py-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Building2 className="size-4" />
+              </EmptyMedia>
+              <EmptyDescription className="text-sm">{t.orgAccount.eventsSection.noEvents}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="space-y-2">
             {orgEvents.map((event) => (

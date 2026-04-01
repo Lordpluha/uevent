@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import { X, Loader2 } from 'lucide-react';
 import { api } from '@shared/api';
 import { Button } from '@shared/components';
+import { DEFAULT_PAYMENT_CURRENCY_CODE, DEFAULT_PAYMENT_CURRENCY_SYMBOL } from '@shared/config/payment';
 import { useAppContext } from '@shared/lib';
 
 export interface PaymentModalProps {
@@ -45,7 +47,7 @@ export function PaymentModal({
         paymentIntentId: string;
       }>('/payments/create-intent', {
         amount: amountInCents,
-        currency: 'usd',
+        currency: DEFAULT_PAYMENT_CURRENCY_CODE,
         orderId: `ticket-${ticketId}-event-${eventId}`,
         userEmail: email,
         userName: cardName,
@@ -78,12 +80,13 @@ export function PaymentModal({
       onClose();
       window.location.href = `/checkout?paymentIntentId=${data.paymentIntentId}`;
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || t.paymentModal.createFailed);
+    onError: (error: unknown) => {
+      const message = isAxiosError(error) ? error.response?.data?.message : undefined;
+      toast.error(message || t.paymentModal.createFailed);
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if(!email || !cardName) {
       toast.error(t.paymentModal.fillFields);
@@ -96,6 +99,7 @@ export function PaymentModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="relative w-full max-w-md rounded-lg bg-card p-6 shadow-lg">
         <button
+          type="button"
           onClick={onClose}
           className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
         >
@@ -111,7 +115,7 @@ export function PaymentModal({
           <div className="flex justify-between text-sm">
             <span>{t.paymentModal.ticketPrice}</span>
             <span className="font-semibold">
-              ${price.toFixed(2)}
+              {DEFAULT_PAYMENT_CURRENCY_SYMBOL}{price.toFixed(2)}
             </span>
           </div>
           <div className="mt-2 border-t border-border pt-2 flex justify-between text-sm font-bold">
@@ -124,10 +128,11 @@ export function PaymentModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="payment-modal-full-name" className="block text-sm font-medium text-foreground mb-1">
               {t.paymentModal.fullName}
             </label>
             <input
+              id="payment-modal-full-name"
               type="text"
               value={cardName}
               onChange={(e) => setCardName(e.target.value)}
@@ -137,10 +142,11 @@ export function PaymentModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="payment-modal-email" className="block text-sm font-medium text-foreground mb-1">
               {t.common.email}
             </label>
             <input
+              id="payment-modal-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}

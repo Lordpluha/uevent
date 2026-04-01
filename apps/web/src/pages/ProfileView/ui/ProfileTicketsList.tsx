@@ -1,26 +1,13 @@
 import { Link } from 'react-router';
-import { Skeleton } from '@shared/components';
+import { Ticket as TicketIcon } from 'lucide-react';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, Skeleton } from '@shared/components';
 import { useAppContext } from '@shared/lib';
+import { useProfileViewData } from './useProfileViewData';
 
-export type ProfileTicket = {
-  id: string;
-  name: string;
-  price: number | string;
-  status: 'DRAFT' | 'READY' | 'RESERVED' | 'PAID';
-  datetime_start?: string;
-  event?: {
-    id?: string;
-    name?: string;
-  };
-};
-
-interface ProfileTicketsListProps {
-  tickets: ProfileTicket[];
-  isLoading: boolean;
-}
-
-export function ProfileTicketsList({ tickets, isLoading }: ProfileTicketsListProps) {
+export function ProfileTicketsList() {
   const { t } = useAppContext();
+  const { myTickets: tickets, ticketsLoading: isLoading } = useProfileViewData();
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -33,10 +20,14 @@ export function ProfileTicketsList({ tickets, isLoading }: ProfileTicketsListPro
 
   if (tickets.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/60 py-10 text-center">
-        <p className="text-3xl">🎟️</p>
-        <p className="text-sm text-muted-foreground">{t.profile.noTickets}</p>
-      </div>
+      <Empty className="rounded-xl border border-border/60 py-10">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <TicketIcon className="size-4" />
+          </EmptyMedia>
+          <EmptyDescription className="text-sm">{t.profile.noTickets}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

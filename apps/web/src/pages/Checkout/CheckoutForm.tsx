@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
@@ -14,6 +14,17 @@ import { useAppContext } from '@shared/lib';
 import { CheckoutOrderSummary } from './CheckoutOrderSummary';
 import { useConfirmPayment } from './useConfirmPayment';
 
+type PendingPayment = {
+  eventId?: string;
+  ticketId?: string | number;
+  ticketName?: string;
+  eventTitle?: string;
+  quantity?: number;
+  price?: number;
+  paymentIntentId?: string;
+  email?: string;
+};
+
 export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
   const { t } = useAppContext();
   const navigate = useNavigate();
@@ -21,7 +32,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
   const elements = useElements();
   const [message, setMessage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pendingPayment, setPendingPayment] = useState<any>(null);
+  const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(null);
   const [email, setEmail] = useState('');
 
   const buildSuccessUrl = (paymentIntentId?: string) => {
@@ -29,7 +40,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
     if (!eventId) return `/payment-success?paymentIntentId=${paymentIntentId ?? clientSecret}`;
 
     const params = new URLSearchParams({
-      ticketId: pendingPayment?.ticketId ?? '',
+      ticketId: String(pendingPayment?.ticketId ?? ''),
       ticketType: pendingPayment?.ticketName ?? 'standard',
       qty: String(pendingPayment?.quantity ?? 1),
       total: String(Number(pendingPayment?.price ?? 0).toFixed(2)),
@@ -56,7 +67,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
       toast.error(t.checkout.noPayment);
       navigate('/');
     }
-  }, [navigate]);
+  }, [navigate, t.checkout.loadFailed, t.checkout.noPayment]);
 
   const confirmPaymentMutation = useConfirmPayment({
     stripe,
@@ -77,7 +88,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if(!stripe || !elements) {
       toast.error(t.checkout.stripeNotReady);
@@ -93,6 +104,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
 
         {/* Header */}
         <button
+          type="button"
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >

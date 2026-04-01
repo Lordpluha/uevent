@@ -18,15 +18,11 @@ import {
 } from '@shared/components';
 import { authApi } from '@shared/api/auth.api';
 import { useAppContext } from '@shared/lib';
-import type { OrgModel } from './types';
+import { useRequiredOrgAccountData } from './useOrgAccountData';
 
-interface Props {
-  org: OrgModel;
-  invalidate: () => Promise<void>;
-}
-
-export function OrgSecuritySection({ org, invalidate }: Props) {
+export function OrgSecuritySection() {
   const { t } = useAppContext();
+  const { org, invalidateOrgQueries } = useRequiredOrgAccountData();
   const [isEnableTwoFaDialogOpen, setIsEnableTwoFaDialogOpen] = useState(false);
   const [isDisableTwoFaDialogOpen, setIsDisableTwoFaDialogOpen] = useState(false);
   const [twoFaSetupData, setTwoFaSetupData] = useState<{ secret: string; qrCodeDataUrl: string } | null>(null);
@@ -46,7 +42,7 @@ export function OrgSecuritySection({ org, invalidate }: Props) {
   const twoFaConfirmMutation = useMutation({
     mutationFn: (code: string) => authApi.confirmOrg2fa(code),
     onSuccess: async () => {
-      await invalidate();
+      await invalidateOrgQueries();
       setIsEnableTwoFaDialogOpen(false);
       setTwoFaSetupData(null);
       setTwoFaCode('');
@@ -58,7 +54,7 @@ export function OrgSecuritySection({ org, invalidate }: Props) {
   const twoFaDisableMutation = useMutation({
     mutationFn: (code: string) => authApi.disableOrg2fa(code),
     onSuccess: async () => {
-      await invalidate();
+      await invalidateOrgQueries();
       setIsDisableTwoFaDialogOpen(false);
       setDisableTwoFaCode('');
       toast.success(t.orgAccount.security.disabled);

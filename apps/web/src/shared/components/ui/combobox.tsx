@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import type { ComponentProps, ComponentPropsWithRef } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { Combobox as ComboboxPrimitive } from '@base-ui/react';
 
 import { cn } from '@shared/lib/utils';

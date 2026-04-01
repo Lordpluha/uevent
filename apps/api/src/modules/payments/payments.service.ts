@@ -98,11 +98,13 @@ export class PaymentsService {
     return this.stripeInstance
   }
 
-  async createPaymentIntent(amount: number, currency: string = 'usd', metadata?: Record<string, string>) {
+  async createPaymentIntent(amount: number, currency?: string, metadata?: Record<string, string>) {
     try {
+      const resolvedCurrency = (currency ?? this.apiConfig.paymentCurrency).toLowerCase()
+
       const paymentIntent = await this.getStripe().paymentIntents.create({
         amount: Math.round(amount),
-        currency,
+        currency: resolvedCurrency,
         metadata: metadata || {},
         automatic_payment_methods: {
           enabled: true,

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Tag, Check, X } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
+import { PROMO_CODE_DISCOUNTS, PROMO_CODE_EXAMPLES } from '@shared/config/payment';
 import { useAppContext } from '@shared/lib';
 
 interface PromoCodeSectionProps {
@@ -9,15 +10,6 @@ interface PromoCodeSectionProps {
   appliedCode?: string;
   appliedDiscount?: number;
 }
-
-// Mock promo codes - можно заменить на реальный API запрос если понадобится
-const VALID_PROMO_CODES: Record<string, number> = {
-  'UEVENT15': 15,
-  'UEVENT20': 20,
-  'UEVENT10': 10,
-  'SUMMER25': 25,
-  'EARLY30': 30,
-};
 
 export function PromoCodeSection({
   onApplyPromo,
@@ -43,7 +35,7 @@ export function PromoCodeSection({
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const discount = VALID_PROMO_CODES[code];
+    const discount = PROMO_CODE_DISCOUNTS[code];
     if (discount !== undefined) {
       onApplyPromo(code, discount);
       setPromoInput('');
@@ -122,10 +114,10 @@ export function PromoCodeSection({
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
       <p className="mt-2 text-xs text-muted-foreground">
         {t.promoCode.examples
-          .replace('{{code1}}', 'UEVENT15')
-          .replace('{{discount1}}', '15')
-          .replace('{{code2}}', 'SUMMER25')
-          .replace('{{discount2}}', '25')}
+          .replace('{{code1}}', PROMO_CODE_EXAMPLES[0].code)
+          .replace('{{discount1}}', String(PROMO_CODE_EXAMPLES[0].discount))
+          .replace('{{code2}}', PROMO_CODE_EXAMPLES[1].code)
+          .replace('{{discount2}}', String(PROMO_CODE_EXAMPLES[1].discount))}
       </p>
     </div>
   );

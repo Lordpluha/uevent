@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, Navigate } from 'react-router';
 import {
   Bell,
@@ -8,17 +8,14 @@ import {
   Shield,
   User,
 } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
 import { Separator, Skeleton } from '@shared/components';
 import { useAppContext } from '@shared/lib';
-import { useMe } from '@entities/User';
-import { useAuth } from '@shared/lib/auth-context';
 import { ProfileSection } from './ProfileSection';
 import { PreferencesSection } from './PreferencesSection';
 import { SecuritySection } from './SecuritySection';
 import { NotificationsSection } from './NotificationsSection';
 import { SessionsSection } from './SessionsSection';
-import type { UserProfile } from './types';
+import { useProfileSettingsData } from './useProfileSettingsData';
 
 const NAV_ITEMS = [
   { id: 'profile', icon: User },
@@ -44,20 +41,8 @@ function SettingsSkeleton() {
 
 export function ProfileSettingsPage() {
   const { t } = useAppContext();
-  const { isAuthenticated, isReady } = useAuth();
-  const { data: user, isLoading } = useMe();
-  const queryClient = useQueryClient();
+  const { isAuthenticated, isReady, isLoading } = useProfileSettingsData();
   const [activeSection, setActiveSection] = useState<SectionId>('profile');
-  const [twoFa, setTwoFa] = useState(false);
-
-  useEffect(() => {
-    if (user) setTwoFa(user.twoFa ?? false);
-  }, [user]);
-
-  const invalidateUser = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['me'] });
-    await queryClient.invalidateQueries({ queryKey: ['users'] });
-  };
 
   const scrollTo = (id: SectionId) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -83,23 +68,6 @@ export function ProfileSettingsPage() {
   }
 
   if (!isAuthenticated) return <Navigate to="/" replace />;
-
-  const userProfile: UserProfile = {
-    name: user?.name ?? '',
-    username: user?.username ?? '',
-    bio: user?.bio ?? '',
-    location: user?.location ?? '',
-    website: user?.website ?? '',
-    avatarUrl: user?.avatarUrl,
-    timezone: user?.timezone,
-    interests: user?.interests ?? [],
-    twoFa: user?.twoFa,
-    notificationsEnabled: user?.notificationsEnabled,
-    pushNotificationsEnabled: user?.pushNotificationsEnabled,
-    paymentEmailEnabled: user?.paymentEmailEnabled,
-    subscriptionNotificationsEnabled: user?.subscriptionNotificationsEnabled,
-    loginNotificationsEnabled: user?.loginNotificationsEnabled,
-  };
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
@@ -144,7 +112,7 @@ export function ProfileSettingsPage() {
               <User className="h-4 w-4 text-muted-foreground" />
               <h2 id="section-profile" className="text-base font-semibold">{t.profileSettings.tabs.profile}</h2>
             </div>
-            <ProfileSection user={userProfile} invalidateUser={invalidateUser} />
+            <ProfileSection />
           </section>
 
           <Separator />
@@ -154,7 +122,7 @@ export function ProfileSettingsPage() {
               <Globe className="h-4 w-4 text-muted-foreground" />
               <h2 id="section-preferences" className="text-base font-semibold">{t.profileSettings.tabs.preferences}</h2>
             </div>
-            <PreferencesSection user={userProfile} invalidateUser={invalidateUser} />
+            <PreferencesSection />
           </section>
 
           <Separator />
@@ -164,7 +132,7 @@ export function ProfileSettingsPage() {
               <Shield className="h-4 w-4 text-muted-foreground" />
               <h2 id="section-security" className="text-base font-semibold">{t.profileSettings.tabs.security}</h2>
             </div>
-            <SecuritySection user={userProfile} invalidateUser={invalidateUser} twoFa={twoFa} setTwoFa={setTwoFa} />
+            <SecuritySection />
           </section>
 
           <Separator />
@@ -174,7 +142,7 @@ export function ProfileSettingsPage() {
               <Bell className="h-4 w-4 text-muted-foreground" />
               <h2 id="section-notifications" className="text-base font-semibold">{t.profileSettings.tabs.notifications}</h2>
             </div>
-            <NotificationsSection user={userProfile} invalidateUser={invalidateUser} />
+            <NotificationsSection />
           </section>
 
           <Separator />
@@ -184,7 +152,7 @@ export function ProfileSettingsPage() {
               <Monitor className="h-4 w-4 text-muted-foreground" />
               <h2 id="section-sessions" className="text-base font-semibold">{t.profileSettings.activeSessions}</h2>
             </div>
-            <SessionsSection twoFa={twoFa} />
+            <SessionsSection />
           </section>
         </div>
       </div>

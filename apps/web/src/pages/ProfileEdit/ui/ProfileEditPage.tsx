@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
-import { ChevronLeft } from 'lucide-react';
-import { Separator } from '@shared/components';
+import { AlertTriangle, ChevronLeft } from 'lucide-react';
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, Separator } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 import { useMe } from '@entities/User';
 import { ProfileEditForm } from './ProfileEditForm';
@@ -20,10 +20,18 @@ export function ProfileEditPage() {
 
   if (isError || !user) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-5xl">⚠️</p>
-        <h1 className="text-xl font-semibold">{t.profileEdit.loadFailed}</h1>
-        <Link to="/" className="text-sm text-primary hover:underline">{t.common.backToHome}</Link>
+      <main className="flex min-h-[60vh] items-center justify-center px-4">
+        <Empty className="max-w-md border border-border/60">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <AlertTriangle className="size-4" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base">{t.profileEdit.loadFailed}</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Link to="/" className="text-sm text-primary hover:underline">{t.common.backToHome}</Link>
+          </EmptyContent>
+        </Empty>
       </main>
     );
   }

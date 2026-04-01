@@ -1,38 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button, Field, FieldLabel, Input, Textarea } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 import { organizationsApi } from '@entities/Organization';
-import type { OrgModel } from './types';
+import { useRequiredOrgAccountData } from './useOrgAccountData';
 
-interface Props {
-  org: OrgModel;
-  invalidate: () => Promise<void>;
-}
-
-export function OrgProfileSection({ org, invalidate }: Props) {
+export function OrgProfileSection() {
   const { t } = useAppContext();
+  const { org, invalidateOrgQueries } = useRequiredOrgAccountData();
   const [profileForm, setProfileForm] = useState({
-    title: '',
-    slogan: '',
-    description: '',
-    category: '',
-    location: '',
-    phone: '',
+    title: org.title ?? '',
+    slogan: org.slogan ?? '',
+    description: org.description ?? '',
+    category: org.category ?? '',
+    location: org.location ?? '',
+    phone: org.phone ?? '',
   });
-
-  useEffect(() => {
-    if (!org) return;
-    setProfileForm({
-      title: org.title ?? '',
-      slogan: org.slogan ?? '',
-      description: org.description ?? '',
-      category: org.category ?? '',
-      location: org.location ?? '',
-      phone: org.phone ?? '',
-    });
-  }, [org]);
 
   const saveProfileMutation = useMutation({
     mutationFn: () => organizationsApi.updateMyProfile({
@@ -43,7 +27,7 @@ export function OrgProfileSection({ org, invalidate }: Props) {
       location: profileForm.location,
       phone: profileForm.phone,
     }),
-    onSuccess: async () => { await invalidate(); toast.success(t.orgAccount.profile.updated); },
+    onSuccess: async () => { await invalidateOrgQueries(); toast.success(t.orgAccount.profile.updated); },
     onError: () => toast.error(t.orgAccount.profile.updateFailed),
   });
 

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { ChevronLeft } from 'lucide-react';
+import { CalendarX2, ChevronLeft } from 'lucide-react';
 import { EventLightbox, useEvent, useEvents } from '@entities/Event';
 import { TicketCard } from '@entities/Ticket';
-import { EventLocationMap, PromoCodeSection, Separator } from '@shared/components';
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, EventLocationMap, PromoCodeSection, Separator } from '@shared/components';
 import { toast } from 'sonner';
 import { useAppContext } from '@shared/lib';
 import { EventHero } from './EventHero';
@@ -22,7 +22,7 @@ export function EventPage() {
   const [appliedPromoCode, setAppliedPromoCode] = useState<string | undefined>();
   const [appliedPromoDiscount, setAppliedPromoDiscount] = useState<number | undefined>();
 
-  useEffect(() => { window.scrollTo(0, 0); }, [id]);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const hasGallery = Boolean(event?.gallery && event.gallery.length > 0);
 
@@ -43,10 +43,18 @@ export function EventPage() {
 
   if (!event || isError) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-5xl">📭</p>
-        <h1 className="text-xl font-semibold text-foreground">{t.events.notFound}</h1>
-        <Link to="/events" className="text-sm text-primary hover:underline">{t.common.backToEvents}</Link>
+      <main className="flex min-h-[60vh] items-center justify-center px-4">
+        <Empty className="max-w-md border border-border/60">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <CalendarX2 className="size-4" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base">{t.events.notFound}</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Link to="/events" className="text-sm text-primary hover:underline">{t.common.backToEvents}</Link>
+          </EmptyContent>
+        </Empty>
       </main>
     );
   }

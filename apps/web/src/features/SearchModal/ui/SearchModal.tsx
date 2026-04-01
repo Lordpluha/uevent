@@ -87,7 +87,7 @@ export const SearchModal = ({ variant = 'pill' }: Props) => {
         )}
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen} title={t.header.actions.searchEvents + ' · ' + t.header.actions.searchSubtitle}>
+      <CommandDialog open={open} onOpenChange={setOpen} title={`${t.header.actions.searchEvents} · ${t.header.actions.searchSubtitle}`}>
         <Command>
           <CommandInput placeholder={t.header.search.placeholder} autoFocus />
           <CommandList>

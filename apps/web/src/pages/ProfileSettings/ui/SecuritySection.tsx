@@ -22,17 +22,11 @@ import {
 import { authApi } from '@shared/api/auth.api';
 import { useAppContext } from '@shared/lib';
 import { PasswordChangeForm } from './PasswordChangeForm';
-import type { UserProfile } from './types';
+import { useProfileSettingsData } from './useProfileSettingsData';
 
-interface SecuritySectionProps {
-  user: UserProfile;
-  invalidateUser: () => Promise<void>;
-  twoFa: boolean;
-  setTwoFa: (value: boolean) => void;
-}
-
-export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: SecuritySectionProps) {
+export function SecuritySection() {
   const { t } = useAppContext();
+  const { invalidateUser, twoFa } = useProfileSettingsData();
   const [isEnableTwoFaDialogOpen, setIsEnableTwoFaDialogOpen] = useState(false);
   const [isDisableTwoFaDialogOpen, setIsDisableTwoFaDialogOpen] = useState(false);
   const [twoFaSetupData, setTwoFaSetupData] = useState<{ secret: string; qrCodeDataUrl: string } | null>(null);
@@ -53,7 +47,6 @@ export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: Secur
     mutationFn: (code: string) => authApi.confirm2fa(code),
     onSuccess: async () => {
       await invalidateUser();
-      setTwoFa(true);
       setIsEnableTwoFaDialogOpen(false);
       setTwoFaSetupData(null);
       setTwoFaCode('');
@@ -66,7 +59,6 @@ export function SecuritySection({ user, invalidateUser, twoFa, setTwoFa }: Secur
     mutationFn: (code: string) => authApi.disable2fa(code),
     onSuccess: async () => {
       await invalidateUser();
-      setTwoFa(false);
       setIsDisableTwoFaDialogOpen(false);
       setDisableTwoFaCode('');
       toast.success(t.profileSettings.security.disabled);

@@ -4,16 +4,9 @@ import { ChevronLeft, CreditCard, Minus, Plus, ShieldCheck, Ticket } from 'lucid
 import { useEvent } from '@entities/Event';
 import { useMe } from '@entities/User';
 import { Badge, Button, PromoCodeSection } from '@shared/components';
+import { DEFAULT_PAYMENT_CURRENCY_SYMBOL, PROMO_CODE_DISCOUNTS } from '@shared/config/payment';
 import { useAppContext } from '@shared/lib';
 import { useCheckoutPayment } from './useCheckoutPayment';
-
-const VALID_PROMO_CODES: Record<string, number> = {
-  UEVENT15: 15,
-  UEVENT20: 20,
-  UEVENT10: 10,
-  SUMMER25: 25,
-  EARLY30: 30,
-};
 
 export function CheckoutReviewPage() {
   const { t } = useAppContext();
@@ -32,7 +25,7 @@ export function CheckoutReviewPage() {
 
   useEffect(() => {
     if (!promoFromQuery) return;
-    const discount = VALID_PROMO_CODES[promoFromQuery];
+    const discount = PROMO_CODE_DISCOUNTS[promoFromQuery];
     if (!discount) return;
     setAppliedPromoCode(promoFromQuery);
     setAppliedPromoDiscount(discount);
@@ -48,7 +41,7 @@ export function CheckoutReviewPage() {
   const discount = subtotal * discountRate;
   const total = Math.max(0, subtotal - discount);
 
-  const currency = selectedTicket?.currency ?? '$';
+  const currency = selectedTicket?.currency ?? DEFAULT_PAYMENT_CURRENCY_SYMBOL;
   const remaining = selectedTicket?.quantityLimited
     ? Math.max(0, (selectedTicket?.quantityTotal ?? 0) - (selectedTicket?.quantitySold ?? 0))
     : undefined;

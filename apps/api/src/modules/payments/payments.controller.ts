@@ -11,6 +11,7 @@ import { JwtGuard } from '../auth/guards/jwt.guard'
 import { ApiBody, ApiExtraModels, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 import { ApiAccessCookieAuth, createPaymentIntentResponseSchema, emailSendResultSchema, paymentIntentStatusResponseSchema } from '../../common/swagger/openapi.util'
 import { Payment } from './entities/payment.entity'
+import { DEFAULT_PAYMENT_CURRENCY } from '../../config/env.schema'
 
 @Controller('payments')
 @ApiTags('Payments')
@@ -33,7 +34,7 @@ export class PaymentsController {
       type: 'object',
       properties: {
         amount: { type: 'number', example: 5000 },
-        currency: { type: 'string', example: 'usd' },
+        currency: { type: 'string', example: DEFAULT_PAYMENT_CURRENCY },
         orderId: { type: 'string' },
         ticketId: { type: 'string', format: 'uuid' },
         quantity: { type: 'integer' },
@@ -65,7 +66,7 @@ export class PaymentsController {
   }) {
     const {
       amount,
-      currency = 'usd',
+      currency = this.apiConfig.paymentCurrency,
       orderId,
       ticketId,
       quantity,

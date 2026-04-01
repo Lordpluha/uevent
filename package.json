@@ -12,8 +12,8 @@
     "db:logs": "docker compose logs -f postgres"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.5",
-    "turbo": "^2.8.21",
+    "@biomejs/biome": "2.4.10",
+    "turbo": "^2.9.3",
     "typescript": "5.9.2"
   },
   "packageManager": "pnpm@10.33.0",

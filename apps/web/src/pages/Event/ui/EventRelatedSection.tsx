@@ -1,6 +1,8 @@
 import { Link } from 'react-router';
+import { CalendarX2 } from 'lucide-react';
 import { EventCard } from '@entities/Event';
 import type { EventModel } from '@entities/Event';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 
 interface Props {
@@ -20,7 +22,14 @@ export function EventRelatedSection({ organizerEvents, similarEvents }: Props) {
           )}
         </div>
         {organizerEvents.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t.events.related.noByOrganizer}</p>
+          <Empty className="rounded-xl border border-border/60 py-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CalendarX2 className="size-4" />
+              </EmptyMedia>
+              <EmptyDescription className="text-sm">{t.events.related.noByOrganizer}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
             {organizerEvents.map((item) => (
@@ -40,7 +49,14 @@ export function EventRelatedSection({ organizerEvents, similarEvents }: Props) {
           )}
         </div>
         {similarEvents.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t.events.related.noSimilar}</p>
+          <Empty className="rounded-xl border border-border/60 py-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CalendarX2 className="size-4" />
+              </EmptyMedia>
+              <EmptyDescription className="text-sm">{t.events.related.noSimilar}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
             {similarEvents.map((item) => (

@@ -16,36 +16,12 @@ import {
 import { ShareButton } from '@shared/components/ShareButton/ShareButton';
 import { useAppContext } from '@shared/lib';
 import { AuthModal } from '@features/AuthModal';
+import { useRequiredOrgProfileData } from './useOrgProfileData';
 
-interface OrgProfileHeroProps {
-  org: {
-    id: string;
-    title: string;
-    avatarUrl?: string;
-    coverUrl?: string;
-    category: string;
-    location?: string;
-    website?: string;
-    foundedAt: string;
-    description?: string;
-    verified?: boolean;
-  };
-  isOwner: boolean;
-  isUserViewer: boolean;
-  followStatus?: { followed: boolean };
-  isFollowPending: boolean;
-  onToggleFollow: () => void;
-}
-
-export function OrgProfileHero({
-  org,
-  isOwner,
-  isUserViewer,
-  followStatus,
-  isFollowPending,
-  onToggleFollow,
-}: OrgProfileHeroProps) {
+export function OrgProfileHero() {
   const { t } = useAppContext();
+  const { org, isOwner, isUserViewer, isFollowed, isFollowPending, toggleFollow } = useRequiredOrgProfileData();
+
   return (
     <>
       {/* ── Hero cover ────────────────────── */}
@@ -127,11 +103,11 @@ export function OrgProfileHero({
             {isUserViewer ? (
               <Button
                 size="sm"
-                variant={followStatus?.followed ? 'outline' : 'default'}
+                variant={isFollowed ? 'outline' : 'default'}
                 disabled={isFollowPending}
-                onClick={onToggleFollow}
+                onClick={toggleFollow}
               >
-                {followStatus?.followed ? t.organizations.unsubscribe : t.organizations.subscribe}
+                {isFollowed ? t.organizations.unsubscribe : t.organizations.subscribe}
               </Button>
             ) : (
               <AuthModal

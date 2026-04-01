@@ -21,15 +21,11 @@ import {
 } from '@shared/components';
 import { usersApi } from '@entities/User';
 import { useAppContext } from '@shared/lib';
-import type { UserProfile } from './types';
+import { useProfileSettingsData } from './useProfileSettingsData';
 
-interface ProfileSectionProps {
-  user: UserProfile;
-  invalidateUser: () => Promise<void>;
-}
-
-export function ProfileSection({ user, invalidateUser }: ProfileSectionProps) {
+export function ProfileSection() {
   const { t } = useAppContext();
+  const { userProfile: user, invalidateUser } = useProfileSettingsData();
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState({

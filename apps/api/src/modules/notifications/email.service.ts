@@ -23,6 +23,18 @@ export class EmailService implements OnModuleInit {
 
   constructor(private readonly apiConfig: ApiConfigService) {}
 
+  private get paymentCurrencyCode(): string {
+    return this.apiConfig.paymentCurrency.toUpperCase()
+  }
+
+  private get paymentCurrencySymbol(): string {
+    return this.apiConfig.paymentCurrency === 'usd' ? '$' : this.paymentCurrencyCode
+  }
+
+  private formatCurrencyLine(amount: number): string {
+    return `${this.paymentCurrencySymbol}${amount.toFixed(2)} ${this.paymentCurrencyCode}`
+  }
+
   async onModuleInit() {
     await this.initializeTransporter()
   }
@@ -127,7 +139,7 @@ export class EmailService implements OnModuleInit {
         '----------------------------',
         `Email: ${data.userEmail}`,
         '----------------------------',
-        `Price: $${data.price.toFixed(2)} USD`,
+        `Price: ${this.formatCurrencyLine(data.price)}`,
         '----------------------------',
         `Payment ID: ${data.paymentIntentId}`,
         '----------------------------',
@@ -510,8 +522,8 @@ export class EmailService implements OnModuleInit {
           <div class="price-section">
             <div class="price-label">Amount Paid</div>
             <div>
-              <span class="price">$${data.price.toFixed(2)}</span>
-              <span class="currency">USD</span>
+              <span class="price">${this.paymentCurrencySymbol}${data.price.toFixed(2)}</span>
+              <span class="currency">${this.paymentCurrencyCode}</span>
             </div>
           </div>
         </div>
@@ -565,7 +577,7 @@ ${data.organizationName ? `Organizer: ${data.organizationName}\n` : ''}${data.ev
 ---
 PAYMENT DETAILS
 ---
-Amount Paid: $${data.price.toFixed(2)} USD
+Amount Paid: ${this.formatCurrencyLine(data.price)}
 Payment ID: ${data.paymentIntentId}
 
 ---
@@ -1309,7 +1321,7 @@ REFUND DETAILS
 Event: ${data.eventTitle}
 Ticket Type: ${data.ticketName}
 Payment ID: ${data.paymentIntentId}
-Refund Amount: $${data.amount.toFixed(2)} USD
+Refund Amount: ${this.formatCurrencyLine(data.amount)}
 
 ---
 WHAT'S NEXT?

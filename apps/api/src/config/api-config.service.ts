@@ -37,13 +37,17 @@ export class ApiConfigService {
     }
   }
 
+  get paymentCurrency(): string {
+    return this.configService.get('PAYMENT_CURRENCY', { infer: true }).toLowerCase()
+  }
+
   get smtpConfig() {
     return {
       host: this.configService.get('SMTP_HOST', { infer: true }),
       port: this.configService.get('SMTP_PORT', { infer: true }),
       user: this.configService.get('SMTP_USER', { infer: true }),
       pass: this.configService.get('SMTP_PASS', { infer: true }),
-      fromEmail: this.configService.get('SMTP_FROM_EMAIL', { infer: true }) ?? 'noreply@uevent.app',
+      fromEmail: this.configService.get('SMTP_FROM_EMAIL', { infer: true }),
     }
   }
 

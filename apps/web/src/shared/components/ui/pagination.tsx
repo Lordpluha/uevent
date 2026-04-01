@@ -10,7 +10,6 @@ function Pagination({ className, ...props }: ComponentProps<'nav'>) {
 
   return (
     <nav
-      role="navigation"
       aria-label={t.pagination.navigation}
       data-slot="pagination"
       className={cn('mx-auto flex w-full justify-center', className)}

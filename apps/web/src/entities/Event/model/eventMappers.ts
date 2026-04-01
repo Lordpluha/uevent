@@ -1,3 +1,4 @@
+import { DEFAULT_PAYMENT_CURRENCY_SYMBOL } from '@shared/config/payment'
 import type { ApiEvent, EventFormat, EventModel } from './eventEntity'
 
 export const mapTicketStatus = (status?: string | null): 'available' | 'limited' | 'sold-out' => {
@@ -90,7 +91,7 @@ export const mapApiEvent = (event: ApiEvent): EventModel => {
       price: Number(ticket.price ?? 0),
       datetimeStart: toIsoOrUndefined(ticket.datetime_start),
       datetimeEnd: toIsoOrUndefined(ticket.datetime_end),
-      currency: ticket.currency ?? '$',
+      currency: ticket.currency ?? DEFAULT_PAYMENT_CURRENCY_SYMBOL,
       seat: ticket.seat ?? undefined,
       quantityLimited: ticket.quantity_limited ?? undefined,
       quantityTotal: ticket.quantity_total ?? undefined,

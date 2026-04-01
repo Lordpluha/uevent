@@ -1,5 +1,5 @@
 import type { ChangeEvent, FormEvent } from 'react';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { Camera, Save } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -32,24 +32,12 @@ export function ProfileEditForm({ user }: Props) {
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
-    name: '',
-    username: '',
-    bio: '',
-    location: '',
-    website: '',
+    name: user.name,
+    username: user.username,
+    bio: user.bio ?? '',
+    location: user.location ?? '',
+    website: user.website ?? '',
   });
-
-  useEffect(() => {
-    if (user) {
-      setForm({
-        name: user.name,
-        username: user.username,
-        bio: user.bio ?? '',
-        location: user.location ?? '',
-        website: user.website ?? '',
-      });
-    }
-  }, [user]);
 
   const invalidate = async () => {
     await Promise.all([

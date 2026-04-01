@@ -1,52 +1,20 @@
-import { Link, useParams } from 'react-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router';
 import {
   CalendarDays,
+  Building2,
   Heart,
   Users,
 } from 'lucide-react';
-import { toast } from 'sonner';
 
-import { organizationsApi, useOrg } from '@entities/Organization';
-import { useEvents } from '@entities/Event';
 import { EventCard } from '@entities/Event';
-import { Separator } from '@shared/components';
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle, Separator } from '@shared/components';
 import { useAppContext } from '@shared/lib';
-import { useAuth } from '@shared/lib/auth-context';
-import { useMyOrg } from '@entities/Organization';
 import { OrgProfileHero } from './OrgProfileHero';
+import { useRequiredOrgProfileData } from './useOrgProfileData';
 
 export function OrgProfilePage() {
   const { t } = useAppContext();
-  const { isAuthenticated, accountType } = useAuth();
-  const queryClient = useQueryClient();
-  const { data: myOrg } = useMyOrg();
-  const { id } = useParams<{ id: string }>();
-  const { data: org, isLoading } = useOrg(id ?? '');
-  const { data: orgEventsResult } = useEvents(
-    org ? { organization_id: org.id } : undefined,
-  );
-  const orgEvents = orgEventsResult?.data ?? [];
-  const isUserViewer = isAuthenticated && accountType === 'user';
-  const orgId = org?.id ?? '';
-
-  const { data: followStatus } = useQuery({
-    queryKey: ['organization-follow', orgId],
-    queryFn: () => organizationsApi.getFollowStatus(orgId),
-    enabled: isUserViewer && !!orgId,
-  });
-
-  const followMutation = useMutation({
-    mutationFn: (nextFollow: boolean) => organizationsApi.setFollow(orgId, nextFollow),
-    onSuccess: async (_data, nextFollow) => {
-      await queryClient.invalidateQueries({ queryKey: ['organization-follow', orgId] });
-      await queryClient.invalidateQueries({ queryKey: ['organizations', orgId] });
-      toast.success(nextFollow ? t.organizations.subscribed : t.organizations.unsubscribed);
-    },
-    onError: () => {
-      toast.error(t.organizations.subscribeFailed);
-    },
-  });
+  const { org, isLoading, displayEvents, isOwner } = useRequiredOrgProfileData();
 
   if (isLoading) {
     return (
@@ -58,29 +26,27 @@ export function OrgProfilePage() {
 
   if (!org) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-5xl">🏢</p>
-        <h1 className="text-xl font-semibold">{t.organizations.notFound}</h1>
-        <Link to="/organizations" className="text-sm text-primary hover:underline">
-          {t.common.backToOrganizations}
-        </Link>
+      <main className="flex min-h-[60vh] items-center justify-center px-4">
+        <Empty className="max-w-md border border-border/60">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Building2 className="size-4" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base">{t.organizations.notFound}</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Link to="/organizations" className="text-sm text-primary hover:underline">
+              {t.common.backToOrganizations}
+            </Link>
+          </EmptyContent>
+        </Empty>
       </main>
     );
   }
 
-  const displayEvents = orgEvents.length > 0 ? orgEvents : [];
-  const isOwner = isAuthenticated && accountType === 'organization' && myOrg?.id === org.id;
-
   return (
     <main className="w-full pb-16">
-      <OrgProfileHero
-        org={org}
-        isOwner={isOwner}
-        isUserViewer={isUserViewer}
-        followStatus={followStatus}
-        isFollowPending={followMutation.isPending}
-        onToggleFollow={() => followMutation.mutate(!(followStatus?.followed ?? false))}
-      />
+      <OrgProfileHero />
 
       <div className="relative z-10 mx-auto w-full max-w-5xl px-4 sm:px-6">
         {/* ── Stats ────────────────────────────────────────────── */}
@@ -95,9 +61,7 @@ export function OrgProfilePage() {
               className="flex flex-col items-center gap-1 rounded-xl border border-border/60 bg-card py-4"
             >
               <Icon className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xl font-extrabold text-foreground">
-                {value.toLocaleString()}
-              </span>
+              <span className="text-xl font-extrabold text-foreground">{value.toLocaleString()}</span>
               <span className="text-[11px] text-muted-foreground">{label}</span>
             </div>
           ))}
@@ -122,13 +86,15 @@ export function OrgProfilePage() {
           </div>
 
           {displayEvents.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border/50 bg-card py-16 text-center">
-              <span className="text-4xl">📅</span>
-              <p className="text-sm font-medium text-foreground">{t.organizations.noEventsYet}</p>
-              <p className="text-xs text-muted-foreground">
-                {t.organizations.noEventsDesc}
-              </p>
-            </div>
+            <Empty className="rounded-2xl border border-border/50 bg-card py-16">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <CalendarDays className="size-4" />
+                </EmptyMedia>
+                <EmptyTitle>{t.organizations.noEventsYet}</EmptyTitle>
+                <EmptyDescription>{t.organizations.noEventsDesc}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
               {displayEvents.slice(0, 6).map((event) => (

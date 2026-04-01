@@ -1,6 +1,8 @@
 import { Link } from 'react-router';
+import { SearchX } from 'lucide-react';
 import { EventCard, EventCardSkeleton } from '@entities/Event';
 import type { EventModel } from '@entities/Event';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 
 interface Props {
@@ -23,11 +25,15 @@ export function EventsGrid({ events, isLoading = false }: Props) {
 
   if (events.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
-        <span className="text-5xl">🔍</span>
-        <p className="text-base font-semibold text-foreground">{t.events.noEvents}</p>
-        <p className="text-sm text-muted-foreground">{t.events.noEventsTip}</p>
-      </div>
+      <Empty className="py-24">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <SearchX className="size-4" />
+          </EmptyMedia>
+          <EmptyTitle className="text-base">{t.events.noEvents}</EmptyTitle>
+          <EmptyDescription className="text-sm">{t.events.noEventsTip}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

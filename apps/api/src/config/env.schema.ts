@@ -1,5 +1,15 @@
 import { z } from 'zod'
 
+export const DEFAULT_API_PORT = 3000
+export const DEFAULT_WEB_PORT = 5173
+export const DEFAULT_API_URL = `http://localhost:${DEFAULT_API_PORT}`
+export const DEFAULT_CLIENT_URL = `http://localhost:${DEFAULT_WEB_PORT}`
+export const DEFAULT_GOOGLE_CALLBACK_PATH = '/auth/google/callback'
+export const DEFAULT_GOOGLE_CALLBACK_URL = `${DEFAULT_API_URL}${DEFAULT_GOOGLE_CALLBACK_PATH}`
+export const DEFAULT_JWT_SECRET = 'changeme'
+export const DEFAULT_PAYMENT_CURRENCY = 'usd'
+export const DEFAULT_SMTP_FROM_EMAIL = 'noreply@uevent.app'
+
 const toNumber = (fallback: number) =>
   z.preprocess((value) => {
     if (value === undefined || value === null || value === '') return fallback
@@ -23,9 +33,9 @@ const toBoolean = (fallback: boolean) =>
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
-  PORT: toNumber(3000),
-  CLIENT_URL: z.url().default('http://localhost:5173'),
-  API_URL: z.url().default('http://localhost:3000'),
+  PORT: toNumber(DEFAULT_API_PORT),
+  CLIENT_URL: z.url().default(DEFAULT_CLIENT_URL),
+  API_URL: z.url().default(DEFAULT_API_URL),
 
   POSTGRES_HOST: z.string().min(1),
   POSTGRES_PORT: toNumber(5432),
@@ -34,24 +44,25 @@ export const envSchema = z.object({
   POSTGRES_DB: z.string().min(1),
   DB_SYNCHRONIZE: toBoolean(true),
 
-  JWT_SECRET: z.string().min(1).default('changeme'),
+  JWT_SECRET: z.string().min(1).default(DEFAULT_JWT_SECRET),
 
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
-  GOOGLE_CALLBACK_URL: z.string().url().default('http://localhost:3000/auth/google/callback'),
+  GOOGLE_CALLBACK_URL: z.string().url().default(DEFAULT_GOOGLE_CALLBACK_URL),
 
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  PAYMENT_CURRENCY: z.string().min(1).default(DEFAULT_PAYMENT_CURRENCY),
 
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  SMTP_FROM_EMAIL: z.string().email().optional(),
+  SMTP_FROM_EMAIL: z.string().email().default(DEFAULT_SMTP_FROM_EMAIL),
 })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production') {
-      if (env.JWT_SECRET === 'changeme') {
+      if (env.JWT_SECRET === DEFAULT_JWT_SECRET) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['JWT_SECRET'],

@@ -4,7 +4,7 @@ import { EventCard } from '@entities/Event';
 import { useEvents } from '@entities/Event';
 import { useOrgs, OrgCard } from '@entities/Organization';
 import { useAppContext } from '@shared/lib';
-import { Badge, buttonVariants } from '@shared/components';
+import { Badge, Empty, EmptyDescription, EmptyHeader, EmptyMedia, buttonVariants } from '@shared/components';
 import { cn } from '@shared/lib/utils';
 import { getHomeCategories, HOW_ICONS, StatCounter } from './HomeConstants';
 
@@ -65,8 +65,8 @@ function HomePage() {
       <section className="border-y border-border/50 bg-card/40 px-6 py-12">
         <div className="mx-auto flex max-w-3xl flex-wrap justify-around gap-8">
           {eventsLoading || orgsLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-2">
+            ['stats-a', 'stats-b', 'stats-c'].map((key) => (
+              <div key={key} className="flex flex-col items-center gap-2">
                 <div className="h-10 w-20 animate-pulse rounded-md bg-border/40" />
                 <div className="h-3 w-16 animate-pulse rounded bg-border/30" />
               </div>
@@ -94,14 +94,18 @@ function HomePage() {
           {/* horizontal scroll row */}
           <div className="flex gap-4 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
             {eventsLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-56 w-64 shrink-0 animate-pulse rounded-xl bg-border/30" />
+              ['trend-a', 'trend-b', 'trend-c', 'trend-d', 'trend-e'].map((key) => (
+                <div key={key} className="h-56 w-64 shrink-0 animate-pulse rounded-xl bg-border/30" />
               ))
             ) : events.length === 0 ? (
-              <div className="flex w-full flex-col items-center gap-3 py-12 text-center text-muted-foreground">
-                <CheckCircle2 className="h-10 w-10 opacity-30" />
-                <p className="text-sm">{h.trending.noEvents}</p>
-              </div>
+              <Empty className="w-full rounded-xl border border-border/60 py-12 text-muted-foreground">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <CheckCircle2 className="size-4" />
+                  </EmptyMedia>
+                  <EmptyDescription className="text-sm">{h.trending.noEvents}</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               events.slice(0, 5).map((event) => (
                 <Link key={event.id} to={`/events/${event.id}`} className="shrink-0">
@@ -171,8 +175,8 @@ function HomePage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {orgsLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-32 animate-pulse rounded-xl bg-border/30" />
+              ? ['org-a', 'org-b', 'org-c', 'org-d', 'org-e', 'org-f'].map((key) => (
+                  <div key={key} className="h-32 animate-pulse rounded-xl bg-border/30" />
                 ))
               : orgs.map((org) => <OrgCard key={org.id} {...org} />)}
           </div>

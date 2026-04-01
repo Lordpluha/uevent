@@ -20,7 +20,7 @@ import {
 import { usersApi } from '@entities/User';
 import { tagsApi } from '@shared/api';
 import { useAppContext } from '@shared/lib';
-import type { UserProfile } from './types';
+import { useProfileSettingsData } from './useProfileSettingsData';
 
 let TZ_LIST: string[] = [];
 try {
@@ -34,13 +34,9 @@ try {
   ];
 }
 
-interface PreferencesSectionProps {
-  user: UserProfile;
-  invalidateUser: () => Promise<void>;
-}
-
-export function PreferencesSection({ user, invalidateUser }: PreferencesSectionProps) {
+export function PreferencesSection() {
   const { t } = useAppContext();
+  const { userProfile: user, invalidateUser } = useProfileSettingsData();
   const [timezone, setTimezone] = useState(user.timezone ?? '');
   const [selectedTags, setSelectedTags] = useState<string[]>(user.interests ?? []);
 

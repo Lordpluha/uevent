@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CheckCircle, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@shared/components';
 import { api } from '@shared/api';
+import { getCurrencySymbol } from '@shared/config/payment';
 import { useAppContext } from '@shared/lib';
 import { toast } from 'sonner';
 
@@ -39,13 +40,13 @@ export function PaymentSuccessPage() {
       toast.error(t.paymentSuccess.invalidLink);
       navigate('/');
     }
-  }, [paymentIntentId, navigate]);
+  }, [paymentIntentId, navigate, t.paymentSuccess.invalidLink]);
 
   const isConfirmed = payment?.status === 'succeeded';
   const isProcessing = isLoading || payment?.status === 'processing';
   const isFailed = isError || payment?.status === 'canceled';
 
-  const currencySymbol = payment?.currency === 'usd' ? '$' : payment?.currency?.toUpperCase() ?? '$';
+  const currencySymbol = getCurrencySymbol(payment?.currency);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/50 flex items-center justify-center px-4">
