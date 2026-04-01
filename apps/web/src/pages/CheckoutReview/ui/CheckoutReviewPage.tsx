@@ -23,6 +23,8 @@ export function CheckoutReviewPage() {
   const [appliedPromoDiscount, setAppliedPromoDiscount] = useState<number | undefined>();
   const [quantity, setQuantity] = useState(1);
 
+  const PLATFORM_FEE = 1.00; // $1 fixed fee
+
   useEffect(() => {
     if (!promoFromQuery) return;
     const discount = PROMO_CODE_DISCOUNTS[promoFromQuery];
@@ -40,6 +42,7 @@ export function CheckoutReviewPage() {
   const discountRate = (appliedPromoDiscount ?? 0) / 100;
   const discount = subtotal * discountRate;
   const total = Math.max(0, subtotal - discount);
+  const totalWithFee = total + PLATFORM_FEE;
 
   const currency = selectedTicket?.currency ?? DEFAULT_PAYMENT_CURRENCY_SYMBOL;
   const remaining = selectedTicket?.quantityLimited
@@ -154,13 +157,19 @@ export function CheckoutReviewPage() {
             <span className="text-muted-foreground">{t.checkoutReview.subtotal.replace('{{qty}}', String(quantity))}</span>
             <span>{currency}{subtotal.toFixed(2)}</span>
           </div>
+          {appliedPromoDiscount && appliedPromoDiscount > 0 && (
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-muted-foreground">{t.common.discount}</span>
+              <span>-{currency}{discount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="mt-1 flex items-center justify-between">
-            <span className="text-muted-foreground">{t.common.discount}</span>
-            <span>-{currency}{discount.toFixed(2)}</span>
+            <span className="text-muted-foreground">{t.paymentModal.platformFee || 'Platform fee'}</span>
+            <span>{currency}{PLATFORM_FEE.toFixed(2)}</span>
           </div>
           <div className="mt-3 flex items-center justify-between border-t border-border pt-3 font-semibold">
             <span>{t.common.total}</span>
-            <span>{currency}{total.toFixed(2)}</span>
+            <span>{currency}{totalWithFee.toFixed(2)}</span>
           </div>
         </div>
 

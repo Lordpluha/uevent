@@ -20,8 +20,11 @@ export function PaymentFailedPage() {
   }, [paymentIntentId, navigate, t.paymentFailed.invalidLink]);
 
   const handleRetry = () => {
-    localStorage.removeItem('pendingPayment');
-    navigate(-1);
+    if(paymentIntentId) {
+      navigate(`/checkout?paymentIntentId=${paymentIntentId}`);
+    }else {
+      navigate('/events');
+    }
   };
 
   return (

@@ -514,6 +514,7 @@
     "fillFields": "Please fill in all fields",
     "title": "Checkout",
     "ticketPrice": "Ticket price:",
+    "platformFee": "Platform fee:",
     "total": "Total:",
     "fullName": "Full Name",
     "fullNamePlaceholder": "John Doe",

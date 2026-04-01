@@ -104,6 +104,8 @@ export class PaymentsController {
     return {
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
+      platformFee: this.apiConfig.paymentFeeCents / 100, // сonverting cents to dollars
+      total: (amount + this.apiConfig.paymentFeeCents) / 100, // converting cents to dollars
     }
   }
 
@@ -116,7 +118,7 @@ export class PaymentsController {
 
     return {
       status: paymentIntent.status,
-      amount: paymentIntent.amount / 100, // convert back to dollars
+      amount: paymentIntent.amount / 100, // converting back to dollars
       currency: paymentIntent.currency,
       clientSecret: paymentIntent.client_secret,
     }

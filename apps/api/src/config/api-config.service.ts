@@ -41,6 +41,10 @@ export class ApiConfigService {
     return this.configService.get('PAYMENT_CURRENCY', { infer: true }).toLowerCase()
   }
 
+  get paymentFeeCents(): number {
+    return 100 // $1 fixed fee
+  }
+
   get smtpConfig() {
     return {
       host: this.configService.get('SMTP_HOST', { infer: true }),

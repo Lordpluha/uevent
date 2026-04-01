@@ -101,9 +101,11 @@ export class PaymentsService {
   async createPaymentIntent(amount: number, currency?: string, metadata?: Record<string, string>) {
     try {
       const resolvedCurrency = (currency ?? this.apiConfig.paymentCurrency).toLowerCase()
+      const feeCents = this.apiConfig.paymentFeeCents
+      const totalAmount = Math.round(amount) + feeCents
 
       const paymentIntent = await this.getStripe().paymentIntents.create({
-        amount: Math.round(amount),
+        amount: totalAmount,
         currency: resolvedCurrency,
         metadata: metadata || {},
         automatic_payment_methods: {

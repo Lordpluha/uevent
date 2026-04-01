@@ -8,6 +8,7 @@ export const DEFAULT_GOOGLE_CALLBACK_PATH = '/auth/google/callback'
 export const DEFAULT_GOOGLE_CALLBACK_URL = `${DEFAULT_API_URL}${DEFAULT_GOOGLE_CALLBACK_PATH}`
 export const DEFAULT_JWT_SECRET = 'changeme'
 export const DEFAULT_PAYMENT_CURRENCY = 'usd'
+export const DEFAULT_PAYMENT_FEE_CENTS = 100 // $1 fee
 export const DEFAULT_SMTP_FROM_EMAIL = 'noreply@uevent.app'
 
 const toNumber = (fallback: number) =>

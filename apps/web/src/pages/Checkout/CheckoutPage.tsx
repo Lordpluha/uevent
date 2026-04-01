@@ -9,6 +9,8 @@ import { CheckoutForm } from './CheckoutForm';
 
 type PendingPayment = {
   clientSecret: string;
+  platformFee?: number;
+  total?: number;
 };
 
 export function CheckoutPage() {
@@ -33,19 +35,22 @@ export function CheckoutPage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('pendingPayment');
-    if(saved)
-      {
+    
+    if(saved) {
       try {
         setPendingPayment(JSON.parse(saved));
       } catch (error) {
         console.error('Failed to parse pending payment:', error);
         toast.error(t.checkout.loadFailed);
-
-        // redirecting home after fail
         setTimeout(() => {
           window.location.href = '/';
         }, 2000);
       }
+    }else {
+      toast.error(t.checkout.noPayment);
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
     }
     setLoading(false);
   }, [t.checkout.loadFailed]);

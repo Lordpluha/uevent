@@ -514,6 +514,7 @@
     "fillFields": "Будь ласка, заповніть усі поля",
     "title": "Оплата",
     "ticketPrice": "Ціна квитка:",
+    "platformFee": "Комісія платформи:",
     "total": "Разом:",
     "fullName": "Повне імʼя",
     "fullNamePlaceholder": "Іван Петренко",

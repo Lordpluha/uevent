@@ -57,7 +57,8 @@ export function useCalendarSync(eventId?: string, ticketId?: string | null) {
     if (!isAuthenticated || accountType !== 'user' || !eventId) return
     autoAddedRef.current = true
     mutate()
-  }, [isAuthenticated, accountType, eventId, mutate])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, accountType, eventId])
 
   useEffect(() => {
     return () => {

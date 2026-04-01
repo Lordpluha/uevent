@@ -39,12 +39,15 @@ export function PaymentModal({
 
   // convert price to cents
   const amountInCents = Math.round(price * 100);
+  const PLATFORM_FEE = 1.00; // $1 fixed fee
 
   const createPaymentMutation = useMutation({
     mutationFn: async () => {
       const response = await api.post<{
         clientSecret: string;
         paymentIntentId: string;
+        platformFee: number;
+        total: number;
       }>('/payments/create-intent', {
         amount: amountInCents,
         currency: DEFAULT_PAYMENT_CURRENCY_CODE,
@@ -70,6 +73,8 @@ export function PaymentModal({
         ticketId,
         ticketName,
         price,
+        platformFee: data.platformFee,
+        total: data.total,
         eventId,
         eventTitle,
         eventDate,
@@ -118,10 +123,16 @@ export function PaymentModal({
               {DEFAULT_PAYMENT_CURRENCY_SYMBOL}{price.toFixed(2)}
             </span>
           </div>
+          <div className="flex justify-between text-sm mt-2">
+            <span>{t.paymentModal.platformFee || 'Platform Fee'}</span>
+            <span className="font-semibold">
+              {DEFAULT_PAYMENT_CURRENCY_SYMBOL}{PLATFORM_FEE.toFixed(2)}
+            </span>
+          </div>
           <div className="mt-2 border-t border-border pt-2 flex justify-between text-sm font-bold">
             <span>{t.paymentModal.total}</span>
             <span>
-              ${price.toFixed(2)}
+              ${(price + PLATFORM_FEE).toFixed(2)}
             </span>
           </div>
         </div>
@@ -181,7 +192,7 @@ export function PaymentModal({
                   {t.common.processing}
                 </>
               ) : (
-                t.paymentModal.pay.replace('{{amount}}', `$${price.toFixed(2)}`)
+                (t.paymentModal.pay || 'Pay {{amount}}').replace('{{amount}}', `$${(price + PLATFORM_FEE).toFixed(2)}`)
               )}
             </Button>
           </div>
