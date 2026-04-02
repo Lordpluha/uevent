@@ -1,8 +1,10 @@
 import { Link } from 'react-router';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { EventCard } from '@entities/Event';
 import { useEvents } from '@entities/Event';
 import { useOrgs, OrgCard } from '@entities/Organization';
+import { api } from '@shared/api';
 import { useAppContext } from '@shared/lib';
 import { Badge, Empty, EmptyDescription, EmptyHeader, EmptyMedia, buttonVariants } from '@shared/components';
 import { cn } from '@shared/lib/utils';
@@ -20,10 +22,15 @@ function HomePage() {
   const { data: orgsResult, isLoading: orgsLoading } = useOrgs({ page: 1, limit: 6 });
   const orgs = orgsResult?.data ?? [];
 
+  const { data: usersResult, isLoading: usersLoading } = useQuery({
+    queryKey: ['users-total'],
+    queryFn: () => api.get<{ count: number }>('/users/count').then((r) => r.data.count),
+  });
+
   const stats = {
     events: eventsResult?.total ?? 0,
     organizations: orgsResult?.total ?? 0,
-    members: events.reduce((sum, event) => sum + (event.attendeeCount ?? 0), 0),
+    members: usersResult ?? 0,
   };
 
   return (
@@ -64,7 +71,7 @@ function HomePage() {
 
       <section className="border-y border-border/50 bg-card/40 px-6 py-12">
         <div className="mx-auto flex max-w-3xl flex-wrap justify-around gap-8">
-          {eventsLoading || orgsLoading ? (
+          {eventsLoading || orgsLoading || usersLoading ? (
             ['stats-a', 'stats-b', 'stats-c'].map((key) => (
               <div key={key} className="flex flex-col items-center gap-2">
                 <div className="h-10 w-20 animate-pulse rounded-md bg-border/40" />

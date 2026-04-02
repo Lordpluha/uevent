@@ -55,6 +55,7 @@ export class EventsService {
           this.notificationsRepo.create({
             name: 'New event from organization',
             content: `${org?.name ?? 'An organization'} published a new event: ${savedEvent.name}`,
+            link: `/events/${savedEvent.id}`,
             user_id: user.id,
           }),
         )
@@ -68,7 +69,7 @@ export class EventsService {
   private async findOneEntity(id: string) {
     const event = await this.eventsRepo.findOne({
       where: { id },
-      relations: ['tags', 'tickets', 'organization', 'recurrence', 'recurrence.overrides'],
+      relations: ['tags', 'tickets', 'tickets.user', 'organization', 'recurrence', 'recurrence.overrides'],
     })
 
     if (!event) throw new NotFoundException(`Event with id #${id} not found`)
@@ -187,6 +188,28 @@ export class EventsService {
 
   async findOne(id: string, acceptLanguage?: string) {
     const event = await this.findOneEntity(id)
+
+    // Collect attendees from paid tickets with a linked user
+    const attendeesFromTickets: Array<{ id: string; avatarUrl?: string; name: string; username: string | null }> = []
+    const seenUserIds = new Set<string>()
+    for (const ticket of event.tickets ?? []) {
+      if (ticket.user_id && ticket.user && ticket.status === 'PAID') {
+        if (!seenUserIds.has(ticket.user_id)) {
+          seenUserIds.add(ticket.user_id)
+          const user = ticket.user as unknown as Record<string, unknown>
+          const firstName = (user.first_name as string | null) ?? ''
+          const lastName = (user.last_name as string | null) ?? ''
+          attendeesFromTickets.push({
+            id: ticket.user_id,
+            avatarUrl: user.avatar as string | undefined,
+            name: [firstName, lastName].filter(Boolean).join(' ') || (user.username as string) || 'User',
+            username: (user.username as string) || null,
+          })
+        }
+      }
+    }
+
+    // Strip sold tickets from exposed ticket list; expose attendees only when public
     event.tickets = (event.tickets ?? []).filter((ticket) => !ticket.user_id)
     const locale = this.contentLocalization.resolveRequestedLocale(acceptLanguage)
     const localized = await this.contentLocalization.localizeEvent(event, locale, {
@@ -194,7 +217,19 @@ export class EventsService {
       includeTickets: true,
       includeTags: true,
     })
-    return this.sanitizeEvent(localized)
+    const sanitized = this.sanitizeEvent(localized) as unknown as Record<string, unknown>
+
+    // Inject attendee count and conditionally the full attendees list
+    sanitized.attendeeCount = seenUserIds.size
+    if (event.attendees_public) {
+      sanitized.attendees_public = true
+      sanitized.attendees = attendeesFromTickets
+    } else {
+      sanitized.attendees_public = false
+      sanitized.attendees = []
+    }
+
+    return sanitized
   }
 
   async update(id: string, dto: UpdateEventDto, user: JwtPayload) {

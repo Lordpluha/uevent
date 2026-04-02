@@ -1,12 +1,41 @@
 import { Link } from 'react-router';
-import { Ticket as TicketIcon } from 'lucide-react';
+import { Download, Ticket as TicketIcon } from 'lucide-react';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, Skeleton } from '@shared/components';
+import { cn } from '@shared/lib/utils';
 import { useAppContext } from '@shared/lib';
+import { api } from '@shared/api';
+import { toast } from 'sonner';
 import { useProfileViewData } from './useProfileViewData';
+
+const STATUS_STYLES: Record<string, string> = {
+  active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  used: 'bg-gray-100 text-gray-500 dark:bg-gray-800/50 dark:text-gray-400',
+  cancelled: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+  expired: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
+  pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-500',
+};
+
+function statusStyle(status: string): string {
+  return STATUS_STYLES[status?.toLowerCase()] ?? 'bg-muted text-muted-foreground';
+}
 
 export function ProfileTicketsList() {
   const { t } = useAppContext();
   const { myTickets: tickets, ticketsLoading: isLoading } = useProfileViewData();
+
+  const handleDownload = async (ticketId: string, ticketName: string) => {
+    try {
+      const response = await api.get<Blob>(`/payments/ticket/${ticketId}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `uevent-ticket-${ticketName.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download ticket');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -56,9 +85,29 @@ export function ProfileTicketsList() {
                 </p>
               </div>
 
-              <div className="text-right">
-                <p className="font-semibold text-foreground">{price > 0 ? `$${price.toFixed(2)}` : t.common.free}</p>
-                <p className="text-xs text-muted-foreground">{ticket.status}</p>
+              <div className="flex items-center gap-3">
+                {ticket.status?.toLowerCase() === 'paid' && (
+                  <button
+                    type="button"
+                    onClick={() => void handleDownload(ticket.id, ticket.name)}
+                    className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                    title={t.profile.downloadTicket}
+                  >
+                    <Download className="size-3.5" />
+                    {t.profile.downloadTicket}
+                  </button>
+                )}
+                <div className="text-right">
+                  <p className="font-semibold text-foreground">{price > 0 ? `$${price.toFixed(2)}` : t.common.free}</p>
+                  <span
+                    className={cn(
+                      'mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize',
+                      statusStyle(ticket.status),
+                    )}
+                  >
+                    {ticket.status}
+                  </span>
+                </div>
               </div>
             </li>
           );

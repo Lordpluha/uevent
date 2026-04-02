@@ -35,6 +35,7 @@ export async function submitCreateEvent({ data, durationHours, coverFiles, onSuc
       online_link: data.format === 'online' ? (data.onlineUrl || undefined) : undefined,
       organization_id: data.organizationId,
       tags: tagIds,
+      attendees_public: data.attendeesPublic ?? false,
     });
 
     if (coverFiles.length > 0 && created.data?.id) {

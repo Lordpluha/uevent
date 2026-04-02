@@ -16,6 +16,7 @@ export const eventAttendeeSchema = z.object({
   id: z.string(),
   avatarUrl: z.string().url().optional(),
   name: z.string(),
+  username: z.string().nullable().optional(),
 });
 
 export const eventTicketOptionSchema = z.object({
@@ -47,6 +48,7 @@ export const eventSchema = z.object({
   organizer: z.string(),
   rating: z.number(),
   attendeeCount: z.number(),
+  attendeesPublic: z.boolean().optional(),
   attendees: z.array(eventAttendeeSchema).optional(),
   isBookmarked: z.boolean().optional(),
   description: z.string(),
@@ -94,7 +96,9 @@ export type ApiEvent = {
   online_link?: string | null;
   organizer?: string | null;
   attendeeCount?: number | null;
-  attendees?: Array<{ id: string; avatarUrl?: string; name: string }>;
+  attendeesPublic?: boolean | null;
+  attendees_public?: boolean | null;
+  attendees?: Array<{ id: string; avatarUrl?: string; name: string; username?: string | null }>;
   isBookmarked?: boolean;
   organization_id?: string | null;
   tags?: Array<{ id: string; name: string }>;

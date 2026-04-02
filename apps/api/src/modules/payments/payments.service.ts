@@ -1202,6 +1202,21 @@ export class PaymentsService {
     }
   }
 
+  async buildTicketPdfByTicketForUser(ticketId: string, userId: string) {
+    const ticket = await this.ticketsRepository.findOne({ where: { id: ticketId } })
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found')
+    }
+    if (ticket.user_id !== userId) {
+      throw new ForbiddenException('This ticket does not belong to the current user')
+    }
+    const match = ticket.private_info?.match(/\[paymentIntent:([^\]]+)\]/)
+    if (!match) {
+      throw new BadRequestException('No payment associated with this ticket')
+    }
+    return this.buildTicketPdfForUser(match[1], userId)
+  }
+
   constructWebhookEvent(body: Buffer | Record<string, unknown>, signature: string, secret: string): Stripe.Event {
     try {
       const bodyToUse = typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body)

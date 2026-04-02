@@ -14,6 +14,7 @@ interface UseCheckoutPaymentOptions {
     currency?: string;
   } | null;
   total: number;
+  displayPrice: number;
   quantity: number;
   remaining?: number;
   currency: string;
@@ -28,6 +29,7 @@ export function useCheckoutPayment({
   eventId,
   selectedTicket,
   total,
+  displayPrice,
   quantity,
   remaining,
   currency,
@@ -78,7 +80,7 @@ export function useCheckoutPayment({
         fullName: me?.name,
         ticketId: selectedTicket.id,
         ticketName: selectedTicket.ticketType,
-        price: total,
+        price: displayPrice,
         quantity,
         currency,
         eventId,

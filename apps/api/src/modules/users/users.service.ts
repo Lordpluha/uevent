@@ -55,6 +55,10 @@ export class UsersService {
     }
   }
 
+  async count() {
+    return { count: await this.usersRepo.count() }
+  }
+
   private async findOnePublicEntity(id: string) {
     const user = await this.usersRepo.findOne({
       where: { id },

@@ -40,10 +40,12 @@ export const backendEventSchema = z.object({
   organizer: z.string().optional(),
   rating: z.number().optional(),
   attendeeCount: z.number().optional(),
+  attendees_public: z.boolean().optional(),
   attendees: z.array(z.object({
     id: z.string(),
     avatarUrl: z.string().optional(),
     name: z.string(),
+    username: z.string().nullable().optional(),
   })).optional(),
   isBookmarked: z.boolean().optional(),
 });

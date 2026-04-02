@@ -3,6 +3,7 @@ import z from 'zod'
 export const CreateNotificationDtoSchema = z.object({
   name: z.string(),
   content: z.string(),
+  link: z.string().nullable().optional(),
   user_id: z.string().uuid().nullable().optional(),
   organization_id: z.string().uuid().nullable().optional(),
 }).refine(

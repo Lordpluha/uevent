@@ -75,6 +75,7 @@ export const mapApiEvent = (event: ApiEvent): EventModel => {
     organizer: event.organizer ?? (event.organization_id ? String(event.organization_id) : '—'),
     rating: 0,
     attendeeCount: event.attendeeCount ?? attendeeCountFromTickets ?? event.attendees?.length ?? 0,
+    attendeesPublic: event.attendees_public ?? event.attendeesPublic ?? false,
     attendees: event.attendees ?? [],
     isBookmarked: event.isBookmarked ?? false,
     description: event.description ?? '',

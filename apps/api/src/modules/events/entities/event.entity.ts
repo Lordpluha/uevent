@@ -86,6 +86,10 @@ export class Event extends UuidEntity {
   organization: Organization
 
   @Column({ nullable: true })
-  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @ApiPropertyOptional({ nullable: true })
   organization_id: string
+
+  @Column({ default: false })
+  @ApiProperty()
+  attendees_public: boolean
 }

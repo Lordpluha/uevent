@@ -20,6 +20,7 @@ export const createEventSchema = z.object({
   organizationId: z.string().min(1),
   tags: z.array(z.string()).optional(),
   imageUrl: optionalUrlField,
+  attendeesPublic: z.boolean().optional(),
 });
 
 export const updateEventSchema = z.object({

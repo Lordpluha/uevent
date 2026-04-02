@@ -8,8 +8,8 @@ import { useRequiredOrgAccountData } from './useOrgAccountData';
 
 export function OrgAccountSettings() {
   const { t } = useAppContext();
-  const { org, invalidateOrgQueries } = useRequiredOrgAccountData();
-  const [email, setEmail] = useState(org.email ?? '');
+  const { org, isLoading, invalidateOrgQueries } = useRequiredOrgAccountData();
+  const [email, setEmail] = useState(org?.email ?? '');
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
 
   const saveEmailMutation = useMutation({
@@ -23,6 +23,8 @@ export function OrgAccountSettings() {
     onSuccess: () => { setPasswordForm({ currentPassword: '', newPassword: '' }); toast.success(t.orgAccount.settings.passwordUpdated); },
     onError: () => toast.error(t.orgAccount.settings.passwordUpdateFailed),
   });
+
+  if (isLoading || !org) return <section className="mt-5 h-40 animate-pulse rounded-xl border border-border/60 bg-muted" />;
 
   return (
     <section className="mt-5 rounded-xl border border-border/60 bg-card p-5">

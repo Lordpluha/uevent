@@ -1,5 +1,6 @@
-import { Bell } from 'lucide-react';
+import { Bell, ExternalLink } from 'lucide-react';
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import {
   Badge,
   DropdownMenu,
@@ -24,6 +25,7 @@ function formatNotificationDate(value: string) {
 
 export function NotificationsBell({ enabled }: NotificationsBellProps) {
   const { t } = useAppContext();
+  const navigate = useNavigate();
   const { data: notifications = [], isLoading } = useMyNotifications(enabled, 20);
   const markReadMutation = useMarkNotificationRead();
 
@@ -63,13 +65,19 @@ export function NotificationsBell({ enabled }: NotificationsBellProps) {
                 if (!item.read && !markReadMutation.isPending) {
                   markReadMutation.mutate(item.id);
                 }
+                if (item.link) {
+                  navigate(item.link);
+                }
               }}
-              className="items-start"
+              className={`items-start ${item.link ? 'cursor-pointer' : ''}`}
             >
               <div className="flex w-full flex-col gap-1">
                 <div className="flex items-start justify-between gap-2">
                   <span className="font-medium text-foreground">{item.title}</span>
-                  {!item.read && <span className="mt-1 h-2 w-2 rounded-full bg-primary" />}
+                  <div className="flex shrink-0 items-center gap-1">
+                    {item.link && <ExternalLink className="h-3 w-3 text-muted-foreground" />}
+                    {!item.read && <span className="mt-0.5 h-2 w-2 rounded-full bg-primary" />}
+                  </div>
                 </div>
                 <p className="line-clamp-2 text-xs text-muted-foreground">{item.content}</p>
                 <span className="text-[11px] text-muted-foreground">{formatNotificationDate(item.createdAt)}</span>

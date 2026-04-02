@@ -1,4 +1,6 @@
-import { CalendarDays, CalendarPlus, Clock, ExternalLink, MapPin, Star, Users, Video } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router';
+import { CalendarDays, CalendarPlus, ChevronDown, ChevronUp, Clock, ExternalLink, Lock, MapPin, Star, Users, Video } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -24,6 +26,7 @@ interface Props {
 export function EventDetails({ event, eventId }: Props) {
   const { t } = useAppContext();
   const { isAuthenticated, accountType } = useAuth();
+  const [attendeesExpanded, setAttendeesExpanded] = useState(false);
   const description = event.description?.trim() ?? '';
 
   const calendarMutation = useMutation({
@@ -133,24 +136,76 @@ export function EventDetails({ event, eventId }: Props) {
 
       <Separator className="mb-8" />
 
-      {event.attendees && event.attendees.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-3 text-base font-semibold text-foreground">{t.events.details.whosGoing}</h2>
-          <div className="flex items-center gap-3">
+      {/* ── Attendees ─────────────────────────────────────────── */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-foreground">{t.events.details.whosGoing}</h2>
+          {event.attendeesPublic ? (
+            <button
+              type="button"
+              onClick={() => setAttendeesExpanded((v) => !v)}
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            >
+              {attendeesExpanded ? t.events.details.attendeesHide : t.events.details.attendeesSeeAll}
+              {attendeesExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <Lock className="h-3 w-3" />
+              {t.events.details.attendeesPrivate}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-3 flex items-center gap-3">
+          {event.attendees && event.attendees.length > 0 ? (
             <div className="flex">
-              {event.attendees.map((a, i) => (
+              {event.attendees.slice(0, 6).map((a, i) => (
                 <Avatar key={a.id} className="h-8 w-8 border-2 border-background" style={{ marginLeft: i === 0 ? 0 : -8 }}>
                   <AvatarImage src={a.avatarUrl} alt={a.name} />
                   <AvatarFallback className="text-[11px]">{a.name[0]}</AvatarFallback>
                 </Avatar>
               ))}
             </div>
-            <span className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{event.attendeeCount.toLocaleString()}</span> {t.events.details.peopleAttending}
-            </span>
-          </div>
+          ) : null}
+          <span className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">{event.attendeeCount.toLocaleString()}</span>{' '}
+            {t.events.details.peopleAttending}
+          </span>
         </div>
-      )}
+
+        {event.attendeesPublic && attendeesExpanded && event.attendees && event.attendees.length > 0 && (
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {event.attendees.map((a) =>
+              a.username ? (
+                <Link
+                  key={a.id}
+                  to={`/users/${a.username}`}
+                  className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-3 py-2 transition-colors hover:border-primary/40 hover:bg-accent"
+                >
+                  <Avatar className="h-7 w-7 shrink-0">
+                    <AvatarImage src={a.avatarUrl} alt={a.name} />
+                    <AvatarFallback className="text-[10px]">{a.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <span className="truncate text-xs font-medium text-foreground">{a.name}</span>
+                </Link>
+              ) : (
+                <div key={a.id} className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-3 py-2">
+                  <Avatar className="h-7 w-7 shrink-0">
+                    <AvatarImage src={a.avatarUrl} alt={a.name} />
+                    <AvatarFallback className="text-[10px]">{a.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <span className="truncate text-xs font-medium text-foreground">{a.name}</span>
+                </div>
+              )
+            )}
+          </div>
+        )}
+
+        {event.attendeesPublic && attendeesExpanded && (!event.attendees || event.attendees.length === 0) && (
+          <p className="mt-4 text-sm text-muted-foreground">{t.events.details.attendeesNone}</p>
+        )}
+      </div>
     </>
   );
 }

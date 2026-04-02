@@ -1,13 +1,17 @@
+import { Link } from 'react-router';
 import {
   CalendarDays,
   Clock,
   Globe,
   MapPin,
+  Pencil,
+  Settings,
 } from 'lucide-react';
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
+  Button,
 } from '@shared/components';
 import { ShareButton } from '@shared/components/ShareButton/ShareButton';
 import { useAppContext } from '@shared/lib';
@@ -41,6 +45,17 @@ export function ProfileHeroCard() {
             <AvatarFallback className="text-2xl font-bold">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex items-center gap-2 pb-1">
+            <Link to="/profile/settings">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Pencil className="h-3.5 w-3.5" />
+                {t.profile.editProfile}
+              </Button>
+            </Link>
+            <Link to="/profile/settings">
+              <Button variant="ghost" size="icon" className="h-8 w-8" title={t.profile.settings}>
+                <Settings className="h-4 w-4" />
+              </Button>
+            </Link>
             <ShareButton title={t.profile.shareTitle.replace('{{name}}', user.name)} />
           </div>
         </div>

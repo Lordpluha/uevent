@@ -22,7 +22,7 @@ import { useRequiredOrgAccountData } from './useOrgAccountData';
 
 export function OrgSecuritySection() {
   const { t } = useAppContext();
-  const { org, invalidateOrgQueries } = useRequiredOrgAccountData();
+  const { org, isLoading, invalidateOrgQueries } = useRequiredOrgAccountData();
   const [isEnableTwoFaDialogOpen, setIsEnableTwoFaDialogOpen] = useState(false);
   const [isDisableTwoFaDialogOpen, setIsDisableTwoFaDialogOpen] = useState(false);
   const [twoFaSetupData, setTwoFaSetupData] = useState<{ secret: string; qrCodeDataUrl: string } | null>(null);
@@ -70,6 +70,8 @@ export function OrgSecuritySection() {
     }
     twoFaSetupMutation.mutate();
   };
+
+  if (isLoading || !org) return <section className="mt-5 h-24 animate-pulse rounded-xl border border-border/60 bg-muted" />;
 
   const twoFaEnabled = org.twoFactorEnabled ?? false;
 

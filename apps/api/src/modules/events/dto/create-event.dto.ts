@@ -13,6 +13,7 @@ export const CreateEventDtoSchema = z.object({
   online_link: z.url().optional(),
   organization_id: z.string().uuid().optional(),
   tags: z.array(z.string().uuid()).optional(),
+  attendees_public: z.boolean().optional(),
 })
 
 export type CreateEventDto = z.infer<typeof CreateEventDtoSchema>

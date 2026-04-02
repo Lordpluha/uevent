@@ -16,11 +16,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
 } from '@shared/components';
 import { useAppContext } from '@shared/lib';
 
 import { createEventSchema, type CreateEventDto } from '@entities/Event';
-import { useOrgs } from '@entities/Organization';
 
 import type { EventCreateProps } from './helpers';
 import { getInitialDateTime } from './helpers';
@@ -29,14 +29,11 @@ import { EventTagsField } from './EventTagsField';
 import { EventImagesField, type CoverFileEntry } from './EventImagesField';
 import { submitCreateEvent } from './submitCreateEvent';
 
-export function EventCreate({ onSuccess, defaultOrganizationId, lockOrganization = false }: EventCreateProps) {
+export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreateProps) {
   const { t } = useAppContext();
   const [durationHours, setDurationHours] = useState<'1' | '2' | '3' | '4'>('2');
   const [coverFiles, setCoverFiles] = useState<CoverFileEntry[]>([]);
-  const { data: organizationsResult, isLoading: organizationsLoading, isError: organizationsError } = useOrgs({ page: 1, limit: 100 });
-  const organizations = organizationsResult?.data ?? [];
   const startsAt = getInitialDateTime();
-  const organizationLocked = Boolean(lockOrganization && defaultOrganizationId);
 
   const form = useForm<CreateEventDto>({
     resolver: zodResolver(createEventSchema),
@@ -52,6 +49,7 @@ export function EventCreate({ onSuccess, defaultOrganizationId, lockOrganization
       organizationId: defaultOrganizationId ?? '',
       tags: [],
       imageUrl: '',
+      attendeesPublic: false,
     },
   });
 
@@ -155,33 +153,6 @@ export function EventCreate({ onSuccess, defaultOrganizationId, lockOrganization
           </Field>
         )}
 
-        {/* Organization */}
-        <Field>
-          <FieldTitle>{t.eventCreate.organization}</FieldTitle>
-          <Controller
-            control={control}
-            name="organizationId"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange} disabled={organizationLocked}>
-                <SelectTrigger className="w-full" aria-invalid={!!errors.organizationId}>
-                  <SelectValue placeholder={t.eventCreate.orgPlaceholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  {organizationsLoading && <SelectItem value="__loading" disabled>{t.eventCreate.orgLoading}</SelectItem>}
-                  {organizationsError && <SelectItem value="__error" disabled>{t.eventCreate.orgFailed}</SelectItem>}
-                  {!organizationsLoading && !organizationsError && organizations.map((org) => (
-                    <SelectItem key={org.id} value={org.id}>{org.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {organizationLocked && (
-            <FieldDescription>{t.eventCreate.orgHint}</FieldDescription>
-          )}
-          <FieldError errors={errors.organizationId ? [errors.organizationId] : undefined} />
-        </Field>
-
         {/* Tags */}
         <EventTagsField
           tags={tags}
@@ -191,6 +162,27 @@ export function EventCreate({ onSuccess, defaultOrganizationId, lockOrganization
 
         {/* Images */}
         <EventImagesField coverFiles={coverFiles} setCoverFiles={setCoverFiles} />
+
+        {/* Attendees visibility */}
+        <Field>
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-card px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <FieldTitle className="mb-0.5">{t.eventCreate.attendeesPublicLabel}</FieldTitle>
+              <FieldDescription>{t.eventCreate.attendeesPublicHint}</FieldDescription>
+            </div>
+            <Controller
+              control={control}
+              name="attendeesPublic"
+              render={({ field }) => (
+                <Switch
+                  checked={field.value ?? false}
+                  onCheckedChange={field.onChange}
+                  aria-label={t.eventCreate.attendeesPublicLabel}
+                />
+              )}
+            />
+          </div>
+        </Field>
       </FieldGroup>
 
       <Button type="submit" disabled={isSubmitting} className="self-end">

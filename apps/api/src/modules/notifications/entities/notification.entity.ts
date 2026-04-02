@@ -23,6 +23,10 @@ export class Notification extends UuidEntity {
   @ApiProperty()
   had_readed: boolean
 
+  @Column({ nullable: true, type: 'varchar' })
+  @ApiPropertyOptional({ nullable: true })
+  link: string | null
+
   // relations
 
   @Column({ nullable: true })

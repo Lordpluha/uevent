@@ -276,6 +276,10 @@
       "openGoogleMaps": "Open in Google Maps",
       "whosGoing": "Who's going",
       "peopleAttending": "people attending",
+      "attendeesSeeAll": "See all",
+      "attendeesHide": "Hide",
+      "attendeesPrivate": "Private list",
+      "attendeesNone": "No attendees yet",
       "onlineEvent": "This is an online event",
       "noPhysicalLocation": "No physical location",
       "mapTitle": "Location"
@@ -537,7 +541,12 @@
     "shareTitle": "{{name}} on UEVENT",
     "joined": "Joined {{date}}",
     "recentEvents": "Recent events",
-    "eventFallback": "Event"
+    "eventFallback": "Event",
+    "downloadTicket": "Download PDF",
+    "overview": "Overview",
+    "orgProfileBanner": "Your public organization profile",
+    "orgProfileDesc": "This is how visitors see your organization",
+    "previewProfile": "Preview"
   },
   "profileEdit": {
     "loading": "Loading profile…",
@@ -749,6 +758,8 @@
     "orgLoading": "Loading organizations…",
     "orgFailed": "Failed to load organizations",
     "orgHint": "You are creating this event for your organization account.",
+    "attendeesPublicLabel": "Public attendee list",
+    "attendeesPublicHint": "When enabled, visitors can see who is attending this event.",
     "create": "Create event",
     "tags": {
       "addMore": "Add more tags…",

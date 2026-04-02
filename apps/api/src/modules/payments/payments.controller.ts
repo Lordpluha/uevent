@@ -540,6 +540,27 @@ export class PaymentsController {
     }
   }
 
+  @Get('ticket/:ticketId/pdf')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Download purchased ticket PDF by ticket ID' })
+  @ApiAccessCookieAuth()
+  @ApiParam({ name: 'ticketId', description: 'Ticket UUID', schema: { type: 'string' } })
+  async downloadTicketPdfByTicketId(
+    @Param('ticketId') ticketId: string,
+    @CurrentUser() user: JwtPayload,
+    @Res() res: Response,
+  ) {
+    if (user.type !== 'user') {
+      throw new ForbiddenException('Only user accounts can download ticket PDF')
+    }
+
+    const { fileName, buffer } = await this.paymentsService.buildTicketPdfByTicketForUser(ticketId, user.sub)
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
+    res.setHeader('Content-Length', String(buffer.length))
+    res.send(buffer)
+  }
+
   @Post(':paymentIntentId/reconcile')
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Reconcile purchased tickets for current user and payment intent' })

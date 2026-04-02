@@ -79,6 +79,7 @@ export function CheckoutReviewPage() {
     eventId,
     selectedTicket,
     total,
+    displayPrice: grandTotal,
     quantity,
     remaining,
     currency,

@@ -6,6 +6,7 @@ export const notificationSchema = z.object({
   content: z.string(),
   createdAt: z.string(),
   read: z.boolean(),
+  link: z.string().nullable().optional(),
 });
 
 export const notificationListSchema = z.array(notificationSchema);
@@ -18,6 +19,7 @@ export type ApiNotification = {
   content?: string | null;
   created?: string | null;
   had_readed?: boolean | null;
+  link?: string | null;
 };
 
 export const mapApiNotification = (raw: ApiNotification): Notification => ({
@@ -26,4 +28,5 @@ export const mapApiNotification = (raw: ApiNotification): Notification => ({
   content: raw.content?.trim() || '',
   createdAt: raw.created ?? new Date().toISOString(),
   read: raw.had_readed ?? false,
+  link: raw.link ?? null,
 });

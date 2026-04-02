@@ -276,6 +276,10 @@
       "openGoogleMaps": "Відкрити в Google Maps",
       "whosGoing": "Хто йде",
       "peopleAttending": "учасників",
+      "attendeesSeeAll": "Показати всіх",
+      "attendeesHide": "Сховати",
+      "attendeesPrivate": "Приватний список",
+      "attendeesNone": "Поки немає учасників",
       "onlineEvent": "Це онлайн-подія",
       "noPhysicalLocation": "Фізична локація відсутня",
       "mapTitle": "Локація"
@@ -537,7 +541,12 @@
     "shareTitle": "{{name}} на UEVENT",
     "joined": "Приєднався {{date}}",
     "recentEvents": "Останні події",
-    "eventFallback": "Подія"
+    "eventFallback": "Подія",
+    "downloadTicket": "Завантажити PDF",
+    "overview": "Огляд",
+    "orgProfileBanner": "Ваш публічний профіль організації",
+    "orgProfileDesc": "Так ваш профіль бачать відвідувачі",
+    "previewProfile": "Переглянути"
   },
   "profileEdit": {
     "loading": "Завантаження профілю…",
@@ -746,6 +755,8 @@
     "orgLoading": "Завантаження організацій…",
     "orgFailed": "Не вдалося завантажити організації",
     "orgHint": "Ви створюєте цю подію від імені організації.",
+    "attendeesPublicLabel": "Публічний список учасників",
+    "attendeesPublicHint": "Коли увімкнено, відвідувачі можуть бачити, хто йде на цю подію.",
     "create": "Створити подію",
     "tags": {
       "addMore": "Додати теги…",

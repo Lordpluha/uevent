@@ -53,18 +53,25 @@ export function useConfirmPayment({
       }
     },
     onError: (error: unknown) => {
+      const stripeError = error as { type?: string; payment_intent?: unknown };
+      const isValidationError = stripeError?.type === 'validation_error';
       const errorMessage =
         (isAxiosError(error) ? error.response?.data?.message : undefined) ||
         (error instanceof Error ? error.message : undefined) ||
         t.checkout.paymentFailed;
       setMessage(errorMessage);
-      toast.error(errorMessage);
       setIsProcessing(false);
 
-      setTimeout(() => {
-        const reason = encodeURIComponent(errorMessage);
-        navigate(`/payment-failed?paymentIntentId=${clientSecret}&reason=${reason}`);
-      }, 2000);
+      if (!isValidationError) {
+        toast.error(errorMessage);
+        // Only navigate to failed page for real payment failures, not input validation
+        if (stripeError?.payment_intent) {
+          setTimeout(() => {
+            const reason = encodeURIComponent(errorMessage);
+            navigate(`/payment-failed?paymentIntentId=${clientSecret}&reason=${reason}`);
+          }, 2000);
+        }
+      }
     },
   });
 }

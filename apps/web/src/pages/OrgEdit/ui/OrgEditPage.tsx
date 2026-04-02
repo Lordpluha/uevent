@@ -7,6 +7,7 @@ import { useAppContext } from '@shared/lib';
 import { OrgBrandingSection } from '@pages/OrgAccount/ui/OrgBrandingSection';
 import { OrgProfileSection } from '@pages/OrgAccount/ui/OrgProfileSection';
 import { OrgAccountSettings } from '@pages/OrgAccount/ui/OrgAccountSettings';
+import { OrgSecuritySection } from '@pages/OrgAccount/ui/OrgSecuritySection';
 
 export function OrgEditPage() {
   const { t } = useAppContext();
@@ -59,6 +60,7 @@ export function OrgEditPage() {
       <OrgBrandingSection />
       <OrgProfileSection />
       <OrgAccountSettings />
+      <OrgSecuritySection />
     </main>
   );
 }

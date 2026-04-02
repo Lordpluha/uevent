@@ -33,6 +33,13 @@ export class UsersController {
     return this.usersService.findAll(query)
   }
 
+  @Get('count')
+  @ApiOperation({ summary: 'Get total user count' })
+  @ApiOkResponse({ description: 'Total number of registered users.', schema: { type: 'object', properties: { count: { type: 'integer' } } } })
+  count() {
+    return this.usersService.count()
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get user by id' })
   @ApiUuidParam('id', 'User id')

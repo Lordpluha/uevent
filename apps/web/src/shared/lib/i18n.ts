@@ -239,6 +239,10 @@ export type Dictionary = {
       openGoogleMaps: string;
       whosGoing: string;
       peopleAttending: string;
+      attendeesSeeAll: string;
+      attendeesHide: string;
+      attendeesPrivate: string;
+      attendeesNone: string;
       onlineEvent: string;
       noPhysicalLocation: string;
       mapTitle: string;
@@ -501,6 +505,11 @@ export type Dictionary = {
     joined: string;
     recentEvents: string;
     eventFallback: string;
+    downloadTicket: string;
+    overview: string;
+    orgProfileBanner: string;
+    orgProfileDesc: string;
+    previewProfile: string;
   };
   profileEdit: {
     loading: string;
@@ -713,6 +722,8 @@ export type Dictionary = {
     orgLoading: string;
     orgFailed: string;
     orgHint: string;
+    attendeesPublicLabel: string;
+    attendeesPublicHint: string;
     create: string;
     tags: {
       addMore: string;

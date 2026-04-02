@@ -10,21 +10,25 @@ import { useRequiredOrgAccountData } from './useOrgAccountData';
 
 export function OrgBrandingSection() {
   const { t } = useAppContext();
-  const { org, invalidateOrgQueries } = useRequiredOrgAccountData();
+  const { org, isLoading, invalidateOrgQueries } = useRequiredOrgAccountData();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const uploadLogoMutation = useMutation({
-    mutationFn: (file: File) => organizationsApi.uploadLogo(org.id, file),
+    mutationFn: (file: File) => organizationsApi.uploadLogo(org?.id ?? '', file),
     onSuccess: async () => { await invalidateOrgQueries(); toast.success(t.orgAccount.branding.logoUpdated); },
     onError: () => toast.error(t.orgAccount.branding.logoFailed),
   });
 
   const uploadCoverMutation = useMutation({
-    mutationFn: (file: File) => organizationsApi.uploadCover(org.id, file),
+    mutationFn: (file: File) => organizationsApi.uploadCover(org?.id ?? '', file),
     onSuccess: async () => { await invalidateOrgQueries(); toast.success(t.orgAccount.branding.coverUpdated); },
     onError: () => toast.error(t.orgAccount.branding.coverFailed),
   });
+
+  if (isLoading || !org) {
+    return <section className="mt-5 h-40 animate-pulse rounded-xl border border-border/60 bg-muted" />;
+  }
 
   const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

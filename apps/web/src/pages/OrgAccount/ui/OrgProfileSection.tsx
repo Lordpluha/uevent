@@ -8,14 +8,14 @@ import { useRequiredOrgAccountData } from './useOrgAccountData';
 
 export function OrgProfileSection() {
   const { t } = useAppContext();
-  const { org, invalidateOrgQueries } = useRequiredOrgAccountData();
+  const { org, isLoading, invalidateOrgQueries } = useRequiredOrgAccountData();
   const [profileForm, setProfileForm] = useState({
-    title: org.title ?? '',
-    slogan: org.slogan ?? '',
-    description: org.description ?? '',
-    category: org.category ?? '',
-    location: org.location ?? '',
-    phone: org.phone ?? '',
+    title: org?.title ?? '',
+    slogan: org?.slogan ?? '',
+    description: org?.description ?? '',
+    category: org?.category ?? '',
+    location: org?.location ?? '',
+    phone: org?.phone ?? '',
   });
 
   const saveProfileMutation = useMutation({
@@ -30,6 +30,8 @@ export function OrgProfileSection() {
     onSuccess: async () => { await invalidateOrgQueries(); toast.success(t.orgAccount.profile.updated); },
     onError: () => toast.error(t.orgAccount.profile.updateFailed),
   });
+
+  if (isLoading || !org) return <section className="mt-5 h-40 animate-pulse rounded-xl border border-border/60 bg-muted" />;
 
   return (
     <section className="mt-5 rounded-xl border border-border/60 bg-card p-5">

@@ -57,7 +57,7 @@ export function useOrgAccountData() {
 export function useRequiredOrgAccountData() {
   const data = useOrgAccountData();
 
-  if (!data.org) {
+  if (!data.isLoading && !data.myOrgLoading && !data.org) {
     throw new Error('useRequiredOrgAccountData requires organization data');
   }
 

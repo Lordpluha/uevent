@@ -2,7 +2,6 @@ import { Link, Navigate } from 'react-router';
 import { Building2, ChevronLeft, ShieldCheck } from 'lucide-react';
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@shared/components';
 import { useAppContext } from '@shared/lib';
-import { OrgSecuritySection } from './OrgSecuritySection';
 import { OrgChartsSection } from './OrgChartsSection';
 import { OrgWalletSection } from './OrgWalletSection';
 import { useOrgAccountData } from './useOrgAccountData';
@@ -99,7 +98,6 @@ export function OrgAccountPage() {
 
       <OrgWalletSection wallet={wallet} verification={verification} onRefresh={invalidateOrgQueries} />
 
-      <OrgSecuritySection />
     </main>
   );
 }
