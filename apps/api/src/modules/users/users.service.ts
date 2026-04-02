@@ -3,6 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from './entities/user.entity'
+import { UserSession } from './entities/user-session.entity'
 import { FindOptionsSelect, Repository } from 'typeorm'
 import { GetUsersParams } from './params'
 import { UsersPrivateService } from './users-private.service'
@@ -26,6 +27,9 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepo: Repository<User>,
+
+    @InjectRepository(UserSession)
+    private readonly sessionsRepo: Repository<UserSession>,
 
     private readonly usersPrivateService: UsersPrivateService,
   ) {}
@@ -85,5 +89,15 @@ export class UsersService {
   async setAvatar(id: string, avatarUrl: string) {
     await this.usersPrivateService.setAvatar(id, avatarUrl)
     return this.findOne(id)
+  }
+
+  async setBanned(id: string, banned: boolean): Promise<void> {
+    const user = await this.usersRepo.findOneBy({ id })
+    if (!user) throw new NotFoundException(`User with id #${id} not found`)
+    user.is_banned = banned
+    await this.usersRepo.save(user)
+    if (banned) {
+      await this.sessionsRepo.delete({ user_id: id })
+    }
   }
 }

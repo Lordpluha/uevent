@@ -12,6 +12,7 @@ export function OrgAccountPage() {
     id,
     isAuthenticated,
     accountType,
+    isReady,
     org,
     myOrg,
     myOrgLoading,
@@ -23,6 +24,7 @@ export function OrgAccountPage() {
     invalidateOrgQueries,
   } = useOrgAccountData();
 
+  if (!isReady) return null;
   if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />;
 
   if (myOrgLoading) {

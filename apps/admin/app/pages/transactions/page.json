@@ -1,0 +1,12 @@
+{
+  "version": "3.4",
+  "type": "table",
+  "title": "Transactions",
+  "hideInSidebar": false,
+  "config": {
+    "dataSource": "postgres-db",
+    "fetchStrategy": "databaseTable",
+    "table": "organization_transactions"
+  },
+  "icon": "creditCard"
+}

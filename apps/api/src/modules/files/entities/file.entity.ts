@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
-import { Ticket } from '../../users/entities/ticket.entity'
+import { Ticket } from '../../tickets/entities/ticket.entity'
 import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 

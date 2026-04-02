@@ -1,4 +1,4 @@
-import { Entity, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, Column, Index, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { UuidEntity } from '../../../common/uuid.entity'
 
@@ -11,7 +11,8 @@ export enum OrganizationWithdrawalStatus {
 
 @Entity('organization_withdrawal_requests')
 export class OrganizationWithdrawalRequest extends UuidEntity {
-  @Column('uuid')
+  @Index('idx_withdrawal_org_id')
+  @Column('uuid', { name: 'organization_id' })
   @ApiProperty({ format: 'uuid' })
   organizationId: string
 
@@ -23,6 +24,7 @@ export class OrganizationWithdrawalRequest extends UuidEntity {
   @ApiProperty()
   currency: string
 
+  @Index('idx_withdrawal_status')
   @Column('enum', { enum: OrganizationWithdrawalStatus, default: OrganizationWithdrawalStatus.PENDING })
   @ApiProperty({ enum: OrganizationWithdrawalStatus })
   status: OrganizationWithdrawalStatus
@@ -35,19 +37,19 @@ export class OrganizationWithdrawalRequest extends UuidEntity {
   @ApiPropertyOptional({ nullable: true })
   comment: string | null
 
-  @Column('text', { nullable: true })
+  @Column('text', { nullable: true, name: 'admin_comment' })
   @ApiPropertyOptional({ nullable: true })
   adminComment: string | null
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true, name: 'processed_at' })
   @ApiPropertyOptional({ format: 'date-time', nullable: true })
   processedAt: Date | null
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   @ApiProperty({ format: 'date-time' })
   createdAt: Date
 
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
   @ApiProperty({ format: 'date-time' })
   updatedAt: Date
 }

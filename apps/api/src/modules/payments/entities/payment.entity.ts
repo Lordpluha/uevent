@@ -1,5 +1,6 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, Column, Index, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 export enum PaymentStatus {
   PENDING = 'pending',
@@ -11,12 +12,9 @@ export enum PaymentStatus {
 }
 
 @Entity('payments')
-export class Payment {
-  @PrimaryColumn('uuid')
-  @ApiProperty({ format: 'uuid' })
-  id: string
-
-  @Column('varchar', { nullable: true })
+export class Payment extends UuidEntity {
+  @Index('idx_payment_stripe_intent_id')
+  @Column('varchar', { nullable: true, name: 'stripe_payment_intent_id' })
   @ApiPropertyOptional({ nullable: true })
   stripePaymentIntentId: string
 
@@ -32,15 +30,15 @@ export class Payment {
   @ApiProperty({ enum: PaymentStatus })
   status: PaymentStatus
 
-  @Column('uuid', { nullable: true })
+  @Column('uuid', { nullable: true, name: 'user_id' })
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   userId: string
 
-  @Column('uuid', { nullable: true })
+  @Column('uuid', { nullable: true, name: 'organization_id' })
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   organizationId: string
 
-  @Column('varchar', { nullable: true })
+  @Column('varchar', { nullable: true, name: 'order_id' })
   @ApiPropertyOptional({ nullable: true })
   orderId: string
 
@@ -48,15 +46,15 @@ export class Payment {
   @ApiPropertyOptional({ nullable: true })
   metadata: Record<string, string>
 
-  @Column('text', { nullable: true })
+  @Column('text', { nullable: true, name: 'failure_reason' })
   @ApiPropertyOptional({ nullable: true })
   failureReason: string
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   @ApiProperty({ format: 'date-time' })
   createdAt: Date
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
   @ApiProperty({ format: 'date-time' })
   updatedAt: Date
 }

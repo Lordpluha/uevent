@@ -1,0 +1,12 @@
+{
+  "version": "3.4",
+  "type": "table",
+  "icon": "creditCard",
+  "title": "Payments",
+  "hideInSidebar": false,
+  "config": {
+    "dataSource": "postgres-db",
+    "fetchStrategy": "databaseTable",
+    "table": "payments"
+  }
+}

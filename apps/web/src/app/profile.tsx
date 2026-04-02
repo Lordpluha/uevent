@@ -12,8 +12,9 @@ export function meta() {
 }
 
 function ProfileRoute() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isReady } = useAuth();
 
+  if (!isReady) return null;
   if (!isAuthenticated) return <Navigate to="/" replace />;
 
   return <ProfileViewPage />;

@@ -13,8 +13,4 @@ export const USERS_OPENAPI_SCHEMAS: OpenApiSchemaMap = {
     },
     required: ['id', 'created_at', 'last_active_at', 'is_current'],
   }),
-  TicketResponse: schemaRefWith('Ticket', {
-    type: 'object',
-    required: ['id', 'name', 'status', 'datetime_start', 'datetime_end', 'price', 'event_id', 'created_at'],
-  }),
 }

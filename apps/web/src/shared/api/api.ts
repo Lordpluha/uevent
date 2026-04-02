@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 import { getAuthState, clearServerCookies } from '@shared/lib/auth-context';
 import { resolveLocale } from '@shared/lib/i18n';
 
@@ -53,7 +54,32 @@ api.interceptors.response.use(
     const originalRequest = error.config as typeof error.config & { _retry?: boolean };
     const requestUrl = String(originalRequest?.url ?? '');
 
-    if (!axios.isAxiosError(error) || error.response?.status !== 401 || originalRequest._retry) {
+    if (!axios.isAxiosError(error)) {
+      return Promise.reject(error);
+    }
+
+    // Handle banned account (403 Forbidden from JWT guard)
+    if (error.response?.status === 403) {
+      const msg: string = (error.response.data as { message?: string })?.message ?? '';
+      if (msg.toLowerCase().includes('banned')) {
+        const { logout, isAuthenticated } = getAuthState();
+        if (isAuthenticated) {
+          logout();
+          await clearServerCookies(getAuthState().accountType);
+          const locale = typeof window !== 'undefined'
+            ? resolveLocale(localStorage.getItem('locale') || navigator.language || 'en')
+            : 'en';
+          const bannedMsg = locale === 'ua'
+            ? 'Ваш акаунт заблоковано. Будь ласка, зверніться до підтримки.'
+            : 'Your account has been banned. Please contact support.';
+          toast.error(bannedMsg);
+          if (typeof window !== 'undefined') window.location.href = '/';
+        }
+      }
+      return Promise.reject(error);
+    }
+
+    if (error.response?.status !== 401 || originalRequest._retry) {
       return Promise.reject(error);
     }
 

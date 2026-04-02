@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
+import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { Organization } from './organization.entity'
 import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
@@ -33,6 +33,18 @@ export class OrganizationSession extends UuidEntity {
   @Column({ default: false })
   @ApiProperty()
   two_fa: boolean
+
+  @Column({ type: 'text', nullable: true })
+  @ApiPropertyOptional({ nullable: true })
+  user_agent: string
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  @ApiProperty({ format: 'date-time' })
+  created_at: Date
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  @ApiProperty({ format: 'date-time' })
+  last_active_at: Date
 
   // relations
 

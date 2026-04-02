@@ -19,14 +19,14 @@ export class NotificationsService {
   async findByUser(user_id: string) {
     return await this.notificationsRepo.find({
       where: { user_id },
-      order: { created: 'DESC' },
+      order: { created_at: 'DESC' },
     })
   }
 
   async findLatestByUser(user_id: string, limit: number, page: number = 1) {
     return await this.notificationsRepo.find({
       where: { user_id },
-      order: { created: 'DESC' },
+      order: { created_at: 'DESC' },
       take: limit,
       skip: (page - 1) * limit,
     })
@@ -35,7 +35,7 @@ export class NotificationsService {
   async findLatestByOrganization(organization_id: string, limit: number, page: number = 1) {
     return await this.notificationsRepo.find({
       where: { organization_id },
-      order: { created: 'DESC' },
+      order: { created_at: 'DESC' },
       take: limit,
       skip: (page - 1) * limit,
     })
@@ -68,16 +68,16 @@ export class NotificationsService {
   async markAsReadForUser(id: string, user_id: string) {
     const notification = await this.notificationsRepo.findOneBy({ id, user_id })
     if (!notification) throw new NotFoundException(`Notification with id #${id} not found`)
-    if (notification.had_readed) return notification
-    notification.had_readed = true
+    if (notification.is_read) return notification
+    notification.is_read = true
     return await this.notificationsRepo.save(notification)
   }
 
   async markAsReadForOrganization(id: string, organization_id: string) {
     const notification = await this.notificationsRepo.findOneBy({ id, organization_id })
     if (!notification) throw new NotFoundException(`Notification with id #${id} not found`)
-    if (notification.had_readed) return notification
-    notification.had_readed = true
+    if (notification.is_read) return notification
+    notification.is_read = true
     return await this.notificationsRepo.save(notification)
   }
 

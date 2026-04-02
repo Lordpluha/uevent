@@ -9,7 +9,7 @@ import { useParams } from 'react-router';
 export function useOrgAccountData() {
   const { id: paramId } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
-  const { isAuthenticated, accountType } = useAuth();
+  const { isAuthenticated, accountType, isReady } = useAuth();
   const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
   const id = paramId ?? myOrg?.id;
   const { data: org, isLoading, isError } = useOrg(id ?? '');
@@ -49,6 +49,7 @@ export function useOrgAccountData() {
     verificationLoading,
     isAuthenticated,
     accountType,
+    isReady,
     orgEvents: orgEventsResult?.data ?? [],
     invalidateOrgQueries,
   };

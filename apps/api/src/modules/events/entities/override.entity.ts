@@ -6,6 +6,10 @@ import { ApiProperty } from '@nestjs/swagger'
 @Entity('overrides')
 export class Override extends UuidEntity {
 
+  @Column({ type: 'timestamptz', nullable: true })
+  @ApiProperty({ format: 'date-time', description: 'The original start date this override replaces' })
+  original_start: Date | null
+
   @Column()
   @ApiProperty({ format: 'date-time' })
   new_start: Date

@@ -1,0 +1,12 @@
+{
+  "version": "3.4",
+  "type": "table",
+  "title": "Tickets",
+  "hideInSidebar": false,
+  "config": {
+    "dataSource": "postgres-db",
+    "fetchStrategy": "databaseTable",
+    "table": "tickets"
+  },
+  "icon": "mail"
+}

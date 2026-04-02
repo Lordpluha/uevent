@@ -15,7 +15,7 @@ import { UserOtp } from '../users/entities/user-otp.entity'
 import { Organization } from '../organizations/entities/organization.entity'
 import { OrganizationSession } from '../organizations/entities/organization-session.entity'
 import { Event } from '../events/entities/event.entity'
-import { Ticket } from '../users/entities/ticket.entity'
+import { Ticket } from '../tickets/entities/ticket.entity'
 import { NotificationsModule } from '../notifications/notifications.module'
 import { ApiConfigService } from '../../config/api-config.service'
 

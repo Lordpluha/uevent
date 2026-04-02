@@ -8,6 +8,7 @@ import { EventsModule } from './modules/events/events.module'
 import { OrganizationsModule } from './modules/organizations/organizations.module'
 import { PaymentsModule } from './modules/payments/payments.module'
 import { AuthModule } from './modules/auth/auth.module'
+import { TicketsModule } from './modules/tickets/tickets.module'
 import { LocalizationModule } from './common/localization/localization.module'
 import { ApiConfigModule } from './config/api-config.module'
 import { ApiConfigService } from './config/api-config.service'
@@ -35,6 +36,7 @@ import { ApiConfigService } from './config/api-config.service'
     OrganizationsModule,
     PaymentsModule,
     AuthModule,
+    TicketsModule,
     LocalizationModule,
   ],
   controllers: [AppController],

@@ -819,6 +819,7 @@ export type Dictionary = {
     forgotPassword: string;
     loginSuccess: string;
     invalidCredentials: string;
+    accountBanned: string;
     passwordsMismatch: string;
     accountCreated: string;
     registerFailed: string;

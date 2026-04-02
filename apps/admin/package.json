@@ -1,0 +1,44 @@
+{
+  "name": "admin",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "dev": "kottster dev",
+    "dev:add-data-source": "kottster add-data-source",
+    "dev:upgrade-kottster": "kottster upgrade",
+    "build": "vite build && kottster build:server",
+    "start": "node dist/server/server.cjs"
+  },
+  "dependencies": {
+    "@kottster/cli": "3.5.1",
+    "@kottster/common": "3.5.1",
+    "@kottster/react": "3.5.1",
+    "@kottster/server": "3.5.1",
+    "better-sqlite3": "^12.x",
+    "knex": "^3.2.8",
+    "pg": "^8.20.0",
+    "react": "^19.x",
+    "react-dom": "^19.x",
+    "react-router-dom": "^7.x"
+  },
+  "devDependencies": {
+    "@types/node": "^20.x",
+    "@types/react": "^19.x",
+    "@types/react-dom": "^19.x",
+    "@vitejs/plugin-react": "^4.x",
+    "tsx": "^4.x",
+    "typescript": "^5.x",
+    "vite": "^6.x",
+    "vite-tsconfig-paths": "^4.x"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
+  }
+}

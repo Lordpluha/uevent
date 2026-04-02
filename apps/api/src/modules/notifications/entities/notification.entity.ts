@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm'
+import { Entity, Column, Index, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm'
 import { User } from '../../users/entities/user.entity'
 import { Organization } from '../../organizations/entities/organization.entity'
 import { UuidEntity } from '../../../common/uuid.entity'
@@ -15,13 +15,13 @@ export class Notification extends UuidEntity {
   @ApiProperty()
   content: string
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created' })
   @ApiProperty({ format: 'date-time' })
-  created: Date
+  created_at: Date
 
-  @Column({ default: false })
+  @Column({ name: 'had_readed', default: false })
   @ApiProperty()
-  had_readed: boolean
+  is_read: boolean
 
   @Column({ nullable: true, type: 'varchar' })
   @ApiPropertyOptional({ nullable: true })
@@ -29,7 +29,8 @@ export class Notification extends UuidEntity {
 
   // relations
 
-  @Column({ nullable: true })
+  @Index('idx_notification_user_id')
+  @Column({ type: 'uuid', nullable: true })
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   user_id: string | null
 
@@ -42,7 +43,8 @@ export class Notification extends UuidEntity {
   @ApiHideProperty()
   user: User | null
 
-  @Column({ nullable: true })
+  @Index('idx_notification_org_id')
+  @Column({ type: 'uuid', nullable: true })
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   organization_id: string | null
 

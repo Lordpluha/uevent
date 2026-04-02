@@ -11,9 +11,10 @@ import { OrgSecuritySection } from '@pages/OrgAccount/ui/OrgSecuritySection';
 
 export function OrgEditPage() {
   const { t } = useAppContext();
-  const { isAuthenticated, accountType } = useAuth();
+  const { isAuthenticated, accountType, isReady } = useAuth();
   const { data: myOrg, isLoading } = useMyOrg();
 
+  if (!isReady) return null;
   if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />;
 
   if (isLoading) {

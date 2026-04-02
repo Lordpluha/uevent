@@ -50,6 +50,8 @@ export class OrgsAuthService {
     const valid = await verifyPassword(org.password, dto.password)
     if (!valid) throw new UnauthorizedException('Invalid credentials')
 
+    if (org.is_banned) throw new UnauthorizedException('Account is banned, please contact support')
+
     // If 2FA is enabled, return a temporary token instead of full auth
     if (org.two_factor_enabled && org.two_fa_secret) {
       const tempToken = await this.jwtService.signAsync(

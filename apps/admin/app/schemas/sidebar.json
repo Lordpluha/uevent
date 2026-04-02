@@ -1,0 +1,14 @@
+{
+  "menuPageOrder": [
+    "eventTags",
+    "events",
+    "transactions",
+    "organizationVerification",
+    "organizationWithdrawalRequests",
+    "organizations",
+    "payments",
+    "promoCodes",
+    "tickets",
+    "users"
+  ]
+}

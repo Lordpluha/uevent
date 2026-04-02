@@ -852,6 +852,7 @@
     "forgotPassword": "Забули пароль?",
     "loginSuccess": "Вхід успішний",
     "invalidCredentials": "Невірний email або пароль",
+    "accountBanned": "Ваш акаунт заблоковано. Будь ласка, зверніться до підтримки.",
     "passwordsMismatch": "Паролі не збігаються",
     "accountCreated": "Акаунт успішно створено",
     "registerFailed": "Реєстрація не вдалася. Email або імʼя користувача може бути зайнятим.",

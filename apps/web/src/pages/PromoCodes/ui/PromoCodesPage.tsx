@@ -5,8 +5,9 @@ import { useAuth } from '@shared/lib/auth-context';
 import { OrgPromoCodesSection } from '@pages/OrgAccount/ui/OrgPromoCodesSection';
 
 export function PromoCodesPage() {
-  const { isAuthenticated, accountType } = useAuth();
+  const { isAuthenticated, accountType, isReady } = useAuth();
 
+  if (!isReady) return null;
   if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />;
 
   return (

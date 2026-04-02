@@ -15,7 +15,7 @@ import { JwtPayload } from '../auth/types/jwt-payload.interface'
 import { ApiAcceptLanguageHeader, ApiAccessCookieAuth, ApiMultipartFile, ApiUuidParam, ApiZodBody, eventResponseSchema, messageSchema, paginatedResponseSchema } from '../../common/swagger/openapi.util'
 import { Event } from './entities/event.entity'
 import { Tag } from '../tags/entities/tag.entity'
-import { Ticket } from '../users/entities/ticket.entity'
+import { Ticket } from '../tickets/entities/ticket.entity'
 
 @Controller('events')
 @ApiTags('Events')

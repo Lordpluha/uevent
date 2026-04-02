@@ -30,7 +30,7 @@ export class UserSession extends UuidEntity {
   @ApiPropertyOptional({ nullable: true })
   ip_address: string
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   @ApiPropertyOptional({ nullable: true })
   user_agent: string
 

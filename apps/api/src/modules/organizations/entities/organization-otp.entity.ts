@@ -10,9 +10,17 @@ export class OrganizationOtp extends UuidEntity {
   @ApiProperty()
   code: string
 
+  @Column({ default: 'password_reset' })
+  @ApiProperty()
+  type: string
+
   @Column()
   @ApiProperty({ format: 'date-time' })
   expires_at: Date
+
+  @Column({ default: false })
+  @ApiProperty()
+  used: boolean
 
   // relations
 

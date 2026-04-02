@@ -1,5 +1,5 @@
-import { Entity, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn } from 'typeorm'
-import { User } from './user.entity'
+import { Entity, Column, Index, ManyToOne, OneToMany, JoinColumn, CreateDateColumn } from 'typeorm'
+import { User } from '../../users/entities/user.entity'
 import { File } from '../../files/entities/file.entity'
 import { Event } from '../../events/entities/event.entity'
 import { UuidEntity } from '../../../common/uuid.entity'
@@ -23,6 +23,7 @@ export class Ticket extends UuidEntity {
   @ApiProperty()
   name: string
 
+  @Index('idx_ticket_status')
   @Column({ type: 'enum', enum: TicketStatus, default: TicketStatus.DRAFT })
   @ApiProperty({ enum: TicketStatus })
   status: TicketStatus
@@ -65,6 +66,7 @@ export class Ticket extends UuidEntity {
 
   // relations
 
+  @Index('idx_ticket_user_id')
   @Column({ type: 'uuid', nullable: true })
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   user_id: string | null
@@ -85,6 +87,7 @@ export class Ticket extends UuidEntity {
   @ApiHideProperty()
   private_files: File[]
 
+  @Index('idx_ticket_event_id')
   @Column({ type: 'uuid', nullable: true })
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   event_id: string | null

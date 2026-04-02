@@ -15,7 +15,7 @@ export function TicketCreatePage() {
   const { t } = useAppContext();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, accountType } = useAuth();
+  const { isAuthenticated, accountType, isReady } = useAuth();
   const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
   const { data: event, isLoading: eventLoading } = useEvent(id ?? '');
   const [ticketType, setTicketType] = useState<'free' | 'standard' | 'vip'>('standard');
@@ -35,6 +35,7 @@ export function TicketCreatePage() {
     },
   });
 
+  if (!isReady) return null;
   if (!isAuthenticated || accountType !== 'organization') {
     return <Navigate to="/" replace />;
   }

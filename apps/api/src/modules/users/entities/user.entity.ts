@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, CreateDateColumn, ManyToMany } from 'typeorm'
-import { Ticket } from './ticket.entity'
+import { Ticket } from '../../tickets/entities/ticket.entity'
 import { UserSession } from './user-session.entity'
 import { UserOtp } from './user-otp.entity'
 import { Notification } from '../../notifications/entities/notification.entity'

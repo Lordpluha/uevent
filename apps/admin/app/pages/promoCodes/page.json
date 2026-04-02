@@ -1,0 +1,12 @@
+{
+  "version": "3.4",
+  "type": "table",
+  "icon": "award",
+  "title": "Promo codes",
+  "hideInSidebar": false,
+  "config": {
+    "dataSource": "postgres-db",
+    "fetchStrategy": "databaseTable",
+    "table": "promo_codes"
+  }
+}

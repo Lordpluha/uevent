@@ -13,7 +13,7 @@ import { Event } from '../src/modules/events/entities/event.entity';
 import { Recurrence } from '../src/modules/events/entities/recurrence.entity';
 import { Override } from '../src/modules/events/entities/override.entity';
 import { Tag } from '../src/modules/tags/entities/tag.entity';
-import { Ticket, TicketStatus } from '../src/modules/users/entities/ticket.entity';
+import { Ticket, TicketStatus } from '../src/modules/tickets/entities/ticket.entity';
 import { Notification } from '../src/modules/notifications/entities/notification.entity';
 import { File as FileEntity } from '../src/modules/files/entities/file.entity';
 import { Payment, PaymentStatus } from '../src/modules/payments/entities/payment.entity';

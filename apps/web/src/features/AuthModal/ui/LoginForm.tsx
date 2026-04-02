@@ -60,7 +60,14 @@ export const LoginForm = ({
         onSuccess();
       }
     },
-    onError: () => toast.error(appT.authExtra.invalidCredentials),
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? '';
+      if (msg.toLowerCase().includes('banned')) {
+        toast.error(appT.authExtra.accountBanned);
+      } else {
+        toast.error(appT.authExtra.invalidCredentials);
+      }
+    },
   });
 
   return (

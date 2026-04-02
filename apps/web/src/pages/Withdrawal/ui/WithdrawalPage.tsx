@@ -31,7 +31,7 @@ const money = (value: number, currency: string) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
 
 export function WithdrawalPage() {
-  const { isAuthenticated, accountType } = useAuth();
+  const { isAuthenticated, accountType, isReady } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: wallet, isLoading: walletLoading } = useQuery<OrgWalletPayload>({
@@ -93,6 +93,7 @@ export function WithdrawalPage() {
     },
   });
 
+  if (!isReady) return null;
   if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />;
 
   if (walletLoading || verificationLoading) {

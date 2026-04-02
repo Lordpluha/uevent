@@ -1,0 +1,12 @@
+{
+  "version": "3.4",
+  "type": "table",
+  "title": "Events",
+  "hideInSidebar": false,
+  "config": {
+    "dataSource": "postgres-db",
+    "fetchStrategy": "databaseTable",
+    "table": "events"
+  },
+  "icon": "calendar"
+}

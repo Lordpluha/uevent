@@ -6,6 +6,7 @@ import { ORGANIZATIONS_OPENAPI_SCHEMAS } from '../../modules/organizations/opena
 import { PAYMENTS_OPENAPI_SCHEMAS } from '../../modules/payments/openapi.schemas'
 import { TAGS_OPENAPI_SCHEMAS } from '../../modules/tags/openapi.schemas'
 import { USERS_OPENAPI_SCHEMAS } from '../../modules/users/openapi.schemas'
+import { TICKETS_OPENAPI_SCHEMAS } from '../../modules/tickets/openapi.schemas'
 
 export const MODULE_OPENAPI_SCHEMAS: OpenApiSchemaMap = {
   PaginatedResponseBase: {
@@ -28,6 +29,7 @@ export const MODULE_OPENAPI_SCHEMAS: OpenApiSchemaMap = {
   ...EVENTS_OPENAPI_SCHEMAS,
   ...ORGANIZATIONS_OPENAPI_SCHEMAS,
   ...USERS_OPENAPI_SCHEMAS,
+  ...TICKETS_OPENAPI_SCHEMAS,
   ...NOTIFICATIONS_OPENAPI_SCHEMAS,
   ...AUTH_OPENAPI_SCHEMAS,
   ...PAYMENTS_OPENAPI_SCHEMAS,

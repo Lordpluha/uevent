@@ -855,6 +855,7 @@
     "forgotPassword": "Forgot password?",
     "loginSuccess": "Logged in successfully",
     "invalidCredentials": "Invalid email or password",
+    "accountBanned": "Your account has been banned. Please contact support.",
     "passwordsMismatch": "Passwords do not match",
     "accountCreated": "Account created successfully",
     "registerFailed": "Registration failed. Email or username may already be in use.",

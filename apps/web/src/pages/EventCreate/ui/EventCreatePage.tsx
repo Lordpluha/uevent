@@ -8,10 +8,11 @@ import { useMyOrg } from '@entities/Organization';
 
 export function EventCreatePage() {
   const { t } = useAppContext();
-  const { isAuthenticated, accountType } = useAuth();
+  const { isAuthenticated, accountType, isReady } = useAuth();
   const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
   const navigate = useNavigate();
 
+  if (!isReady) return null;
   if (!isAuthenticated || accountType !== 'organization') {
     return <Navigate to="/" replace />;
   }

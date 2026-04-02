@@ -7,7 +7,7 @@ import { toBuffer } from 'qrcode'
 import { Payment, PaymentStatus } from './entities/payment.entity'
 import { EmailService } from '../notifications/email.service'
 import { v4 as uuidv4 } from 'uuid'
-import { Ticket, TicketStatus } from '../users/entities/ticket.entity'
+import { Ticket, TicketStatus } from '../tickets/entities/ticket.entity'
 import { Notification } from '../notifications/entities/notification.entity'
 import { User } from '../users/entities/user.entity'
 import { ApiConfigService } from '../../config/api-config.service'
@@ -262,11 +262,7 @@ export class PaymentsService {
     const promoCodeId = metadata?.promoCodeId
     if (!promoCodeId) return
 
-    const promo = await this.promoCodeRepository.findOne({ where: { id: promoCodeId } })
-    if (!promo) return
-
-    promo.usedCount += 1
-    await this.promoCodeRepository.save(promo)
+    await this.promoCodeRepository.increment({ id: promoCodeId }, 'usedCount', 1)
   }
 
   private async resolveOrganizationContextFromTicket(metadata?: Record<string, string>) {

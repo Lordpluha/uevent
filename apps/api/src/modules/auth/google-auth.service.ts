@@ -12,7 +12,7 @@ import { google } from 'googleapis'
 import { User } from '../users/entities/user.entity'
 import { UserSession } from '../users/entities/user-session.entity'
 import { Event } from '../events/entities/event.entity'
-import { Ticket } from '../users/entities/ticket.entity'
+import { Ticket } from '../tickets/entities/ticket.entity'
 import { JwtPayload } from './types/jwt-payload.interface'
 import { ApiConfigService } from '../../config/api-config.service'
 

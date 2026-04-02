@@ -1,0 +1,13 @@
+{
+  "version": "3.4",
+  "type": "table",
+  "title": "Event Tags",
+  "hideInSidebar": false,
+  "config": {
+    "dataSource": "postgres-db",
+    "fetchStrategy": "databaseTable",
+    "table": "event_tags",
+    "primaryKeyColumn": "tagsId"
+  },
+  "icon": "sliders"
+}

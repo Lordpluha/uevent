@@ -1,6 +1,7 @@
 import {
   Entity,
   Column,
+  Index,
   ManyToMany,
   OneToMany,
   OneToOne,
@@ -10,7 +11,7 @@ import {
 } from 'typeorm'
 import { Tag } from '../../tags/entities/tag.entity'
 import { Recurrence } from './recurrence.entity'
-import { Ticket } from '../../users/entities/ticket.entity'
+import { Ticket } from '../../tickets/entities/ticket.entity'
 import { Organization } from '../../organizations/entities/organization.entity'
 import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
@@ -58,6 +59,14 @@ export class Event extends UuidEntity {
   @ApiPropertyOptional({ nullable: true })
   online_link: string | null
 
+  @Column({ type: 'varchar', nullable: true })
+  @ApiPropertyOptional({ nullable: true })
+  location_from: string | null
+
+  @Column({ type: 'varchar', nullable: true })
+  @ApiPropertyOptional({ nullable: true })
+  location_to: string | null
+
   // relations
 
   @ManyToMany(() => Tag)
@@ -85,6 +94,7 @@ export class Event extends UuidEntity {
   @ApiHideProperty()
   organization: Organization
 
+  @Index('idx_event_organization_id')
   @Column({ nullable: true })
   @ApiPropertyOptional({ nullable: true })
   organization_id: string

@@ -6,6 +6,7 @@ import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
 import { GetOrganizationsParams } from './params'
 import { ContentLocalizationService } from '../../common/localization/content-localization.service'
 import { OrganizationsPrivateService } from './organizations-private.service'
+import { OrganizationSession } from './entities/organization-session.entity'
 
 const PUBLIC_ORG_SELECT: FindOptionsSelect<Organization> = {
   id: true,
@@ -29,6 +30,9 @@ export class OrganizationsService {
   constructor(
     @InjectRepository(Organization)
     private readonly orgsRepo: Repository<Organization>,
+
+    @InjectRepository(OrganizationSession)
+    private readonly sessionsRepo: Repository<OrganizationSession>,
 
     private readonly contentLocalization: ContentLocalizationService,
     private readonly organizationsPrivateService: OrganizationsPrivateService,
@@ -217,6 +221,16 @@ export class OrganizationsService {
       .getCount()
 
     return { followed: count > 0 }
+  }
+
+  async setBanned(id: string, banned: boolean): Promise<void> {
+    const org = await this.orgsRepo.findOneBy({ id })
+    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
+    org.is_banned = banned
+    await this.orgsRepo.save(org)
+    if (banned) {
+      await this.sessionsRepo.delete({ organization_id: id })
+    }
   }
 
 }

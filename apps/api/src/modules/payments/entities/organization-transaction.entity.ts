@@ -1,4 +1,4 @@
-import { Entity, Column, CreateDateColumn } from 'typeorm'
+import { Entity, Column, Index, CreateDateColumn } from 'typeorm'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { UuidEntity } from '../../../common/uuid.entity'
 
@@ -10,7 +10,8 @@ export enum OrganizationTransactionType {
 
 @Entity('organization_transactions')
 export class OrganizationTransaction extends UuidEntity {
-  @Column('uuid')
+  @Index('idx_org_transaction_org_id')
+  @Column('uuid', { name: 'organization_id' })
   @ApiProperty({ format: 'uuid' })
   organizationId: string
 
@@ -26,23 +27,23 @@ export class OrganizationTransaction extends UuidEntity {
   @ApiProperty()
   currency: string
 
-  @Column('uuid', { nullable: true })
+  @Column('uuid', { nullable: true, name: 'source_payment_id' })
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   sourcePaymentId: string | null
 
-  @Column('varchar', { nullable: true })
+  @Column('varchar', { nullable: true, name: 'source_payment_intent_id' })
   @ApiPropertyOptional({ nullable: true })
   sourcePaymentIntentId: string | null
 
-  @Column('uuid', { nullable: true })
+  @Column('uuid', { nullable: true, name: 'source_withdrawal_request_id' })
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   sourceWithdrawalRequestId: string | null
 
-  @Column('varchar', { nullable: true })
+  @Column('varchar', { nullable: true, name: 'event_title' })
   @ApiPropertyOptional({ nullable: true })
   eventTitle: string | null
 
-  @Column('varchar', { nullable: true })
+  @Column('varchar', { nullable: true, name: 'ticket_title' })
   @ApiPropertyOptional({ nullable: true })
   ticketTitle: string | null
 
@@ -58,7 +59,7 @@ export class OrganizationTransaction extends UuidEntity {
   @ApiPropertyOptional({ nullable: true })
   metadata: Record<string, string> | null
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   @ApiProperty({ format: 'date-time' })
   createdAt: Date
 }
