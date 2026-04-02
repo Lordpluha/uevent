@@ -102,4 +102,16 @@ export class Event extends UuidEntity {
   @Column({ default: false })
   @ApiProperty()
   attendees_public: boolean
+
+  @Column({ default: false })
+  @ApiProperty()
+  notify_new_attendees: boolean
+
+  @Column({ type: 'text', nullable: true })
+  @ApiPropertyOptional({ nullable: true })
+  redirect_url: string | null
+
+  @Column({ type: 'timestamptz', nullable: true })
+  @ApiPropertyOptional({ nullable: true, format: 'date-time' })
+  publish_at: Date | null
 }

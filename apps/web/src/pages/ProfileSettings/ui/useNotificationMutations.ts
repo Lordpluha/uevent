@@ -46,11 +46,20 @@ export function useNotificationMutations(invalidateUser: () => Promise<void>) {
     onError: () => toast.error(t.profileSettings.notifications.updateFailed),
   })
 
+  const hiddenFromAttendeesMutation = useMutation({
+    mutationFn: (hidden: boolean) => usersApi.updateMe({ hiddenFromAttendees: hidden }),
+    onSuccess: async () => {
+      await invalidateUser()
+    },
+    onError: () => toast.error(t.profileSettings.notifications.updateFailed),
+  })
+
   return {
     notificationsMutation,
     pushNotificationsMutation,
     paymentEmailMutation,
     subscriptionNotificationsMutation,
     loginNotificationsMutation,
+    hiddenFromAttendeesMutation,
   }
 }

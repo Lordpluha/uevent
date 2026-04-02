@@ -56,6 +56,18 @@ class EventApi extends BasicClientApi {
     })).data;
   }
 
+  async subscribe(id: string): Promise<void> {
+    await this.http.post(`${this.basePath}/${id}/subscribe`);
+  }
+
+  async unsubscribe(id: string): Promise<void> {
+    await this.http.delete(`${this.basePath}/${id}/subscribe`);
+  }
+
+  async getSubscription(id: string): Promise<{ subscribed: boolean }> {
+    return (await this.http.get<{ subscribed: boolean }>(`${this.basePath}/${id}/subscription`)).data;
+  }
+
   async getByOrganization(organizationId: string, params?: EventListParams): Promise<ApiEventListResponse> {
     return this.getAll({ ...params, organization_id: organizationId });
   }

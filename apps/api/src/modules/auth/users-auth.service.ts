@@ -121,7 +121,7 @@ export class UsersAuthService {
         meta?.ip_address || 'Unknown',
         meta?.user_agent || 'Unknown',
         new Date(),
-      ).catch(() => undefined)
+      ).catch((e) => console.warn(`[UsersAuthService] Failed to send login notification email to ${user.email}: ${e.message}`))
     }
 
     return { access_token: tokens.access_token, refresh_token: tokens.refresh_token }

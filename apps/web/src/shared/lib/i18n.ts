@@ -218,6 +218,11 @@ export type Dictionary = {
     pagination: string;
     promoApplied: string;
     promoRemoved: string;
+    subscribeEvent: string;
+    unsubscribeEvent: string;
+    followOrg: string;
+    unfollowOrg: string;
+    attendees: string;
     allEvents: string;
     tickets: string;
     addTicket: string;
@@ -653,6 +658,8 @@ export type Dictionary = {
       toggleLogin: string;
       login: string;
       loginDesc: string;
+      hiddenFromAttendees: string;
+      hiddenFromAttendeesDesc: string;
       pushUnsupported: string;
       pushDenied: string;
       pushEnabled: string;
@@ -724,6 +731,12 @@ export type Dictionary = {
     orgHint: string;
     attendeesPublicLabel: string;
     attendeesPublicHint: string;
+    notifyAttendeesLabel: string;
+    notifyAttendeesHint: string;
+    redirectUrlLabel: string;
+    redirectUrlHint: string;
+    publishAtLabel: string;
+    publishAtHint: string;
     create: string;
     tags: {
       addMore: string;

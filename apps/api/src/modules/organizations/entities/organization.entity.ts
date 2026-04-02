@@ -55,6 +55,10 @@ export class Organization extends UuidEntity {
   @ApiProperty()
   is_banned: boolean
 
+  @Column({ default: true })
+  @ApiProperty()
+  notifications_enabled: boolean
+
   @Column({ default: false })
   @ApiProperty()
   two_factor_enabled: boolean

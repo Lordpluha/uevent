@@ -36,6 +36,9 @@ export async function submitCreateEvent({ data, durationHours, coverFiles, onSuc
       organization_id: data.organizationId,
       tags: tagIds,
       attendees_public: data.attendeesPublic ?? false,
+      notify_new_attendees: data.notifyNewAttendees ?? false,
+      redirect_url: data.redirectUrl || undefined,
+      publish_at: data.publishAt ? new Date(data.publishAt) : undefined,
     });
 
     if (coverFiles.length > 0 && created.data?.id) {

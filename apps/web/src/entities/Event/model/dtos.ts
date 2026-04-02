@@ -21,6 +21,9 @@ export const createEventSchema = z.object({
   tags: z.array(z.string()).optional(),
   imageUrl: optionalUrlField,
   attendeesPublic: z.boolean().optional(),
+  notifyNewAttendees: z.boolean().optional(),
+  redirectUrl: optionalUrlField,
+  publishAt: z.string().optional(),
 });
 
 export const updateEventSchema = z.object({

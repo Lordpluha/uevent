@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, In } from 'typeorm'
 import { Event } from './entities/event.entity'
+import { EventSubscription } from './entities/event-subscription.entity'
 import { Tag } from '../tags/entities/tag.entity'
 import { CreateEventDto } from './dto/create-event.dto'
 import { UpdateEventDto } from './dto/update-event.dto'
@@ -16,6 +17,9 @@ export class EventsService {
   constructor(
     @InjectRepository(Event)
     private readonly eventsRepo: Repository<Event>,
+
+    @InjectRepository(EventSubscription)
+    private readonly eventSubRepo: Repository<EventSubscription>,
 
     @InjectRepository(Tag)
     private readonly tagsRepo: Repository<Tag>,
@@ -49,7 +53,7 @@ export class EventsService {
         relations: ['followers'],
       })
 
-      const recipients = (org?.followers ?? []).filter((u) => u.notifications_enabled)
+      const recipients = (org?.followers ?? []).filter((u) => u.notifications_enabled && u.subscription_notifications_enabled)
       if (recipients.length > 0) {
         const notifications = recipients.map((user) =>
           this.notificationsRepo.create({
@@ -311,5 +315,25 @@ export class EventsService {
 
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null
+  }
+
+  async subscribe(eventId: string, userId: string): Promise<{ message: string }> {
+    const event = await this.eventsRepo.findOne({ where: { id: eventId } })
+    if (!event) throw new NotFoundException('Event not found')
+    const existing = await this.eventSubRepo.findOne({ where: { event_id: eventId, user_id: userId } })
+    if (!existing) {
+      await this.eventSubRepo.save(this.eventSubRepo.create({ event_id: eventId, user_id: userId }))
+    }
+    return { message: 'Subscribed' }
+  }
+
+  async unsubscribe(eventId: string, userId: string): Promise<{ message: string }> {
+    await this.eventSubRepo.delete({ event_id: eventId, user_id: userId })
+    return { message: 'Unsubscribed' }
+  }
+
+  async getSubscription(eventId: string, userId: string): Promise<{ subscribed: boolean }> {
+    const sub = await this.eventSubRepo.findOne({ where: { event_id: eventId, user_id: userId } })
+    return { subscribed: !!sub }
   }
 }

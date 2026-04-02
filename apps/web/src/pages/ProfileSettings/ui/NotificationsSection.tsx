@@ -7,8 +7,16 @@ import {
   Switch,
 } from '@shared/components';
 import { useAppContext } from '@shared/lib';
+import { notificationsApi } from '@entities/Notification';
 import { useNotificationMutations } from './useNotificationMutations';
 import { useProfileSettingsData } from './useProfileSettingsData';
+
+function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0))).buffer;
+}
 
 export function NotificationsSection() {
   const { t } = useAppContext();
@@ -18,6 +26,7 @@ export function NotificationsSection() {
   const [paymentEmailEnabled, setPaymentEmailEnabled] = useState(user.paymentEmailEnabled ?? true);
   const [subscriptionNotificationsEnabled, setSubscriptionNotificationsEnabled] = useState(user.subscriptionNotificationsEnabled ?? true);
   const [loginNotificationsEnabled, setLoginNotificationsEnabled] = useState(user.loginNotificationsEnabled ?? true);
+  const [hiddenFromAttendees, setHiddenFromAttendees] = useState(user.hiddenFromAttendees ?? false);
   const [browserPushPermission, setBrowserPushPermission] = useState<NotificationPermission | 'unsupported'>('default');
 
   const {
@@ -26,6 +35,7 @@ export function NotificationsSection() {
     paymentEmailMutation,
     subscriptionNotificationsMutation,
     loginNotificationsMutation,
+    hiddenFromAttendeesMutation,
   } = useNotificationMutations(invalidateUser);
 
   useEffect(() => {
@@ -43,8 +53,10 @@ export function NotificationsSection() {
     setPaymentEmailEnabled(user.paymentEmailEnabled ?? true);
     setSubscriptionNotificationsEnabled(user.subscriptionNotificationsEnabled ?? true);
     setLoginNotificationsEnabled(user.loginNotificationsEnabled ?? true);
+    setHiddenFromAttendees(user.hiddenFromAttendees ?? false);
   }, [
     user.loginNotificationsEnabled,
+    user.hiddenFromAttendees,
     user.notificationsEnabled,
     user.paymentEmailEnabled,
     user.pushNotificationsEnabled,
@@ -73,6 +85,19 @@ export function NotificationsSection() {
 
   const handlePushNotificationsChange = async (enabled: boolean) => {
     if (!enabled) {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration('/sw.js');
+        if (reg) {
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            const endpoint = sub.endpoint;
+            await sub.unsubscribe();
+            await notificationsApi.deletePushSubscription(endpoint);
+          }
+        }
+      } catch {
+        // ignore cleanup errors
+      }
       setPushNotificationsEnabled(false);
       pushNotificationsMutation.mutate(false);
       return;
@@ -88,7 +113,6 @@ export function NotificationsSection() {
     if (permission === 'default') {
       permission = await Notification.requestPermission();
     }
-
     setBrowserPushPermission(permission);
 
     if (permission !== 'granted') {
@@ -98,9 +122,35 @@ export function NotificationsSection() {
       return;
     }
 
-    setPushNotificationsEnabled(true);
-    pushNotificationsMutation.mutate(true);
-    toast.success(t.profileSettings.notifications.pushEnabled);
+    try {
+      const vapidPublicKey = await notificationsApi.getPushVapidKey();
+      if (!vapidPublicKey) {
+        toast.error(t.profileSettings.notifications.pushUnsupported);
+        return;
+      }
+
+      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      await navigator.serviceWorker.ready;
+
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      });
+
+      const json = subscription.toJSON();
+      if (!json.keys?.p256dh || !json.keys?.auth) {
+        throw new Error('Missing push subscription keys');
+      }
+
+      await notificationsApi.savePushSubscription(subscription.endpoint, json.keys.p256dh, json.keys.auth);
+      setPushNotificationsEnabled(true);
+      pushNotificationsMutation.mutate(true);
+      toast.success(t.profileSettings.notifications.pushEnabled);
+    } catch {
+      setPushNotificationsEnabled(false);
+      pushNotificationsMutation.mutate(false);
+      toast.error(t.profileSettings.notifications.pushDenied);
+    }
   };
 
   return (
@@ -186,6 +236,23 @@ export function NotificationsSection() {
             onCheckedChange={handleLoginNotificationsChange}
             disabled={loginNotificationsMutation.isPending}
             aria-label={t.profileSettings.notifications.toggleLogin}
+          />
+        </Field>
+      </div>
+
+      <div className="rounded-xl border border-border/60 bg-card p-5">
+        <Field orientation="horizontal" className="items-center justify-between">
+          <div>
+            <FieldTitle>{t.profileSettings.notifications.hiddenFromAttendees}</FieldTitle>
+            <FieldDescription className="mt-0.5">
+              {t.profileSettings.notifications.hiddenFromAttendeesDesc}
+            </FieldDescription>
+          </div>
+          <Switch
+            checked={hiddenFromAttendees}
+            onCheckedChange={(v) => { setHiddenFromAttendees(v); hiddenFromAttendeesMutation.mutate(v); }}
+            disabled={hiddenFromAttendeesMutation.isPending}
+            aria-label={t.profileSettings.notifications.hiddenFromAttendees}
           />
         </Field>
       </div>

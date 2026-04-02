@@ -934,6 +934,25 @@ export class PaymentsService {
     await this.applySucceededPaymentSideEffects(savedPayment, paymentIntentId)
     await this.issuePurchasedTickets(savedPayment.metadata, paymentIntentId)
 
+    // Send confirmation email for free checkout
+    const freeMetadata = savedPayment.metadata ?? {}
+    if (freeMetadata.userEmail && freeMetadata.userName) {
+      const freeUser = await this.usersRepository.findOne({ where: { email: freeMetadata.userEmail } })
+      if (!freeUser || freeUser.payment_email_enabled) {
+        this.emailService.sendPaymentConfirmation({
+          userEmail: freeMetadata.userEmail,
+          userName: freeMetadata.userName,
+          eventTitle: freeMetadata.eventTitle || 'Ticket Purchase',
+          ticketName: freeMetadata.ticketName || 'Ticket',
+          price: 0,
+          eventDate: freeMetadata.eventDate || '',
+          eventLocation: freeMetadata.eventLocation || '',
+          organizationName: freeMetadata.organizationName || '',
+          paymentIntentId,
+        }).catch((e) => this.logger.warn(`Failed to send free checkout confirmation email: ${e.message}`))
+      }
+    }
+
     return {
       id: paymentIntentId,
       client_secret: null,
@@ -1122,27 +1141,24 @@ export class PaymentsService {
       this.logger.log(`Payment ${paymentIntent.id} marked as failed in database`)
 
       // send failed payment email
-      if(paymentIntent.metadata?.userEmail) {
-        this.logger.log(`Sending failed payment email to: ${paymentIntent.metadata.userEmail}`)
-        await this.emailService.sendPaymentFailedEmail(
-          paymentIntent.metadata.userEmail,
-          paymentIntent.metadata.userName || 'Valued Customer',
-          paymentIntent.metadata.eventTitle || 'Ticket Purchase',
-          paymentIntent.metadata.ticketName || 'Ticket',
-          failureReason,
-          paymentIntent.id
-        )
-      }else if(payment?.metadata?.userEmail) {
-        this.logger.log(`Using metadata from database record. Sending failed payment email to: ${payment.metadata.userEmail}`)
-        await this.emailService.sendPaymentFailedEmail(
-          payment.metadata.userEmail,
-          payment.metadata.userName || 'Valued Customer',
-          payment.metadata.eventTitle || 'Ticket Purchase',
-          payment.metadata.ticketName || 'Ticket',
-          failureReason,
-          paymentIntent.id
-        )
-      }else {
+      const failedUserEmail = paymentIntent.metadata?.userEmail || payment?.metadata?.userEmail
+      if (failedUserEmail) {
+        const failedUser = await this.usersRepository.findOne({ where: { email: failedUserEmail } })
+        if (!failedUser || failedUser.payment_email_enabled) {
+          const meta = paymentIntent.metadata?.userEmail ? paymentIntent.metadata : payment?.metadata ?? {}
+          this.logger.log(`Sending failed payment email to: ${failedUserEmail}`)
+          await this.emailService.sendPaymentFailedEmail(
+            failedUserEmail,
+            meta.userName || 'Valued Customer',
+            meta.eventTitle || 'Ticket Purchase',
+            meta.ticketName || 'Ticket',
+            failureReason,
+            paymentIntent.id,
+          )
+        } else {
+          this.logger.log(`Payment email disabled for user ${failedUserEmail} — skipping failed email`)
+        }
+      } else {
         this.logger.warn(`No email found in webhook metadata or database - skipping failed payment email`)
       }
     } catch(error) {
@@ -1176,17 +1192,22 @@ export class PaymentsService {
           this.logger.log(`Payment ${paymentIntentId} marked as refunded`)
 
           // send refund email
-          if(payment.metadata) {
-            this.logger.log(`Sending refund email to: ${payment.metadata.userEmail}`)
-            await this.emailService.sendRefundEmail(
-              payment.metadata.userEmail,
-              payment.metadata.userName,
-              payment.metadata.eventTitle || 'Ticket Purchase',
-              payment.metadata.ticketName || 'Ticket',
-              payment.amount,
-              paymentIntentId
-            )
-          }else {
+          if (payment.metadata?.userEmail) {
+            const refundUser = await this.usersRepository.findOne({ where: { email: payment.metadata.userEmail } })
+            if (!refundUser || refundUser.payment_email_enabled) {
+              this.logger.log(`Sending refund email to: ${payment.metadata.userEmail}`)
+              await this.emailService.sendRefundEmail(
+                payment.metadata.userEmail,
+                payment.metadata.userName,
+                payment.metadata.eventTitle || 'Ticket Purchase',
+                payment.metadata.ticketName || 'Ticket',
+                payment.amount,
+                paymentIntentId,
+              )
+            } else {
+              this.logger.log(`Payment email disabled for user ${payment.metadata.userEmail} — skipping refund email`)
+            }
+          } else {
             this.logger.warn(`No metadata found - skipping refund email`)
           }
         }

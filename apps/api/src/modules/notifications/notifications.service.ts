@@ -3,17 +3,41 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Notification } from './entities'
 import { CreateNotificationDto, UpdateNotificationDto } from './dto'
+import { User } from '../users/entities/user.entity'
+import { PushNotificationService } from './push-notification.service'
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private readonly notificationsRepo: Repository<Notification>,
+
+    @InjectRepository(User)
+    private readonly usersRepo: Repository<User>,
+
+    private readonly pushService: PushNotificationService,
   ) {}
 
   async create(dto: CreateNotificationDto) {
     const notification = this.notificationsRepo.create(dto)
-    return await this.notificationsRepo.save(notification)
+    const saved = await this.notificationsRepo.save(notification)
+
+    // Fire a browser push if the target user has it enabled
+    if (saved.user_id) {
+      const user = await this.usersRepo.findOne({
+        where: { id: saved.user_id },
+        select: ['id', 'push_notifications_enabled'],
+      })
+      if (user?.push_notifications_enabled) {
+        this.pushService.sendToUser(saved.user_id, {
+          title: saved.name,
+          body: saved.content,
+          url: saved.link ?? '/',
+        }).catch(() => undefined)
+      }
+    }
+
+    return saved
   }
 
   async findByUser(user_id: string) {

@@ -141,4 +141,43 @@ export class EventsController {
     const imageUrls = files.map((f) => `${base}/storage/events/${f.filename}`)
     return this.eventsService.addGalleryImages(id, imageUrls, user)
   }
+
+  @Post(':id/subscribe')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Subscribe to event notifications' })
+  @ApiAccessCookieAuth()
+  @ApiUuidParam('id', 'Event id')
+  @ApiCreatedResponse({ description: 'Subscribed.', schema: messageSchema('Subscribed') })
+  subscribe(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.eventsService.subscribe(id, user.sub)
+  }
+
+  @Delete(':id/subscribe')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Unsubscribe from event notifications' })
+  @ApiAccessCookieAuth()
+  @ApiUuidParam('id', 'Event id')
+  @ApiOkResponse({ description: 'Unsubscribed.', schema: messageSchema('Unsubscribed') })
+  unsubscribe(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.eventsService.unsubscribe(id, user.sub)
+  }
+
+  @Get(':id/subscription')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Check subscription status for event' })
+  @ApiAccessCookieAuth()
+  @ApiUuidParam('id', 'Event id')
+  @ApiOkResponse({ description: 'Subscription status.', schema: { type: 'object', properties: { subscribed: { type: 'boolean' } } } })
+  getSubscription(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.eventsService.getSubscription(id, user.sub)
+  }
 }

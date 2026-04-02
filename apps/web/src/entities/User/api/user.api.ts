@@ -23,6 +23,7 @@ const toBackendUserUpdate = (body: UpdateUserDto) => {
     payment_email_enabled: body.paymentEmailEnabled,
     subscription_notifications_enabled: body.subscriptionNotificationsEnabled,
     login_notifications_enabled: body.loginNotificationsEnabled,
+    hidden_from_attendees: body.hiddenFromAttendees,
     two_fa: body.twoFa,
     password: body.password,
   };

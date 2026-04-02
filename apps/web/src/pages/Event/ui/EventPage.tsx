@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { CalendarX2, ChevronLeft } from 'lucide-react';
-import { EventLightbox, useEvent, useEvents } from '@entities/Event';
+import { Bell, BellOff, CalendarX2, ChevronLeft, UserCheck, UserPlus, Users } from 'lucide-react';
+import { EventLightbox, eventsApi, useEvent, useEvents } from '@entities/Event';
+import { organizationsApi } from '@entities/Organization';
 import { TicketCard } from '@entities/Ticket';
-import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, EventLocationMap, JsonLd, PromoCodeSection, Separator } from '@shared/components';
+import { Button, Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, EventLocationMap, JsonLd, PromoCodeSection, Separator } from '@shared/components';
 import { toast } from 'sonner';
 import { useAppContext } from '@shared/lib';
 import { SITE_URL } from '@shared/config/app';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EventHero } from './EventHero';
 import { EventDetails } from './EventDetails';
 import { EventRelatedSection } from './EventRelatedSection';
@@ -23,7 +25,34 @@ export function EventPage() {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [appliedPromoCode, setAppliedPromoCode] = useState<string | undefined>();
   const [appliedPromoDiscount, setAppliedPromoDiscount] = useState<number | undefined>();
-  const { accountType } = useAuth();
+  const { accountType, isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+
+  const isUser = isAuthenticated && accountType === 'user';
+  const orgId = event?.organizerOrgId ?? null;
+
+  const { data: eventSubData } = useQuery({
+    queryKey: ['event-subscription', id],
+    queryFn: () => eventsApi.getSubscription(id ?? ''),
+    enabled: isUser && !!id,
+  });
+  const { data: orgSubData } = useQuery({
+    queryKey: ['org-subscription', orgId],
+    queryFn: () => organizationsApi.getFollowStatus(orgId!),
+    enabled: isUser && !!orgId,
+  });
+
+  const eventSubMutation = useMutation({
+    mutationFn: (subscribe: boolean) =>
+      subscribe ? eventsApi.subscribe(id ?? '') : eventsApi.unsubscribe(id ?? ''),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['event-subscription', id] }),
+    onError: () => toast.error(t.errors.somethingWrong),
+  });
+  const orgFollowMutation = useMutation({
+    mutationFn: (follow: boolean) => organizationsApi.setFollow(orgId!, follow),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['org-subscription', orgId] }),
+    onError: () => toast.error(t.errors.somethingWrong),
+  });
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -118,6 +147,53 @@ export function EventPage() {
       </Link>
 
       <EventHero event={event} hasGallery={hasGallery} onOpenGallery={openGallery} />
+
+      {/* Subscribe buttons */}
+      {isUser && (
+        <div className="mb-6 flex flex-wrap gap-3">
+          <Button
+            variant={eventSubData?.subscribed ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => eventSubMutation.mutate(!eventSubData?.subscribed)}
+            disabled={eventSubMutation.isPending}
+            className="gap-1.5"
+          >
+            {eventSubData?.subscribed ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+            {eventSubData?.subscribed ? t.events.unsubscribeEvent : t.events.subscribeEvent}
+          </Button>
+          {orgId && (
+            <Button
+              variant={orgSubData?.followed ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => orgFollowMutation.mutate(!orgSubData?.followed)}
+              disabled={orgFollowMutation.isPending}
+              className="gap-1.5"
+            >
+              {orgSubData?.followed ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+              {orgSubData?.followed ? t.events.unfollowOrg : t.events.followOrg}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Attendees list */}
+      {event.attendeesPublic && event.attendees && event.attendees.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
+            <Users className="h-4 w-4" />
+            {t.events.attendees} ({event.attendeeCount})
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {event.attendees.map((a) => (
+              <Link key={a.id} to={`/users/${a.id}`} className="flex items-center gap-1.5 rounded-full border border-border/60 bg-card px-3 py-1 text-xs font-medium transition-colors hover:bg-accent">
+                {a.avatarUrl && <img src={a.avatarUrl} alt={a.name} className="h-5 w-5 rounded-full object-cover" />}
+                {a.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       <EventDetails event={event} eventId={id ?? ''} />
 
       {/* Tickets */}

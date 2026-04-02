@@ -80,6 +80,10 @@ export class User extends UuidEntity {
 
   @Column({ default: false })
   @ApiProperty()
+  hidden_from_attendees: boolean
+
+  @Column({ default: false })
+  @ApiProperty()
   is_banned: boolean
 
   @Column({ default: false })

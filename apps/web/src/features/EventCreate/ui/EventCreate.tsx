@@ -183,6 +183,52 @@ export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreatePro
             />
           </div>
         </Field>
+
+        {/* Notify organizer about new attendees */}
+        <Field>
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-card px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <FieldTitle className="mb-0.5">{t.eventCreate.notifyAttendeesLabel}</FieldTitle>
+              <FieldDescription>{t.eventCreate.notifyAttendeesHint}</FieldDescription>
+            </div>
+            <Controller
+              control={control}
+              name="notifyNewAttendees"
+              render={({ field }) => (
+                <Switch
+                  checked={field.value ?? false}
+                  onCheckedChange={field.onChange}
+                  aria-label={t.eventCreate.notifyAttendeesLabel}
+                />
+              )}
+            />
+          </div>
+        </Field>
+
+        {/* Redirect URL after ticket purchase */}
+        <Field>
+          <FieldTitle>{t.eventCreate.redirectUrlLabel}</FieldTitle>
+          <FieldDescription>{t.eventCreate.redirectUrlHint}</FieldDescription>
+          <Input
+            {...register('redirectUrl')}
+            type="url"
+            placeholder="https://your-site.com/thank-you"
+            aria-invalid={!!errors.redirectUrl}
+          />
+          <FieldError errors={errors.redirectUrl ? [errors.redirectUrl] : undefined} />
+        </Field>
+
+        {/* Scheduled publication date */}
+        <Field>
+          <FieldTitle>{t.eventCreate.publishAtLabel}</FieldTitle>
+          <FieldDescription>{t.eventCreate.publishAtHint}</FieldDescription>
+          <Input
+            {...register('publishAt')}
+            type="date"
+            aria-invalid={!!errors.publishAt}
+          />
+          <FieldError errors={errors.publishAt ? [errors.publishAt] : undefined} />
+        </Field>
       </FieldGroup>
 
       <Button type="submit" disabled={isSubmitting} className="self-end">

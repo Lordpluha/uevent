@@ -61,6 +61,14 @@ export class ApiConfigService {
     }
   }
 
+  get vapidConfig() {
+    return {
+      publicKey: this.configService.get('VAPID_PUBLIC_KEY', { infer: true }) ?? null,
+      privateKey: this.configService.get('VAPID_PRIVATE_KEY', { infer: true }) ?? null,
+      subject: this.configService.get('VAPID_SUBJECT', { infer: true }) ?? null,
+    }
+  }
+
   get nodeEnv(): EnvConfig['NODE_ENV'] {
     return this.configService.get('NODE_ENV', { infer: true })
   }

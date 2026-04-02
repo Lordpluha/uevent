@@ -14,6 +14,9 @@ export const CreateEventDtoSchema = z.object({
   organization_id: z.string().uuid().optional(),
   tags: z.array(z.string().uuid()).optional(),
   attendees_public: z.boolean().optional(),
+  notify_new_attendees: z.boolean().optional(),
+  redirect_url: z.url().optional().nullable(),
+  publish_at: z.coerce.date().optional().nullable(),
 })
 
 export type CreateEventDto = z.infer<typeof CreateEventDtoSchema>

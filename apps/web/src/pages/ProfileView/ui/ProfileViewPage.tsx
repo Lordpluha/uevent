@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router';
 import {
+  Bell,
   CalendarDays,
   ExternalLink,
   LayoutDashboard,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { OrgProfilePage } from '@pages/OrgProfile';
 import { EventCard } from '@entities/Event';
+import { useMyNotifications, useMarkNotificationRead } from '@entities/Notification';
 import {
   Badge,
   Button,
@@ -62,7 +64,9 @@ function ProfileSkeleton() {
 export function ProfileViewPage() {
   const { t } = useAppContext();
   const { isAuthenticated, accountType, isReady, myOrg, myOrgLoading, user, isLoading, isError, myEvents } = useProfileViewData();
-  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'tickets'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'tickets' | 'notifications'>('overview');
+  const { data: notifications = [] } = useMyNotifications(isAuthenticated && accountType === 'user', 50);
+  const markRead = useMarkNotificationRead();
 
   if (!isReady) return <ProfileSkeleton />;
 
@@ -139,6 +143,7 @@ export function ProfileViewPage() {
     { id: 'overview' as const, label: t.profile.overview, icon: Users },
     { id: 'events' as const, label: t.profile.myEvents, icon: CalendarDays },
     { id: 'tickets' as const, label: t.profile.tickets, icon: Ticket },
+    { id: 'notifications' as const, label: t.notificationsBell.title, icon: Bell },
   ];
 
   return (
@@ -243,6 +248,54 @@ export function ProfileViewPage() {
             <h2 className="text-base font-semibold">{t.profile.myTickets}</h2>
           </div>
           <ProfileTicketsList />
+        </section>
+      )}
+
+      {/* ── Notifications tab ────────────────────────────────────── */}
+      {activeTab === 'notifications' && (
+        <section>
+          <h2 className="mb-4 text-base font-semibold">{t.notificationsBell.title}</h2>
+          {notifications.length === 0 ? (
+            <Empty className="border border-border/60">
+              <EmptyHeader>
+                <EmptyMedia variant="icon"><Bell className="size-4" /></EmptyMedia>
+                <EmptyTitle className="text-base">{t.notificationsBell.noNotifications}</EmptyTitle>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {notifications.map((n) => (
+                <div
+                  key={n.id}
+                  className={cn(
+                    'rounded-xl border border-border/60 bg-card px-4 py-3 text-sm',
+                    !n.read && 'border-primary/40 bg-primary/5',
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">{n.title}</p>
+                      {n.content && <p className="mt-0.5 text-muted-foreground">{n.content}</p>}
+                      {n.link && (
+                        <Link to={n.link} className="mt-1 inline-block text-xs text-primary hover:underline">
+                          {t.common.open}
+                        </Link>
+                      )}
+                    </div>
+                    {!n.read && (
+                      <button
+                        type="button"
+                        onClick={() => markRead.mutate(n.id)}
+                        className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        ✓
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
     </main>

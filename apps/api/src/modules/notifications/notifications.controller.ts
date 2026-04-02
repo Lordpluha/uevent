@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, UseGuards, ForbiddenException } from '@nestjs/common'
 import { NotificationsService } from './notifications.service'
+import { PushNotificationService } from './push-notification.service'
 import {
   CreateNotificationDto,
   CreateNotificationDtoSchema,
@@ -19,7 +20,10 @@ import { Notification } from './entities/notification.entity'
 @ApiTags('Notifications')
 @ApiExtraModels(Notification)
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly pushService: PushNotificationService,
+  ) {}
 
   @Post()
   @UseGuards(JwtGuard)
@@ -200,5 +204,42 @@ export class NotificationsController {
     }
 
     throw new ForbiddenException('Unsupported account type')
+  }
+
+  // ── Push subscription ─────────────────────────────────────
+
+  @Get('push/vapid-key')
+  @ApiOperation({ summary: 'Get VAPID public key for push subscription' })
+  @ApiOkResponse({ description: 'VAPID public key.', schema: { type: 'object', properties: { publicKey: { type: 'string', nullable: true } } } })
+  getVapidPublicKey() {
+    return { publicKey: this.pushService.vapidPublicKey }
+  }
+
+  @Post('push/subscription')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Register a browser push subscription' })
+  @ApiAccessCookieAuth()
+  @ApiOkResponse({ description: 'Subscription saved.', schema: { type: 'object', properties: { success: { type: 'boolean' } } } })
+  async savePushSubscription(
+    @Body() body: { endpoint: string; p256dh: string; auth: string },
+    @CurrentUser() user: JwtPayload,
+  ) {
+    if (user.type !== 'user') throw new ForbiddenException('Only user accounts can register push subscriptions')
+    await this.pushService.saveSubscription(user.sub, body.endpoint, body.p256dh, body.auth)
+    return { success: true }
+  }
+
+  @Delete('push/subscription')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Unregister a browser push subscription' })
+  @ApiAccessCookieAuth()
+  @ApiOkResponse({ description: 'Subscription removed.', schema: { type: 'object', properties: { success: { type: 'boolean' } } } })
+  async deletePushSubscription(
+    @Body() body: { endpoint: string },
+    @CurrentUser() user: JwtPayload,
+  ) {
+    if (user.type !== 'user') throw new ForbiddenException('Only user accounts can unregister push subscriptions')
+    await this.pushService.deleteSubscription(user.sub, body.endpoint)
+    return { success: true }
   }
 }

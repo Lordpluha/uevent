@@ -21,6 +21,7 @@ export const updateUserSchema = z.object({
   paymentEmailEnabled: z.boolean().optional(),
   subscriptionNotificationsEnabled: z.boolean().optional(),
   loginNotificationsEnabled: z.boolean().optional(),
+  hiddenFromAttendees: z.boolean().optional(),
   twoFa: z.boolean().optional(),
   password: z.string().min(8).optional(),
 });

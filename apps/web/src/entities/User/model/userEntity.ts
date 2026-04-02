@@ -17,6 +17,7 @@ export const userSchema = z.object({
   paymentEmailEnabled: z.boolean(),
   subscriptionNotificationsEnabled: z.boolean(),
   loginNotificationsEnabled: z.boolean(),
+  hiddenFromAttendees: z.boolean(),
   twoFa: z.boolean(),
   joinedAt: z.string(),
   ticketsCount: z.number(),
@@ -50,6 +51,7 @@ export type ApiUser = {
   payment_email_enabled?: boolean | null;
   subscription_notifications_enabled?: boolean | null;
   login_notifications_enabled?: boolean | null;
+  hidden_from_attendees?: boolean | null;
   two_fa?: boolean | null;
   joinedAt?: string | null;
   createdAt?: string | null;
@@ -99,6 +101,7 @@ export const mapApiUser = (raw: ApiUser): User => {
     paymentEmailEnabled: raw.payment_email_enabled ?? true,
     subscriptionNotificationsEnabled: raw.subscription_notifications_enabled ?? true,
     loginNotificationsEnabled: raw.login_notifications_enabled ?? true,
+    hiddenFromAttendees: raw.hidden_from_attendees ?? false,
     twoFa: raw.two_fa ?? false,
     joinedAt: formatJoinedAt(raw.joinedAt ?? raw.createdAt ?? raw.created_at),
     ticketsCount: raw.ticketsCount ?? 0,

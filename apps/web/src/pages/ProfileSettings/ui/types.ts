@@ -13,4 +13,5 @@ export interface UserProfile {
   paymentEmailEnabled?: boolean;
   subscriptionNotificationsEnabled?: boolean;
   loginNotificationsEnabled?: boolean;
+  hiddenFromAttendees?: boolean;
 }

@@ -17,6 +17,61 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: uevent-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      DB_SYNCHRONIZE: "false"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-uevent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-uevent}
+      POSTGRES_DB: ${POSTGRES_DB:-uevent}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      API_URL: ${API_URL:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:3000/api/auth/users/google/callback}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PLATFORM_ACCOUNT_ID: ${STRIPE_PLATFORM_ACCOUNT_ID:-}
+      STRIPE_PLATFORM_COMMISSION_ACCOUNT: ${STRIPE_PLATFORM_COMMISSION_ACCOUNT:-}
+      PAYMENT_CURRENCY: ${PAYMENT_CURRENCY:-usd}
+      STRIPE_PLATFORM_FEE_CENTS: ${STRIPE_PLATFORM_FEE_CENTS:-100}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@uevent.app}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@uevent.app}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: uevent-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-5173}:3000"
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+      VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-}
+      VITE_PAYMENT_CURRENCY: ${VITE_PAYMENT_CURRENCY:-usd}
+    depends_on:
+      - api
+
   stripe-cli:
     image: stripe/stripe-cli:latest
     container_name: uevent-stripe-cli
@@ -24,7 +79,7 @@ services:
     environment:
       STRIPE_API_KEY: ${STRIPE_SECRET_KEY}
     depends_on:
-      - postgres
+      - api
 
 volumes:
   postgres_data:
