@@ -95,8 +95,13 @@ export class EventsService {
     const qb = this.eventsRepo
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.tags', 'tag')
-      .leftJoinAndSelect('event.tickets', 'ticket')
       .leftJoinAndSelect('event.organization', 'organization')
+
+    if (user_id) {
+      qb.leftJoinAndSelect('event.tickets', 'ticket')
+    } else {
+      qb.leftJoinAndSelect('event.tickets', 'ticket', 'ticket.user_id IS NULL')
+    }
 
     // Show only events that have not ended yet.
     qb.andWhere('event.datetime_end >= :now', { now })
@@ -182,6 +187,7 @@ export class EventsService {
 
   async findOne(id: string, acceptLanguage?: string) {
     const event = await this.findOneEntity(id)
+    event.tickets = (event.tickets ?? []).filter((ticket) => !ticket.user_id)
     const locale = this.contentLocalization.resolveRequestedLocale(acceptLanguage)
     const localized = await this.contentLocalization.localizeEvent(event, locale, {
       includeOrganization: true,
@@ -239,6 +245,8 @@ export class EventsService {
       sanitized.tickets = sanitized.tickets.map((ticket) => {
         if (!this.isRecord(ticket)) return ticket
         const normalizedTicket = { ...ticket }
+        delete normalizedTicket.private_info
+        delete normalizedTicket.private_files
         if (this.isRecord(normalizedTicket.user)) {
           normalizedTicket.user = this.sanitizeUserLike(normalizedTicket.user)
         }

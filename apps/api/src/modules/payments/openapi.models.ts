@@ -6,6 +6,35 @@ export class CreatePaymentIntentModel {
 
   @ApiProperty()
   paymentIntentId: string
+
+  @ApiProperty()
+  baseAmount: number
+
+  @ApiProperty()
+  platformFee: number
+
+  @ApiProperty()
+  totalAmount: number
+
+  @ApiProperty()
+  currencyCode: string
+
+  @ApiProperty()
+  currencySymbol: string
+}
+
+export class PaymentConfigModel {
+  @ApiProperty()
+  currencyCode: string
+
+  @ApiProperty()
+  currencySymbol: string
+
+  @ApiProperty()
+  platformFeeCents: number
+
+  @ApiProperty()
+  platformFeeAmount: number
 }
 
 export class PaymentIntentStatusModel {

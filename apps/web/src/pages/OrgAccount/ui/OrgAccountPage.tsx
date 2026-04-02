@@ -1,17 +1,28 @@
 import { Link, Navigate } from 'react-router';
-import { Building2, ChevronLeft, PlusCircle, ShieldCheck } from 'lucide-react';
-import { Button, Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@shared/components';
+import { Building2, ChevronLeft, ShieldCheck } from 'lucide-react';
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@shared/components';
 import { useAppContext } from '@shared/lib';
-import { OrgBrandingSection } from './OrgBrandingSection';
-import { OrgProfileSection } from './OrgProfileSection';
-import { OrgAccountSettings } from './OrgAccountSettings';
 import { OrgSecuritySection } from './OrgSecuritySection';
-import { OrgEventsSection } from './OrgEventsSection';
+import { OrgChartsSection } from './OrgChartsSection';
+import { OrgWalletSection } from './OrgWalletSection';
 import { useOrgAccountData } from './useOrgAccountData';
 
 export function OrgAccountPage() {
   const { t } = useAppContext();
-  const { id, isAuthenticated, accountType, org, myOrg, myOrgLoading, isLoading, isError, orgEvents } = useOrgAccountData();
+  const {
+    id,
+    isAuthenticated,
+    accountType,
+    org,
+    myOrg,
+    myOrgLoading,
+    isLoading,
+    isError,
+    orgEvents,
+    wallet,
+    verification,
+    invalidateOrgQueries,
+  } = useOrgAccountData();
 
   if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />;
 
@@ -63,27 +74,6 @@ export function OrgAccountPage() {
       <h1 className="text-2xl font-extrabold tracking-tight">{t.orgAccount.title}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t.orgAccount.subtitle}</p>
 
-      {/* Quick action */}
-      <section className="mt-6 overflow-hidden rounded-2xl border border-primary/30 bg-linear-to-r from-primary/15 via-primary/5 to-transparent p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-primary/80">{t.orgAccount.quickAction}</p>
-            <h2 className="mt-1 text-lg font-semibold">{t.orgAccount.launchEvent}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t.orgAccount.launchEventDesc}</p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Link to={`/events/create?organizationId=${org.id}`}>
-              <Button className="h-11 gap-2 rounded-full px-6 shadow-lg shadow-primary/30">
-                <PlusCircle className="h-4 w-4" /> {t.common.createEvent}
-              </Button>
-            </Link>
-            <Link to="/events">
-              <Button variant="outline" className="h-11 rounded-full px-5">{t.orgAccount.browseEvents}</Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Stats */}
       <section className="mt-5 grid gap-4 rounded-xl border border-border/60 bg-card p-5 sm:grid-cols-3">
         <div className="rounded-lg border border-border/60 bg-background/70 p-4">
@@ -105,10 +95,10 @@ export function OrgAccountPage() {
         </div>
       </section>
 
-      <OrgEventsSection />
-      <OrgBrandingSection />
-      <OrgProfileSection />
-      <OrgAccountSettings />
+      <OrgChartsSection wallet={wallet} orgEvents={orgEvents} />
+
+      <OrgWalletSection wallet={wallet} verification={verification} onRefresh={invalidateOrgQueries} />
+
       <OrgSecuritySection />
     </main>
   );

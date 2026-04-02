@@ -3,26 +3,13 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { isAxiosError } from 'axios';
 import type { PaymentIntentResult, Stripe, StripeElements } from '@stripe/stripe-js';
-import { api } from '@shared/api';
 import { useAppContext } from '@shared/lib';
-
-type PendingPayment = {
-  email?: string;
-  fullName?: string;
-  eventTitle?: string;
-  ticketName?: string;
-  price?: number;
-  eventDate?: string;
-  eventLocation?: string;
-  organizationName?: string;
-};
 
 interface UseConfirmPaymentOptions {
   stripe: Stripe | null;
   elements: StripeElements | null;
   email: string;
   clientSecret: string;
-  pendingPayment: PendingPayment | null;
   buildSuccessUrl: (paymentIntentId?: string) => string;
   setMessage: (msg: string | null) => void;
   setIsProcessing: (v: boolean) => void;
@@ -33,7 +20,6 @@ export function useConfirmPayment({
   elements,
   email,
   clientSecret,
-  pendingPayment,
   buildSuccessUrl,
   setMessage,
   setIsProcessing,
@@ -58,26 +44,6 @@ export function useConfirmPayment({
       return result;
     },
     onSuccess: async (result: PaymentIntentResult) => {
-      const customerEmail = pendingPayment?.email || email;
-      if (result?.paymentIntent?.status === 'succeeded' && customerEmail) {
-        try {
-          await api.post('/payments/send-confirmation', {
-            userEmail: customerEmail,
-            userName: pendingPayment?.fullName || t.checkout.defaultName,
-            eventTitle: pendingPayment?.eventTitle,
-            ticketName: pendingPayment?.ticketName,
-            price: pendingPayment?.price,
-            eventDate: pendingPayment?.eventDate,
-            eventLocation: pendingPayment?.eventLocation,
-            organizationName: pendingPayment?.organizationName,
-            paymentIntentId: result.paymentIntent.id,
-          });
-          console.log('Confirmation email sent!');
-        } catch (emailError) {
-          console.error('⚠️ Email sending failed (payment succeeded but email not sent):', emailError);
-        }
-      }
-
       if (result?.paymentIntent?.status === 'succeeded') {
         toast.success(t.checkout.paymentSuccess);
         navigate(buildSuccessUrl(result.paymentIntent.id));

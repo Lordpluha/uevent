@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { Tag, Check, X } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
-import { PROMO_CODE_DISCOUNTS, PROMO_CODE_EXAMPLES } from '@shared/config/payment';
+import { api } from '@shared/api';
 import { useAppContext } from '@shared/lib';
 
 interface PromoCodeSectionProps {
-  onApplyPromo: (code: string, discountPercent: number) => void;
+  eventId?: string;
+  onApplyPromo: (promo: { code: string; id: string; discountPercent: number }) => void;
   onRemovePromo: () => void;
   appliedCode?: string;
   appliedDiscount?: number;
 }
 
 export function PromoCodeSection({
+  eventId,
   onApplyPromo,
   onRemovePromo,
   appliedCode,
@@ -32,14 +34,18 @@ export function PromoCodeSection({
     setLoading(true);
     setError('');
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const discount = PROMO_CODE_DISCOUNTS[code];
-    if (discount !== undefined) {
-      onApplyPromo(code, discount);
+    try {
+      const response = await api.post<{ id: string; code: string; discountPercent: number }>('/payments/promo-codes/validate', {
+        code,
+        eventId,
+      });
+      onApplyPromo({
+        code: response.data.code,
+        id: response.data.id,
+        discountPercent: response.data.discountPercent,
+      });
       setPromoInput('');
-    } else {
+    } catch {
       setError(t.promoCode.invalidCode);
     }
 
@@ -114,10 +120,10 @@ export function PromoCodeSection({
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
       <p className="mt-2 text-xs text-muted-foreground">
         {t.promoCode.examples
-          .replace('{{code1}}', PROMO_CODE_EXAMPLES[0].code)
-          .replace('{{discount1}}', String(PROMO_CODE_EXAMPLES[0].discount))
-          .replace('{{code2}}', PROMO_CODE_EXAMPLES[1].code)
-          .replace('{{discount2}}', String(PROMO_CODE_EXAMPLES[1].discount))}
+          .replace('{{code1}}', 'SPRING20')
+          .replace('{{discount1}}', '20')
+          .replace('{{code2}}', 'WELCOME10')
+          .replace('{{discount2}}', '10')}
       </p>
     </div>
   );

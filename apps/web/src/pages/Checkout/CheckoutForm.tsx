@@ -21,6 +21,7 @@ type PendingPayment = {
   eventTitle?: string;
   quantity?: number;
   price?: number;
+  currency?: string;
   paymentIntentId?: string;
   email?: string;
 };
@@ -44,7 +45,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
       ticketType: pendingPayment?.ticketName ?? 'standard',
       qty: String(pendingPayment?.quantity ?? 1),
       total: String(Number(pendingPayment?.price ?? 0).toFixed(2)),
-      currency: '$',
+      currency: pendingPayment?.currency ?? '$',
       order: pendingPayment?.paymentIntentId ?? paymentIntentId ?? clientSecret,
     });
 
@@ -74,7 +75,6 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
     elements,
     email,
     clientSecret,
-    pendingPayment,
     buildSuccessUrl,
     setMessage,
     setIsProcessing,
@@ -124,6 +124,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
             eventTitle={pendingPayment?.eventTitle}
             ticketName={pendingPayment?.ticketName}
             price={pendingPayment?.price}
+            currency={pendingPayment?.currency}
           />
 
           {/* Payment Form */}
@@ -200,7 +201,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
                     {t.common.processing}
                   </>
                 ) : (
-                  t.checkout.pay.replace('{{amount}}', `$${(pendingPayment.price || 0).toFixed(2)}`)
+                  t.checkout.pay.replace('{{amount}}', `${pendingPayment.currency ?? '$'}${(pendingPayment.price || 0).toFixed(2)}`)
                 )}
               </Button>
             </div>

@@ -2,11 +2,13 @@ import { Link } from 'react-router';
 import { Building2, Ticket } from 'lucide-react';
 import { Button, Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@shared/components';
 import { useAppContext } from '@shared/lib';
-import { useRequiredOrgAccountData } from './useOrgAccountData';
+import { useOrgAccountData } from './useOrgAccountData';
 
 export function OrgEventsSection() {
   const { t } = useAppContext();
-  const { orgEvents } = useRequiredOrgAccountData();
+  const { orgEvents, isLoading } = useOrgAccountData();
+
+  if (isLoading) return null;
 
   return (
     <section className="mt-5 space-y-3 rounded-xl border border-border/60 bg-card p-5">

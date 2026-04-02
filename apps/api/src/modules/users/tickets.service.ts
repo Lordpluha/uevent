@@ -111,7 +111,11 @@ export class TicketsService {
       .orderBy('ticket.created_at', 'DESC')
 
     if (event_id) qb.andWhere('ticket.event_id = :event_id', { event_id })
-    if (user_id) qb.andWhere('ticket.user_id = :user_id', { user_id })
+    if (user_id) {
+      qb.andWhere('ticket.user_id = :user_id', { user_id })
+    } else {
+      qb.andWhere('ticket.user_id IS NULL')
+    }
     if (status) qb.andWhere('ticket.status = :status', { status })
 
     const total = await qb.getCount()

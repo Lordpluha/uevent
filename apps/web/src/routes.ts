@@ -4,6 +4,9 @@ export default [
   // Ignore Chrome DevTools probe in dev to avoid noisy "No route matches" logs
   route('/.well-known/appspecific/com.chrome.devtools.json', 'app/chrome-devtools-probe.tsx'),
 
+  // SEO
+  route('/robots.txt', 'app/robots[.]txt.ts'),
+
   index('app/home.tsx'),
 
   // Events
@@ -36,5 +39,14 @@ export default [
   route('/checkout/:eventId/success', 'app/checkout-success.tsx'),
 
   // Private: org management
-  route('/organizations/:id/edit', 'app/organization-edit.tsx'),
+  route('/settings', 'app/settings.tsx'),
+
+  // Dashboard (org account shortcut)
+  route('/dashboard', 'app/dashboard.tsx'),
+
+  // Org wallet withdrawal
+  route('/withdrawal', 'app/withdrawal.tsx'),
+
+  // Org promo codes
+  route('/promo-codes', 'app/promo-codes.tsx'),
 ] satisfies RouteConfig;

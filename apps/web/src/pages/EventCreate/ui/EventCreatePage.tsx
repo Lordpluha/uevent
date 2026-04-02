@@ -1,4 +1,4 @@
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
+import { Link, Navigate, useNavigate } from 'react-router';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { EventCreate } from '@features/EventCreate';
@@ -11,8 +11,6 @@ export function EventCreatePage() {
   const { isAuthenticated, accountType } = useAuth();
   const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const orgFromQuery = searchParams.get('organizationId') ?? undefined;
 
   if (!isAuthenticated || accountType !== 'organization') {
     return <Navigate to="/" replace />;
@@ -26,7 +24,7 @@ export function EventCreatePage() {
     );
   }
 
-  const defaultOrganizationId = orgFromQuery ?? myOrg?.id;
+  const defaultOrganizationId = myOrg?.id;
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">

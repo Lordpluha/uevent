@@ -26,6 +26,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/shared/components/JsonLd/JsonLd.tsx"],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
     }
   ],
   "javascript": {

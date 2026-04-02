@@ -1,7 +1,8 @@
 import { cva } from 'class-variance-authority';
 import { CalendarDays, Clock, MapPin, Video, QrCode } from 'lucide-react';
 import { Badge } from '@shared/components';
-import { DEFAULT_PAYMENT_CURRENCY_SYMBOL } from '@shared/config/payment';
+import { getCurrencySymbol } from '@shared/config/payment';
+import { usePaymentConfig } from '@shared/hooks/usePaymentConfig';
 import { useAppContext } from '@shared/lib';
 import { cn } from '@shared/lib/utils';
 import type { TicketStatus, TicketType } from '../model/ticket';
@@ -65,7 +66,7 @@ const panelPriceVariants = cva('text-2xl font-black leading-none', {
 export const TicketCard = ({
   ticketType,
   price,
-  currency = DEFAULT_PAYMENT_CURRENCY_SYMBOL,
+  currency,
   eventTitle,
   eventDate,
   eventTime,
@@ -76,6 +77,7 @@ export const TicketCard = ({
   onSelect,
 }: TicketCardProps) => {
   const { t } = useAppContext();
+  const { data: paymentConfig } = usePaymentConfig();
   const TYPE_LABELS: Record<TicketType, string> = {
     free: t.common.free,
     standard: t.common.standard,
@@ -88,6 +90,7 @@ export const TicketCard = ({
   };
   const statusBadge = STATUS_BADGE[status];
   const isSoldOut = status === 'sold-out';
+  const currencySymbol = getCurrencySymbol({ currency, paymentConfig });
 
   return (
     <div
@@ -99,7 +102,7 @@ export const TicketCard = ({
       {/* Left panel — price + type */}
       <div className={cn(panelVariants({ ticketType }))}>
         <span className={cn(panelTextVariants({ ticketType }))}>{TYPE_LABELS[ticketType]}</span>
-        <span className={cn(panelPriceVariants({ ticketType }))}>{price === 0 ? t.common.free : `${currency}${price}`}</span>
+        <span className={cn(panelPriceVariants({ ticketType }))}>{price === 0 ? t.common.free : `${currencySymbol}${price}`}</span>
         {seat && (
           <span className="mt-1 rounded bg-black/10 px-1.5 py-0.5 text-[10px] font-semibold text-foreground/60">
             {t.entityCard.seat} {seat}

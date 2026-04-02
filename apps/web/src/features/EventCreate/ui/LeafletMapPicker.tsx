@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { CircleMarker, LeafletMouseEvent, Map as LeafletMap } from 'leaflet';
 import type { LatLng } from './helpers';
+import { OSM_TILE_URL, OSM_ATTRIBUTION } from '@shared/config/app';
 
 import 'leaflet/dist/leaflet.css';
 
@@ -30,9 +31,9 @@ export function LeafletMapPicker({
       );
       map = mapInstance;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      L.tileLayer(OSM_TILE_URL, {
         maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors',
+        attribution: OSM_ATTRIBUTION,
       }).addTo(mapInstance);
 
       if (selected) {

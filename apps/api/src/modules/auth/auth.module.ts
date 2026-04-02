@@ -8,6 +8,7 @@ import { UsersAuthService } from './users-auth.service'
 import { OrgsAuthService } from './orgs-auth.service'
 import { GoogleAuthService } from './google-auth.service'
 import { JwtGuard } from './guards/jwt.guard'
+import { OptionalJwtGuard } from './guards/optional-jwt.guard'
 import { User } from '../users/entities/user.entity'
 import { UserSession } from '../users/entities/user-session.entity'
 import { UserOtp } from '../users/entities/user-otp.entity'
@@ -32,7 +33,7 @@ import { ApiConfigService } from '../../config/api-config.service'
     NotificationsModule,
   ],
   controllers: [UsersAuthController, OrgsAuthController, GoogleAuthController],
-  providers: [UsersAuthService, OrgsAuthService, GoogleAuthService, JwtGuard],
-  exports: [JwtGuard, JwtModule],
+  providers: [UsersAuthService, OrgsAuthService, GoogleAuthService, JwtGuard, OptionalJwtGuard],
+  exports: [JwtGuard, OptionalJwtGuard, JwtModule],
 })
 export class AuthModule {}

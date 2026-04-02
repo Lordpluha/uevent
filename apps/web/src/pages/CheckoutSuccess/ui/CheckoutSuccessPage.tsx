@@ -1,26 +1,30 @@
+import { useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { CalendarCheck, CalendarPlus, CheckCircle2, Download, ExternalLink, Loader2, Ticket } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge, Button } from '@shared/components';
 import { api } from '@shared/api';
-import { DEMO_PAYMENT_ORDER_ID, getCurrencySymbol } from '@shared/config/payment';
+import { getCurrencySymbol } from '@shared/config/payment';
+import { usePaymentConfig } from '@shared/hooks/usePaymentConfig';
 import { useAppContext } from '@shared/lib';
 import { useAuth } from '@shared/lib/auth-context';
 import { useCalendarSync } from './useCalendarSync';
+import { toast } from 'sonner';
 
 export function CheckoutSuccessPage() {
   const { t } = useAppContext();
   const { eventId } = useParams<{ eventId: string }>();
   const [searchParams] = useSearchParams();
   const { isAuthenticated, accountType } = useAuth();
+  const { data: paymentConfig } = usePaymentConfig();
 
   const ticketType = searchParams.get('ticketType') ?? 'standard';
   const ticketTypeLabel = ticketType === 'free' ? t.common.free : ticketType === 'vip' ? t.common.vip : t.common.standard;
   const quantity = Number(searchParams.get('qty') ?? '1');
   const promo = searchParams.get('promo') ?? '';
   const total = Number(searchParams.get('total') ?? '0');
-  const currency = getCurrencySymbol(searchParams.get('currency'));
-  const orderId = searchParams.get('order') ?? DEMO_PAYMENT_ORDER_ID;
+  const currency = getCurrencySymbol({ currency: searchParams.get('currency'), paymentConfig });
+  const orderId = searchParams.get('order');
   const ticketId = searchParams.get('ticketId');
 
   const { data: paymentData, isLoading: isPaymentLoading } = useQuery<{
@@ -33,7 +37,7 @@ export function CheckoutSuccessPage() {
       const res = await api.get(`/payments/${orderId}`);
       return res.data;
     },
-    enabled: !!orderId && orderId !== DEMO_PAYMENT_ORDER_ID,
+    enabled: !!orderId,
     retry: 3,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
@@ -43,6 +47,36 @@ export function CheckoutSuccessPage() {
   });
 
   const paymentProcessing = isPaymentLoading || paymentData?.status === 'processing';
+
+  useEffect(() => {
+    if (!orderId || !isAuthenticated || accountType !== 'user') return;
+
+    void api.post(`/payments/${orderId}/reconcile`).catch(() => {
+      // Best-effort recovery for old orders where webhook didn't issue all user tickets.
+    });
+  }, [orderId, isAuthenticated, accountType]);
+
+  const handleDownloadTicket = async () => {
+    if (!orderId) {
+      toast.error('Missing order id');
+      return;
+    }
+
+    try {
+      const response = await api.get<Blob>(`/payments/${orderId}/ticket-pdf`, {
+        responseType: 'blob',
+      });
+
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `uevent-ticket-${orderId}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download ticket PDF');
+    }
+  };
 
   const { calendarMutation, calendarStatus } = useCalendarSync(eventId, ticketId);
 
@@ -72,7 +106,7 @@ export function CheckoutSuccessPage() {
         <div className="mb-6 grid gap-3 rounded-xl border border-border/60 bg-background/40 p-4 text-sm sm:grid-cols-2">
           <div>
             <p className="text-xs text-muted-foreground">{t.checkoutSuccess.orderId}</p>
-            <p className="font-semibold text-foreground">{orderId}</p>
+            <p className="font-semibold text-foreground">{orderId ?? '—'}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">{t.checkoutSuccess.eventId}</p>
@@ -139,7 +173,7 @@ export function CheckoutSuccessPage() {
         )}
 
         <div className="flex flex-wrap gap-3">
-          <Button className="gap-1.5" variant="outline" disabled>
+          <Button className="gap-1.5" variant="outline" onClick={handleDownloadTicket}>
             <Download className="h-4 w-4" />
             {t.checkoutSuccess.downloadTicket}
           </Button>

@@ -33,6 +33,7 @@
     "nestjs-stripe": "^1.0.0",
     "nestjs-zod": "^5.1.1",
     "nodemailer": "^8.0.4",
+    "pdf-lib": "^1.17.1",
     "pg": "^8.20.0",
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",

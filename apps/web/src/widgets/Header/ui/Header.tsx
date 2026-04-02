@@ -1,4 +1,4 @@
-import { LogOut, Menu, Settings, User, X } from 'lucide-react';
+import { Banknote, CalendarPlus, LayoutDashboard, LogOut, Menu, Settings, Tag, User, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import {
@@ -90,10 +90,34 @@ export const Header = () => {
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem render={<Link to={accountType === 'organization' ? `/organizations/${myOrg?.id}` : '/profile'} />}>
+                <DropdownMenuItem render={<Link to="/profile" />}>
                   <User className="h-4 w-4" />
                   {displayName}
                 </DropdownMenuItem>
+                {accountType === 'organization' && (
+                  <>
+                    <DropdownMenuItem render={<Link to="/dashboard" />}>
+                      <LayoutDashboard className="h-4 w-4" />
+                      {t.organizations.dashboard}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem render={<Link to="/settings" />}>
+                      <Settings className="h-4 w-4" />
+                      {t.header.actions.profileSettings}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem render={<Link to="/withdrawal" />}>
+                      <Banknote className="h-4 w-4" />
+                      Request withdrawal
+                    </DropdownMenuItem>
+                    <DropdownMenuItem render={<Link to="/promo-codes" />}>
+                      <Tag className="h-4 w-4" />
+                      Promo codes
+                    </DropdownMenuItem>
+                    <DropdownMenuItem render={<Link to="/events/create" />}>
+                      <CalendarPlus className="h-4 w-4" />
+                      {t.common.createEvent}
+                    </DropdownMenuItem>
+                  </>
+                )}
                 {accountType === 'user' && (
                   <DropdownMenuItem render={<Link to="/profile/settings" />}>
                     <Settings className="h-4 w-4" />
@@ -166,7 +190,7 @@ export const Header = () => {
               {isAuthenticated && currentAccount && (
                 <>
                   <Link
-                    to={accountType === 'organization' ? `/organizations/${myOrg?.id}` : '/profile'}
+                    to="/profile"
                     onClick={closeMenu}
                     className="flex items-center gap-3 rounded-md border border-border px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-accent"
                   >
@@ -176,6 +200,60 @@ export const Header = () => {
                     </Avatar>
                     {displayName}
                   </Link>
+                  {accountType === 'organization' && (
+                    <>
+                      <Link
+                        to="/dashboard"
+                        onClick={closeMenu}
+                        className="flex items-center gap-3 rounded-md border border-border px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-accent"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        {t.organizations.dashboard}
+                      </Link>
+                      <Link
+                        to="/settings"
+                        onClick={closeMenu}
+                        className="flex items-center gap-3 rounded-md border border-border px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-accent"
+                      >
+                        <Settings className="h-4 w-4" />
+                        {t.header.actions.profileSettings}
+                      </Link>
+                      <Link
+                        to="/withdrawal"
+                        onClick={closeMenu}
+                        className="flex items-center gap-3 rounded-md border border-border px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-accent"
+                      >
+                        <Banknote className="h-4 w-4" />
+                        Request withdrawal
+                      </Link>
+                      <Link
+                        to="/promo-codes"
+                        onClick={closeMenu}
+                        className="flex items-center gap-3 rounded-md border border-border px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-accent"
+                      >
+                        <Tag className="h-4 w-4" />
+                        Promo codes
+                      </Link>
+                      <Link
+                        to="/events/create"
+                        onClick={closeMenu}
+                        className="flex items-center gap-3 rounded-md border border-border px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-accent"
+                      >
+                        <CalendarPlus className="h-4 w-4" />
+                        {t.common.createEvent}
+                      </Link>
+                    </>
+                  )}
+                  {accountType === 'user' && (
+                    <Link
+                      to="/profile/settings"
+                      onClick={closeMenu}
+                      className="flex items-center gap-3 rounded-md border border-border px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-accent"
+                    >
+                      <Settings className="h-4 w-4" />
+                      {t.header.actions.profileSettings}
+                    </Link>
+                  )}
                   <button
                     type="button"
                     onClick={() => { closeMenu(); handleLogout(); }}

@@ -8,6 +8,7 @@ export const DEFAULT_GOOGLE_CALLBACK_PATH = '/auth/google/callback'
 export const DEFAULT_GOOGLE_CALLBACK_URL = `${DEFAULT_API_URL}${DEFAULT_GOOGLE_CALLBACK_PATH}`
 export const DEFAULT_JWT_SECRET = 'changeme'
 export const DEFAULT_PAYMENT_CURRENCY = 'usd'
+export const DEFAULT_STRIPE_PLATFORM_FEE_CENTS = 100
 export const DEFAULT_SMTP_FROM_EMAIL = 'noreply@uevent.app'
 
 const toNumber = (fallback: number) =>
@@ -34,8 +35,8 @@ export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   PORT: toNumber(DEFAULT_API_PORT),
-  CLIENT_URL: z.url().default(DEFAULT_CLIENT_URL),
-  API_URL: z.url().default(DEFAULT_API_URL),
+  CLIENT_URL: z.url(),
+  API_URL: z.url(),
 
   POSTGRES_HOST: z.string().min(1),
   POSTGRES_PORT: toNumber(5432),
@@ -44,15 +45,18 @@ export const envSchema = z.object({
   POSTGRES_DB: z.string().min(1),
   DB_SYNCHRONIZE: toBoolean(true),
 
-  JWT_SECRET: z.string().min(1).default(DEFAULT_JWT_SECRET),
+  JWT_SECRET: z.string().min(1),
 
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
-  GOOGLE_CALLBACK_URL: z.string().url().default(DEFAULT_GOOGLE_CALLBACK_URL),
+  GOOGLE_CALLBACK_URL: z.string().url(),
 
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PLATFORM_ACCOUNT_ID: z.string().optional(),
+  STRIPE_PLATFORM_COMMISSION_ACCOUNT: z.string().optional(),
   PAYMENT_CURRENCY: z.string().min(1).default(DEFAULT_PAYMENT_CURRENCY),
+  STRIPE_PLATFORM_FEE_CENTS: toNumber(DEFAULT_STRIPE_PLATFORM_FEE_CENTS),
 
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().optional(),
@@ -62,14 +66,6 @@ export const envSchema = z.object({
 })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production') {
-      if (env.JWT_SECRET === DEFAULT_JWT_SECRET) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['JWT_SECRET'],
-          message: 'JWT_SECRET must be set to a strong non-default value in production',
-        })
-      }
-
       if (env.DB_SYNCHRONIZE) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

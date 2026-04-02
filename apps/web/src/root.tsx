@@ -13,7 +13,7 @@ import type { Route } from './+types/root'
 import type { PropsWithChildren } from 'react'
 import { useCallback, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { NuqsAdapter } from 'nuqs/adapters/react'
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
 
 import '@app/styles/global.css'
 import { Header } from '@widgets/Header'
@@ -21,11 +21,13 @@ import { Footer } from '@widgets/Footer'
 import { NotFound } from '@widgets/NotFound'
 import { ErrorBoundary as ErrorBoundaryWidget } from '@widgets/Error'
 import { TooltipProvider } from '@shared/components'
+import { JsonLd } from '@shared/components'
 import { Toaster } from 'sonner'
 import { AppContext, type AppContextValue, fetchLocale } from '@shared/lib'
 import { AuthProvider } from '@shared/lib/auth-context'
 import type { Dictionary, Locale } from '@shared/lib'
 import { GoogleAuthHandler } from '@features/GoogleAuth'
+import { GOOGLE_FONTS_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@shared/config/app'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -36,7 +38,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    href: GOOGLE_FONTS_URL,
   },
 ]
 
@@ -97,6 +99,19 @@ export function Layout({ children }: PropsWithChildren) {
   )
 }
 
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/events?search={search_term_string}` },
+    'query-input': 'required name=search_term_string',
+  },
+}
+
 const queryClient = new QueryClient()
 
 type Win = Window & { __THEME__?: string }
@@ -136,6 +151,7 @@ export default function App() {
           <GoogleAuthHandler />
           <AppContext.Provider value={ctx}>
           <TooltipProvider>
+            <JsonLd schema={websiteJsonLd} />
             <Header />
             <Outlet />
             <Toaster />

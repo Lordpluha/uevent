@@ -4,9 +4,10 @@ interface CheckoutOrderSummaryProps {
   eventTitle?: string;
   ticketName?: string;
   price?: number | string;
+  currency?: string;
 }
 
-export function CheckoutOrderSummary({ eventTitle, ticketName, price }: CheckoutOrderSummaryProps) {
+export function CheckoutOrderSummary({ eventTitle, ticketName, price, currency = '$' }: CheckoutOrderSummaryProps) {
   const { t } = useAppContext();
   return (
     <div className="mb-6 p-4 bg-muted rounded-lg">
@@ -23,7 +24,7 @@ export function CheckoutOrderSummary({ eventTitle, ticketName, price }: Checkout
       <div className="flex justify-between items-center pt-3">
         <span className="text-sm font-medium text-muted-foreground">{t.checkout.totalAmount}</span>
         <span className="text-2xl font-bold">
-          ${price ? Number.parseFloat(price.toString()).toFixed(2) : '0.00'}
+          {currency}{price ? Number.parseFloat(price.toString()).toFixed(2) : '0.00'}
         </span>
       </div>
     </div>

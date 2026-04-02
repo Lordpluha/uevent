@@ -2,8 +2,9 @@ import { Link, useParams } from 'react-router';
 import { CalendarDays, ChevronLeft, Globe, MapPin, Star, UserRoundX } from 'lucide-react';
 import { EventCard, useEvents } from '@entities/Event';
 import { useUser } from '@entities/User';
-import { Avatar, AvatarFallback, AvatarImage, Badge, Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, Separator } from '@shared/components';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, JsonLd, Separator } from '@shared/components';
 import { ShareButton } from '@shared/components/ShareButton/ShareButton';
+import { SITE_URL } from '@shared/config/app';
 import { useAppContext } from '@shared/lib';
 
 export function UserProfilePage() {
@@ -43,6 +44,20 @@ export function UserProfilePage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
+      <JsonLd
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'Person',
+          '@id': `${SITE_URL}/users/${user.id}`,
+          name: user.name,
+          alternateName: user.username,
+          url: `${SITE_URL}/users/${user.id}`,
+          ...(user.avatarUrl ? { image: user.avatarUrl } : {}),
+          ...(user.bio ? { description: user.bio } : {}),
+          ...(user.location ? { homeLocation: { '@type': 'Place', name: user.location } } : {}),
+          ...(user.website ? { sameAs: [user.website] } : {}),
+        }}
+      />
       <Link
         to="/"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"

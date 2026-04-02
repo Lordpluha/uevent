@@ -18,9 +18,9 @@ import { useAppContext } from '@shared/lib';
 import { AuthModal } from '@features/AuthModal';
 import { useRequiredOrgProfileData } from './useOrgProfileData';
 
-export function OrgProfileHero() {
+export function OrgProfileHero({ overrideId }: { overrideId?: string } = {}) {
   const { t } = useAppContext();
-  const { org, isOwner, isUserViewer, isFollowed, isFollowPending, toggleFollow } = useRequiredOrgProfileData();
+  const { org, isOwner, isUserViewer, isFollowed, isFollowPending, toggleFollow } = useRequiredOrgProfileData(overrideId);
 
   return (
     <>
@@ -88,16 +88,6 @@ export function OrgProfileHero() {
         </div>
 
         {/* ── Action buttons ───────────────── */}
-        {isOwner && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link to={`/events/create?organizationId=${org.id}`}>
-              <Button size="sm">{t.common.createEvent}</Button>
-            </Link>
-            <Link to={`/profile/organization/${org.id}`}>
-              <Button size="sm" variant="outline">{t.organizations.dashboard}</Button>
-            </Link>
-          </div>
-        )}
         {!isOwner && (
           <div className="mt-4 flex flex-wrap gap-2">
             {isUserViewer ? (

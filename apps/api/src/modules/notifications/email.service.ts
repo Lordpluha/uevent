@@ -28,7 +28,7 @@ export class EmailService implements OnModuleInit {
   }
 
   private get paymentCurrencySymbol(): string {
-    return this.apiConfig.paymentCurrency === 'usd' ? '$' : this.paymentCurrencyCode
+    return this.apiConfig.paymentCurrencySymbol
   }
 
   private formatCurrencyLine(amount: number): string {
@@ -533,7 +533,7 @@ export class EmailService implements OnModuleInit {
         <div class="next-steps">
           <strong>What's Next?</strong><br><br>
           1. Save or screenshot your QR code<br>
-          2. Check your account at <strong>uevent.app</strong> for your ticket<br>
+          2. Check your account at <strong>${this.apiConfig.clientUrl}</strong> for your ticket<br>
           3. You may need to present the QR code at the event<br><br>
           For any questions, visit our support center.
         </div>
@@ -543,9 +543,9 @@ export class EmailService implements OnModuleInit {
         <div class="footer-brand">UEVENT</div>
         <div class="footer-tagline">Event Management Platform</div>
         <div class="footer-links">
-          <a href="https://uevent.app">Website</a> |
-          <a href="https://uevent.app/support">Support</a> |
-          <a href="https://uevent.app/faq">FAQ</a>
+          <a href="${this.apiConfig.clientUrl}">Website</a> |
+          <a href="${this.apiConfig.clientUrl}/support">Support</a> |
+          <a href="${this.apiConfig.clientUrl}/faq">FAQ</a>
         </div>
         <div class="footer-disclaimer">
           This is an automated email. Please do not reply to this message.<br>
@@ -583,9 +583,9 @@ Payment ID: ${data.paymentIntentId}
 ---
 NEXT STEPS
 ---
-Check your account at uevent.app to view your ticket.
+Check your account at ${this.apiConfig.clientUrl} to view your ticket.
 
-For support, visit: https://uevent.app/support
+For support, visit: ${this.apiConfig.clientUrl}/support
 
 This is an automated email. Please do not reply to this message.
 
@@ -934,7 +934,7 @@ Event Management Platform
             Ensure your card has sufficient funds<br>
             Try a different payment method<br>
             Contact your bank if the issue persists<br><br>
-          <a href="https://uevent.app/checkout" class="cta-button">Try Again</a>
+          <a href="${this.apiConfig.clientUrl}/checkout" class="cta-button">Try Again</a>
         </div>
       </div>
 
@@ -942,9 +942,9 @@ Event Management Platform
         <div class="footer-brand">UEVENT</div>
         <div class="footer-tagline">Event Management Platform</div>
         <div class="footer-links">
-          <a href="https://uevent.app">Website</a> |
-          <a href="https://uevent.app/support">Support</a> |
-          <a href="https://uevent.app/faq">FAQ</a>
+          <a href="${this.apiConfig.clientUrl}">Website</a> |
+          <a href="${this.apiConfig.clientUrl}/support">Support</a> |
+          <a href="${this.apiConfig.clientUrl}/faq">FAQ</a>
         </div>
         <div class="footer-disclaimer">
           This is an automated email. Please do not reply to this message.<br>
@@ -986,9 +986,9 @@ WHAT NOW?
 ✓ Try a different payment method
 ✓ Contact your bank if the issue persists
 
-Try again: https://uevent.app/checkout
+Try again: ${this.apiConfig.clientUrl}/checkout
 
-For support, visit: https://uevent.app/support
+For support, visit: ${this.apiConfig.clientUrl}/support
 
 This is an automated email. Please do not reply to this message.
 
@@ -1291,9 +1291,9 @@ Event Management Platform
         <div class="footer-brand">UEVENT</div>
         <div class="footer-tagline">Event Management Platform</div>
         <div class="footer-links">
-          <a href="https://uevent.app">Website</a> |
-          <a href="https://uevent.app/support">Support</a> |
-          <a href="https://uevent.app/faq">FAQ</a>
+          <a href="${this.apiConfig.clientUrl}">Website</a> |
+          <a href="${this.apiConfig.clientUrl}/support">Support</a> |
+          <a href="${this.apiConfig.clientUrl}/faq">FAQ</a>
         </div>
         <div class="footer-disclaimer">
           This is an automated email. Please do not reply to this message.<br>
@@ -1328,7 +1328,7 @@ WHAT'S NEXT?
 ---
 The refund has been initiated and will return to your original payment method within 3-5 business days. Some banks may take longer to process the refund.
 
-If you have any questions, please contact our support team at: https://uevent.app/support
+If you have any questions, please contact our support team at: ${this.apiConfig.clientUrl}/support
 
 This is an automated email. Please do not reply to this message.
 

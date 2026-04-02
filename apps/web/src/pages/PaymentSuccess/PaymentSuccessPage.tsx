@@ -5,6 +5,7 @@ import { CheckCircle, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@shared/components';
 import { api } from '@shared/api';
 import { getCurrencySymbol } from '@shared/config/payment';
+import { usePaymentConfig } from '@shared/hooks/usePaymentConfig';
 import { useAppContext } from '@shared/lib';
 import { toast } from 'sonner';
 
@@ -19,6 +20,7 @@ export function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const paymentIntentId = searchParams.get('paymentIntentId');
+  const { data: paymentConfig } = usePaymentConfig();
 
   const { data: payment, isLoading, isError } = useQuery<PaymentStatus>({
     queryKey: ['payment-status', paymentIntentId],
@@ -46,10 +48,10 @@ export function PaymentSuccessPage() {
   const isProcessing = isLoading || payment?.status === 'processing';
   const isFailed = isError || payment?.status === 'canceled';
 
-  const currencySymbol = getCurrencySymbol(payment?.currency);
+  const currencySymbol = getCurrencySymbol({ currency: payment?.currency, paymentConfig });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-linear-to-b from-background to-muted/50 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
 
         {/* Status Icon */}

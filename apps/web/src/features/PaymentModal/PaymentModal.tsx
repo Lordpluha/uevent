@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { X, Loader2 } from 'lucide-react';
 import { api } from '@shared/api';
 import { Button } from '@shared/components';
-import { DEFAULT_PAYMENT_CURRENCY_CODE, DEFAULT_PAYMENT_CURRENCY_SYMBOL } from '@shared/config/payment';
+import { usePaymentConfig } from '@shared/hooks/usePaymentConfig';
 import { useAppContext } from '@shared/lib';
 
 export interface PaymentModalProps {
@@ -34,11 +34,15 @@ export function PaymentModal({
   onSuccess,
 }: PaymentModalProps) {
   const { t } = useAppContext();
+  const { data: paymentConfig } = usePaymentConfig();
   const [email, setEmail] = useState('');
   const [cardName, setCardName] = useState('');
 
   // convert price to cents
   const amountInCents = Math.round(price * 100);
+  const stripeFee = price > 0 ? (paymentConfig?.platformFeeAmount ?? 0) : 0;
+  const totalPrice = price + stripeFee;
+  const currencySymbol = paymentConfig?.currencySymbol ?? '';
 
   const createPaymentMutation = useMutation({
     mutationFn: async () => {
@@ -47,7 +51,6 @@ export function PaymentModal({
         paymentIntentId: string;
       }>('/payments/create-intent', {
         amount: amountInCents,
-        currency: DEFAULT_PAYMENT_CURRENCY_CODE,
         orderId: `ticket-${ticketId}-event-${eventId}`,
         userEmail: email,
         userName: cardName,
@@ -115,13 +118,19 @@ export function PaymentModal({
           <div className="flex justify-between text-sm">
             <span>{t.paymentModal.ticketPrice}</span>
             <span className="font-semibold">
-              {DEFAULT_PAYMENT_CURRENCY_SYMBOL}{price.toFixed(2)}
+              {currencySymbol}{price.toFixed(2)}
+            </span>
+          </div>
+          <div className="mt-2 flex justify-between text-sm">
+            <span>Stripe fee</span>
+            <span className="font-semibold">
+              {currencySymbol}{stripeFee.toFixed(2)}
             </span>
           </div>
           <div className="mt-2 border-t border-border pt-2 flex justify-between text-sm font-bold">
             <span>{t.paymentModal.total}</span>
             <span>
-              ${price.toFixed(2)}
+              {currencySymbol}{totalPrice.toFixed(2)}
             </span>
           </div>
         </div>
@@ -181,7 +190,7 @@ export function PaymentModal({
                   {t.common.processing}
                 </>
               ) : (
-                t.paymentModal.pay.replace('{{amount}}', `$${price.toFixed(2)}`)
+                t.paymentModal.pay.replace('{{amount}}', `${currencySymbol}${totalPrice.toFixed(2)}`)
               )}
             </Button>
           </div>

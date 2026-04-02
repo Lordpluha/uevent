@@ -34,11 +34,21 @@ export class ApiConfigService {
     return {
       secretKey: this.configService.get('STRIPE_SECRET_KEY', { infer: true }) ?? '',
       webhookSecret: this.configService.get('STRIPE_WEBHOOK_SECRET', { infer: true }) ?? '',
+      platformAccountId: this.configService.get('STRIPE_PLATFORM_ACCOUNT_ID', { infer: true }) ?? '',
+      commissionAccount: this.configService.get('STRIPE_PLATFORM_COMMISSION_ACCOUNT', { infer: true }) ?? '',
     }
   }
 
   get paymentCurrency(): string {
     return this.configService.get('PAYMENT_CURRENCY', { infer: true }).toLowerCase()
+  }
+
+  get paymentCurrencySymbol(): string {
+    return this.paymentCurrency === 'usd' ? '$' : this.paymentCurrency.toUpperCase()
+  }
+
+  get stripePlatformFeeCents(): number {
+    return this.configService.get('STRIPE_PLATFORM_FEE_CENTS', { infer: true })
   }
 
   get smtpConfig() {

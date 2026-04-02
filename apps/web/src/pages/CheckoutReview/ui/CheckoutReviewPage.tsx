@@ -4,8 +4,11 @@ import { ChevronLeft, CreditCard, Minus, Plus, ShieldCheck, Ticket } from 'lucid
 import { useEvent } from '@entities/Event';
 import { useMe } from '@entities/User';
 import { Badge, Button, PromoCodeSection } from '@shared/components';
-import { DEFAULT_PAYMENT_CURRENCY_SYMBOL, PROMO_CODE_DISCOUNTS } from '@shared/config/payment';
+import { api } from '@shared/api';
+import { getCurrencySymbol } from '@shared/config/payment';
+import { usePaymentConfig } from '@shared/hooks/usePaymentConfig';
 import { useAppContext } from '@shared/lib';
+import { useAuth } from '@shared/lib/auth-context';
 import { useCheckoutPayment } from './useCheckoutPayment';
 
 export function CheckoutReviewPage() {
@@ -18,18 +21,37 @@ export function CheckoutReviewPage() {
 
   const { data: event, isLoading } = useEvent(eventId ?? '');
   const { data: me } = useMe();
+  const { data: paymentConfig } = usePaymentConfig();
+  const { accountType } = useAuth();
 
-  const [appliedPromoCode, setAppliedPromoCode] = useState<string | undefined>();
-  const [appliedPromoDiscount, setAppliedPromoDiscount] = useState<number | undefined>();
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; id: string; discountPercent: number } | undefined>();
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     if (!promoFromQuery) return;
-    const discount = PROMO_CODE_DISCOUNTS[promoFromQuery];
-    if (!discount) return;
-    setAppliedPromoCode(promoFromQuery);
-    setAppliedPromoDiscount(discount);
-  }, [promoFromQuery]);
+    let ignore = false;
+    void (async () => {
+      try {
+        const response = await api.post<{ id: string; code: string; discountPercent: number }>('/payments/promo-codes/validate', {
+          code: promoFromQuery,
+          eventId,
+        });
+        if (!ignore) {
+          setAppliedPromo({
+            code: response.data.code,
+            id: response.data.id,
+            discountPercent: response.data.discountPercent,
+          });
+        }
+      } catch {
+        if (!ignore) setAppliedPromo(undefined);
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [promoFromQuery, eventId]);
 
   const selectedTicket = useMemo(() => {
     if (!event) return null;
@@ -37,11 +59,13 @@ export function CheckoutReviewPage() {
   }, [event, ticketType]);
 
   const subtotal = (selectedTicket?.price ?? 0) * quantity;
-  const discountRate = (appliedPromoDiscount ?? 0) / 100;
+  const discountRate = (appliedPromo?.discountPercent ?? 0) / 100;
   const discount = subtotal * discountRate;
   const total = Math.max(0, subtotal - discount);
+  const stripeFee = total > 0 ? (paymentConfig?.platformFeeAmount ?? 0) : 0;
+  const grandTotal = total + stripeFee;
 
-  const currency = selectedTicket?.currency ?? DEFAULT_PAYMENT_CURRENCY_SYMBOL;
+  const currency = getCurrencySymbol({ currency: selectedTicket?.currency, paymentConfig });
   const remaining = selectedTicket?.quantityLimited
     ? Math.max(0, (selectedTicket?.quantityTotal ?? 0) - (selectedTicket?.quantitySold ?? 0))
     : undefined;
@@ -58,7 +82,9 @@ export function CheckoutReviewPage() {
     quantity,
     remaining,
     currency,
-    appliedPromoCode,
+    appliedPromoCode: appliedPromo?.code,
+    appliedPromoId: appliedPromo?.id,
+    appliedPromoDiscount: appliedPromo?.discountPercent,
     me,
     event,
   });
@@ -137,16 +163,15 @@ export function CheckoutReviewPage() {
         </div>
 
         <PromoCodeSection
-          onApplyPromo={(code, discountPercent) => {
-            setAppliedPromoCode(code);
-            setAppliedPromoDiscount(discountPercent);
+          eventId={eventId}
+          onApplyPromo={(promo) => {
+            setAppliedPromo(promo);
           }}
           onRemovePromo={() => {
-            setAppliedPromoCode(undefined);
-            setAppliedPromoDiscount(undefined);
+            setAppliedPromo(undefined);
           }}
-          appliedCode={appliedPromoCode}
-          appliedDiscount={appliedPromoDiscount}
+          appliedCode={appliedPromo?.code}
+          appliedDiscount={appliedPromo?.discountPercent}
         />
 
         <div className="rounded-lg border border-border/60 bg-background/40 p-4 text-sm">
@@ -158,14 +183,22 @@ export function CheckoutReviewPage() {
             <span className="text-muted-foreground">{t.common.discount}</span>
             <span>-{currency}{discount.toFixed(2)}</span>
           </div>
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-muted-foreground">Stripe fee</span>
+            <span>{currency}{stripeFee.toFixed(2)}</span>
+          </div>
           <div className="mt-3 flex items-center justify-between border-t border-border pt-3 font-semibold">
             <span>{t.common.total}</span>
-            <span>{currency}{total.toFixed(2)}</span>
+            <span>{currency}{grandTotal.toFixed(2)}</span>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button className="gap-1.5" onClick={handleProceedToPayment} disabled={isProcessingPayment || !selectedTicket}>
+          <Button
+            className="gap-1.5"
+            onClick={handleProceedToPayment}
+            disabled={isProcessingPayment || !selectedTicket || accountType === 'organization'}
+          >
             <CreditCard className="h-4 w-4" />
             {isProcessingPayment ? t.common.processing : t.checkoutReview.proceedToPayment}
           </Button>

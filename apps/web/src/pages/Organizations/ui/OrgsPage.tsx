@@ -9,6 +9,7 @@ import {
   EmptyMedia,
   EmptyTitle,
   Input,
+  JsonLd,
   Pagination,
   PaginationContent,
   PaginationEllipsis,
@@ -17,6 +18,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@shared/components';
+import { SITE_URL } from '@shared/config/app';
 import { useAppContext } from '@shared/lib';
 
 const PAGE_SIZE = 12;
@@ -77,6 +79,21 @@ export function OrgsPage() {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <JsonLd
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: 'Organizations',
+          url: `${SITE_URL}/organizations`,
+          numberOfItems: total,
+          itemListElement: allOrgs.map((org, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            url: `${SITE_URL}/organizations/${org.id}`,
+            name: org.title,
+          })),
+        }}
+      />
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">{t.organizations.title}</h1>

@@ -31,6 +31,7 @@ export const twoFaSetupResponseSchema: OpenApiSchema = schemaRef('TwoFaSetupResp
 export const twoFaEnabledResponseSchema: OpenApiSchema = schemaRef('TwoFaEnabledResponse')
 export const calendarEventCreateResponseSchema: OpenApiSchema = schemaRef('CalendarEventCreateResponse')
 export const createPaymentIntentResponseSchema: OpenApiSchema = schemaRef('CreatePaymentIntentResponse')
+export const paymentConfigResponseSchema: OpenApiSchema = schemaRef('PaymentConfigResponse')
 export const paymentIntentStatusResponseSchema: OpenApiSchema = schemaRef('PaymentIntentStatusResponse')
 export const emailSendResultSchema: OpenApiSchema = schemaRef('EmailSendResultResponse')
 

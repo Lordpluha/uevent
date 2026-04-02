@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { api } from '@shared/api';
-import { DEFAULT_PAYMENT_CURRENCY_CODE } from '@shared/config/payment';
 import { useAppContext } from '@shared/lib';
 
 interface UseCheckoutPaymentOptions {
@@ -19,6 +18,8 @@ interface UseCheckoutPaymentOptions {
   remaining?: number;
   currency: string;
   appliedPromoCode?: string;
+  appliedPromoId?: string;
+  appliedPromoDiscount?: number;
   me?: { email?: string; name?: string } | null;
   event?: { title?: string; date?: string; time?: string; location?: string; organizer?: string } | null;
 }
@@ -31,6 +32,8 @@ export function useCheckoutPayment({
   remaining,
   currency,
   appliedPromoCode,
+  appliedPromoId,
+  appliedPromoDiscount,
   me,
   event,
 }: UseCheckoutPaymentOptions) {
@@ -50,24 +53,10 @@ export function useCheckoutPayment({
       const orderId = `ticket-${selectedTicket.id}-event-${eventId}-${Date.now()}`;
       const amountInCents = Math.round(total * 100);
 
-      if (amountInCents <= 0) {
-        const params = new URLSearchParams({
-          ticketId: selectedTicket.id,
-          ticketType: selectedTicket.ticketType,
-          qty: String(quantity),
-          total: total.toFixed(2),
-          currency,
-          order: orderId,
-        });
-        if (appliedPromoCode) params.set('promo', appliedPromoCode);
-        navigate(`/checkout/${eventId}/success?${params.toString()}`);
-        return;
-      }
-
-      const response = await api.post<{ clientSecret: string; paymentIntentId: string }>('/payments/create-intent', {
+      const response = await api.post<{ clientSecret: string | null; paymentIntentId: string }>('/payments/create-intent', {
         amount: amountInCents,
-        currency: DEFAULT_PAYMENT_CURRENCY_CODE,
         orderId,
+        eventId,
         ticketId: selectedTicket.id,
         quantity,
         userEmail: me?.email,
@@ -77,6 +66,9 @@ export function useCheckoutPayment({
         eventDate: event?.date,
         eventLocation: event?.location,
         organizationName: event?.organizer,
+        promoCode: appliedPromoCode,
+        promoCodeId: appliedPromoId,
+        promoDiscountPercent: appliedPromoDiscount,
       });
 
       localStorage.setItem('pendingPayment', JSON.stringify({
@@ -88,12 +80,27 @@ export function useCheckoutPayment({
         ticketName: selectedTicket.ticketType,
         price: total,
         quantity,
+        currency,
         eventId,
         eventTitle: event?.title,
         eventDate: event?.date,
         eventLocation: event?.location,
         organizationName: event?.organizer,
       }));
+
+      if (!response.data.clientSecret) {
+        const params = new URLSearchParams({
+          ticketId: selectedTicket.id,
+          ticketType: selectedTicket.ticketType,
+          qty: String(quantity),
+          total: total.toFixed(2),
+          currency,
+          order: response.data.paymentIntentId,
+        });
+        if (appliedPromoCode) params.set('promo', appliedPromoCode);
+        navigate(`/checkout/${eventId}/success?${params.toString()}`);
+        return;
+      }
 
       navigate(`/checkout?paymentIntentId=${response.data.paymentIntentId}`);
     } catch (error) {

@@ -6,7 +6,7 @@ import { useEventsFilters } from '../model/useEventsFilters';
 import { EventsFilterBar, EventsMobileFilters } from '@features/EventsFilter';
 import { useAppContext } from '@shared/lib';
 import { EventsGrid } from './EventsGrid';
-import {
+import { JsonLd,
   Pagination,
   PaginationContent,
   PaginationEllipsis,
@@ -15,6 +15,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@shared/components';
+import { SITE_URL } from '@shared/config/app';
 
 const PAGE_SIZE = 12;
 
@@ -80,6 +81,21 @@ export function EventsPage() {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <JsonLd
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: 'Events',
+          url: `${SITE_URL}/events`,
+          numberOfItems: total,
+          itemListElement: allEvents.map((event, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            url: `${SITE_URL}/events/${event.id}`,
+            name: event.title,
+          })),
+        }}
+      />
       <div className="mb-10">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">{t.events.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">

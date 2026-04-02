@@ -7,12 +7,13 @@ import { useAuth } from '@shared/lib/auth-context';
 import { useParams } from 'react-router';
 import { toast } from 'sonner';
 
-export function useOrgProfileData() {
+export function useOrgProfileData(overrideId?: string) {
   const { t } = useAppContext();
   const { isAuthenticated, accountType } = useAuth();
   const queryClient = useQueryClient();
   const { data: myOrg } = useMyOrg();
-  const { id } = useParams<{ id: string }>();
+  const { id: paramId } = useParams<{ id: string }>();
+  const id = overrideId ?? paramId;
   const { data: org, isLoading } = useOrg(id ?? '');
   const { data: orgEventsResult } = useEvents(org ? { organization_id: org.id } : undefined);
   const orgEvents = orgEventsResult?.data ?? [];
@@ -54,8 +55,8 @@ export function useOrgProfileData() {
   };
 }
 
-export function useRequiredOrgProfileData() {
-  const data = useOrgProfileData();
+export function useRequiredOrgProfileData(overrideId?: string) {
+  const data = useOrgProfileData(overrideId);
 
   if (!data.org) {
     throw new Error('useRequiredOrgProfileData requires organization data');

@@ -20,6 +20,28 @@ export const ticketFormSchema = z
         message: 'Amount is required when ticket quantity is limited',
       })
     }
+
+    const start = new Date(values.datetimeStart)
+    const end = new Date(values.datetimeEnd)
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return
+    }
+
+    if (end <= start) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['datetimeEnd'],
+        message: 'End datetime must be later than start datetime',
+      })
+    }
+
+    if (values.ticketType === 'free' && values.price !== 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['price'],
+        message: 'Free ticket price must be 0',
+      })
+    }
   })
 
 export type TicketForm = z.input<typeof ticketFormSchema>

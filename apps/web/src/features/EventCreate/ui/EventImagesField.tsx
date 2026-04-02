@@ -146,10 +146,10 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
         <FieldDescription>{t.eventCreate.images.coverHint}</FieldDescription>
       )}
 
-      {lightboxOpen && coverFiles.length > 0 && (
+      {coverFiles.length > 0 && (
         <PhotoSwipe
           container={coverFiles.map(({ preview, w, h }, i) => ({ uid: i, src: preview, w, h }))}
-          index={lightboxIndex}
+          index={Math.min(lightboxIndex, coverFiles.length - 1)}
           open={lightboxOpen}
           onIndexChange={setLightboxIndex}
           onOpenChange={setLightboxOpen}

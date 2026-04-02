@@ -18,6 +18,7 @@ async function bootstrap() {
     join(storageDir, 'events'),
     join(storageDir, 'users'),
     join(storageDir, 'organizations'),
+    join(storageDir, 'verifications'),
   ]
   for (const dir of staticDirs) {
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true })

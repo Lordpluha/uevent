@@ -1,10 +1,13 @@
 import { Link, Navigate } from 'react-router';
 import {
   CalendarDays,
+  ExternalLink,
   Star,
   Ticket,
   Users,
 } from 'lucide-react';
+import { OrgProfilePage } from '@pages/OrgProfile';
+import { OrgEventsSection } from '@pages/OrgAccount/ui/OrgEventsSection';
 import { EventCard } from '@entities/Event';
 import {
   Badge,
@@ -65,7 +68,23 @@ export function ProfileViewPage() {
 
   if (isAuthenticated && accountType === 'organization') {
     if (myOrgLoading) return <ProfileSkeleton />;
-    if (myOrg?.id) return <Navigate to={`/profile/organization/${myOrg.id}`} replace />;
+    return (
+      <>
+        <div className="mx-auto w-full max-w-5xl px-4 pt-6 sm:px-6">
+          <Link
+            to={`/organizations/${myOrg?.id}`}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Preview profile
+          </Link>
+        </div>
+        <OrgProfilePage overrideId={myOrg?.id} />
+        <div className="mx-auto w-full max-w-5xl px-4 pb-16 sm:px-6">
+          <OrgEventsSection />
+        </div>
+      </>
+    );
   }
 
   if (isLoading) return <ProfileSkeleton />;

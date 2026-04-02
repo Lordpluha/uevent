@@ -1,9 +1,14 @@
 import { Navigate } from 'react-router';
 import { ProfileViewPage } from '@pages/ProfileView';
 import { useAuth } from '@shared/lib/auth-context';
+import { SITE_NAME } from '@shared/config/app';
 
 export function meta() {
-  return [{ title: 'My profile — uevent' }, { name: 'description', content: 'View your uevent profile.' }];
+  return [
+    { title: `My profile — ${SITE_NAME}` },
+    { name: 'description', content: 'View your uevent profile.' },
+    { name: 'robots', content: 'noindex, nofollow' },
+  ];
 }
 
 function ProfileRoute() {

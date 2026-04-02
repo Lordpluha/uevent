@@ -3,12 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { CalendarX2, ChevronLeft } from 'lucide-react';
 import { EventLightbox, useEvent, useEvents } from '@entities/Event';
 import { TicketCard } from '@entities/Ticket';
-import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, EventLocationMap, PromoCodeSection, Separator } from '@shared/components';
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, EventLocationMap, JsonLd, PromoCodeSection, Separator } from '@shared/components';
 import { toast } from 'sonner';
 import { useAppContext } from '@shared/lib';
+import { SITE_URL } from '@shared/config/app';
 import { EventHero } from './EventHero';
 import { EventDetails } from './EventDetails';
 import { EventRelatedSection } from './EventRelatedSection';
+import { useAuth } from '@shared/lib/auth-context';
 
 export function EventPage() {
   const { t } = useAppContext();
@@ -21,6 +23,7 @@ export function EventPage() {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [appliedPromoCode, setAppliedPromoCode] = useState<string | undefined>();
   const [appliedPromoDiscount, setAppliedPromoDiscount] = useState<number | undefined>();
+  const { accountType } = useAuth();
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -72,8 +75,44 @@ export function EventPage() {
     })
     .slice(0, 4);
 
+  const eventJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: event.title,
+    description: event.description?.replace(/<[^>]+>/g, '').slice(0, 500) || undefined,
+    startDate: event.date,
+    url: `${SITE_URL}/events/${event.id}`,
+    image: event.imageUrl,
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode:
+      event.format === 'online'
+        ? 'https://schema.org/OnlineEventAttendanceMode'
+        : 'https://schema.org/OfflineEventAttendanceMode',
+    location:
+      event.format === 'online'
+        ? { '@type': 'VirtualLocation', url: event.onlineUrl ?? `${SITE_URL}/events/${event.id}` }
+        : { '@type': 'Place', name: event.location },
+    organizer: { '@type': 'Organization', name: event.organizer },
+    ...(event.tickets.length > 0 && {
+      offers: event.tickets.map((t) => ({
+        '@type': 'Offer',
+        name: t.ticketType,
+        price: t.price,
+        priceCurrency: (t.currency ?? 'USD').toUpperCase(),
+        availability:
+          t.status === 'sold-out'
+            ? 'https://schema.org/SoldOut'
+            : t.status === 'limited'
+              ? 'https://schema.org/LimitedAvailability'
+              : 'https://schema.org/InStock',
+        url: `${SITE_URL}/events/${event.id}`,
+      })),
+    }),
+  };
+
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <JsonLd schema={eventJsonLd} />
       <Link to="/events" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
         <ChevronLeft className="h-4 w-4" /> {t.events.allEvents}
       </Link>
@@ -95,6 +134,10 @@ export function EventPage() {
               location={event.location ?? t.common.online}
               format={event.format}
               onSelect={() => {
+                if (accountType === 'organization') {
+                  toast.error('Organization accounts cannot purchase tickets');
+                  return;
+                }
                 const params = new URLSearchParams({ ticketType: ticket.ticketType });
                 if (appliedPromoCode) params.set('promo', appliedPromoCode);
                 navigate(`/checkout/${event.id}/review?${params.toString()}`);
@@ -114,10 +157,11 @@ export function EventPage() {
 
       <section className="mb-8">
         <PromoCodeSection
-          onApplyPromo={(code, discount) => {
-            setAppliedPromoCode(code);
-            setAppliedPromoDiscount(discount);
-            toast.success(t.events.promoApplied.replace('{{code}}', code).replace('{{discount}}', String(discount)));
+          eventId={event.id}
+          onApplyPromo={(promo) => {
+            setAppliedPromoCode(promo.code);
+            setAppliedPromoDiscount(promo.discountPercent);
+            toast.success(t.events.promoApplied.replace('{{code}}', promo.code).replace('{{discount}}', String(promo.discountPercent)));
           }}
           onRemovePromo={() => {
             setAppliedPromoCode(undefined);

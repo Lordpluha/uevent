@@ -7,14 +7,15 @@ import {
 } from 'lucide-react';
 
 import { EventCard } from '@entities/Event';
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle, Separator } from '@shared/components';
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle, JsonLd, Separator } from '@shared/components';
 import { useAppContext } from '@shared/lib';
+import { SITE_URL } from '@shared/config/app';
 import { OrgProfileHero } from './OrgProfileHero';
-import { useRequiredOrgProfileData } from './useOrgProfileData';
+import { useOrgProfileData } from './useOrgProfileData';
 
-export function OrgProfilePage() {
+export function OrgProfilePage({ overrideId }: { overrideId?: string } = {}) {
   const { t } = useAppContext();
-  const { org, isLoading, displayEvents, isOwner } = useRequiredOrgProfileData();
+  const { org, isLoading, displayEvents, isOwner } = useOrgProfileData(overrideId);
 
   if (isLoading) {
     return (
@@ -46,7 +47,20 @@ export function OrgProfilePage() {
 
   return (
     <main className="w-full pb-16">
-      <OrgProfileHero />
+      <JsonLd schema={{
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: org.title,
+        description: org.description,
+        url: org.website ?? `${SITE_URL}/organizations/${org.id}`,
+        logo: org.avatarUrl,
+        image: org.coverUrl ?? org.avatarUrl,
+        ...(org.location && { address: { '@type': 'PostalAddress', addressLocality: org.location } }),
+        ...(org.email && { email: org.email }),
+        ...(org.phone && { telephone: org.phone }),
+        numberOfEmployees: { '@type': 'QuantitativeValue', value: org.membersCount },
+      }} />
+      <OrgProfileHero overrideId={overrideId} />
 
       <div className="relative z-10 mx-auto w-full max-w-5xl px-4 sm:px-6">
         {/* ── Stats ────────────────────────────────────────────── */}

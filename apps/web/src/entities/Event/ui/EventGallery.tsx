@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { Gallery, PhotoSwipe } from 'react-pswp';
 import 'react-pswp/dist/index.css';
 import type { GalleryImage } from '../model/eventEntity';
@@ -33,14 +33,16 @@ export interface EventLightboxProps {
 }
 
 export function EventLightbox({ images, index, open, onIndexChange, onOpenChange }: EventLightboxProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const container = useMemo(() => buildPswpContainer(images), [images]);
 
-  if (!mounted || images.length === 0 || !open) return null;
+  // Always render so PhotoSwipe mounts with open=false — this avoids React 18
+  // Strict Mode re-connecting effects while open=true (which crashes inside goTo
+  // because items[index].center is not yet computed in the preload window).
+  if (container.length === 0) return null;
 
   return (
     <PhotoSwipe
-      container={buildPswpContainer(images)}
+      container={container}
       index={index ?? 0}
       open={open}
       onIndexChange={onIndexChange}
@@ -56,20 +58,7 @@ export interface EventGalleryProps {
 }
 
 export function EventGallery({ images, onSelect }: EventGalleryProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-
   if (!images || images.length === 0) return null;
-
-  if (!mounted) {
-    return (
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {images.map((img) => (
-          <div key={img.src} className="h-32 w-full animate-pulse rounded-lg bg-muted" />
-        ))}
-      </div>
-    );
-  }
 
   return (
     <Gallery
