@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-uevent}
       POSTGRES_USER: ${POSTGRES_USER:-uevent}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-uevent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -31,7 +31,7 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
       POSTGRES_USER: ${POSTGRES_USER:-uevent}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-uevent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:-uevent}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
@@ -70,16 +70,13 @@ services:
       VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-}
       VITE_PAYMENT_CURRENCY: ${VITE_PAYMENT_CURRENCY:-usd}
     depends_on:
-      - api
-
-  stripe-cli:
-    image: stripe/stripe-cli:latest
-    container_name: uevent-stripe-cli
-    command: listen --forward-to http://api:3000/api/payments/webhook
-    environment:
-      STRIPE_API_KEY: ${STRIPE_SECRET_KEY}
-    depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres_data:

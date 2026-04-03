@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+build
+.turbo
+
+# Git
+.git
+.gitignore
+
+# Local env files (never bake secrets into image)
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+*.pem
+
+# Test / coverage / logs
+coverage
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Uploaded files (volume-mounted at runtime)
+apps/api/storage
+
+# Docs / non-build files
+*.md
+demo.md
+checklist*.md
+postman-*.json

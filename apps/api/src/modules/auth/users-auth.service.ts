@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common'
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException, BadRequestException, Logger } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -24,6 +24,7 @@ export interface LoginMeta {
 
 @Injectable()
 export class UsersAuthService {
+  private readonly logger = new Logger(UsersAuthService.name)
   constructor(
     private readonly jwtService: JwtService,
 
@@ -121,7 +122,7 @@ export class UsersAuthService {
         meta?.ip_address || 'Unknown',
         meta?.user_agent || 'Unknown',
         new Date(),
-      ).catch((e) => console.warn(`[UsersAuthService] Failed to send login notification email to ${user.email}: ${e.message}`))
+      ).catch((e: Error) => this.logger.warn(`Failed to send login notification email: ${e.message}`))
     }
 
     return { access_token: tokens.access_token, refresh_token: tokens.refresh_token }
@@ -156,7 +157,33 @@ export class UsersAuthService {
   }
 
   async getMe(id: string) {
-    const user = await this.usersRepo.findOneBy({ id })
+    const user = await this.usersRepo.findOne({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        phone: true,
+        location: true,
+        avatar: true,
+        bio: true,
+        website: true,
+        timezone: true,
+        interests: true,
+        notifications_enabled: true,
+        push_notifications_enabled: true,
+        payment_email_enabled: true,
+        subscription_notifications_enabled: true,
+        login_notifications_enabled: true,
+        hidden_from_attendees: true,
+        is_banned: true,
+        two_fa: true,
+        google_id: true,
+        created_at: true,
+      },
+    })
     if (!user) throw new NotFoundException('User not found')
     return user
   }

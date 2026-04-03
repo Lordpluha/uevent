@@ -76,7 +76,7 @@ export class NotificationsController {
   @ApiAccessCookieAuth()
   @ApiQuery({ name: 'page', required: false, schema: { type: 'integer', default: 1, minimum: 1 } })
   @ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', default: 20, minimum: 1, maximum: 100 } })
-  @ApiOkResponse({ description: 'Notifications for current account.', schema: { type: 'array', items: notificationResponseSchema } })
+  @ApiOkResponse({ description: 'Notifications for current account.', schema: { type: 'object', properties: { data: { type: 'array', items: notificationResponseSchema }, meta: { type: 'object', properties: { total: { type: 'integer' }, page: { type: 'integer' }, limit: { type: 'integer' }, total_pages: { type: 'integer' } } } } } })
   findAll(
     @CurrentUser() user: JwtPayload,
     @Query(new ZodValidationPipe(GetNotificationsParamsSchema)) query: GetNotificationsParamsDto,
@@ -103,7 +103,7 @@ export class NotificationsController {
   @ApiUuidParam('id', 'User id')
   @ApiQuery({ name: 'page', required: false, schema: { type: 'integer', default: 1, minimum: 1 } })
   @ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', default: 20, minimum: 1, maximum: 100 } })
-  @ApiOkResponse({ description: 'Notifications for the user.', schema: { type: 'array', items: notificationResponseSchema } })
+  @ApiOkResponse({ description: 'Notifications for the user.', schema: { type: 'object', properties: { data: { type: 'array', items: notificationResponseSchema }, meta: { type: 'object', properties: { total: { type: 'integer' }, page: { type: 'integer' }, limit: { type: 'integer' }, total_pages: { type: 'integer' } } } } } })
   findByUser(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,

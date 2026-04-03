@@ -1,4 +1,9 @@
 import 'reflect-metadata';
+import * as dotenv from 'dotenv';
+import { resolve } from 'node:path';
+// Load .env from the apps/api directory when running locally
+dotenv.config({ path: resolve(__dirname, '../.env') });
+
 import { DataSource } from 'typeorm';
 import { faker } from '@faker-js/faker';
 import { v7 as uuidv7 } from 'uuid';
@@ -30,11 +35,11 @@ const ARGON2_OPTIONS: Options = {
 
 const dataSource = new DataSource({
   type: 'postgres',
-  host: 'localhost',
-  port: 5434,
-  username: 'uevent',
-  password: 'uevent',
-  database: 'uevent',
+  host: process.env.POSTGRES_HOST ?? 'localhost',
+  port: Number(process.env.POSTGRES_PORT ?? 5434),
+  username: process.env.POSTGRES_USER ?? 'uevent',
+  password: process.env.POSTGRES_PASSWORD ?? 'uevent',
+  database: process.env.POSTGRES_DB ?? 'uevent',
   entities: [
     User, UserSession, UserOtp,
     Organization, OrganizationSession, OrganizationOtp,

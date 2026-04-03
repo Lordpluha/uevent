@@ -61,26 +61,28 @@ export class OrganizationsPrivateService {
   }
 
   async follow(id: string, userId: string) {
-    const org = await this.orgsRepo.findOne({ where: { id }, relations: ['followers'] })
-    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
+    const orgExists = await this.orgsRepo.existsBy({ id })
+    if (!orgExists) throw new NotFoundException(`Organization with id #${id} not found`)
 
     const user = await this.usersRepo.findOneBy({ id: userId })
     if (!user) throw new NotFoundException(`User with id #${userId} not found`)
 
-    if (!org.followers?.some((f) => f.id === userId)) {
-      org.followers = [...(org.followers ?? []), user]
-      await this.orgsRepo.save(org)
-    }
+    // Use a raw insert with conflict ignore to avoid loading the full followers collection
+    await this.orgsRepo
+      .createQueryBuilder()
+      .relation('followers')
+      .of(id)
+      .add(userId)
+      .catch(() => undefined) // ignore duplicate key on re-follow
 
     return { followed: true }
   }
 
   async unfollow(id: string, userId: string) {
-    const org = await this.orgsRepo.findOne({ where: { id }, relations: ['followers'] })
-    if (!org) throw new NotFoundException(`Organization with id #${id} not found`)
+    const orgExists = await this.orgsRepo.existsBy({ id })
+    if (!orgExists) throw new NotFoundException(`Organization with id #${id} not found`)
 
-    org.followers = (org.followers ?? []).filter((f) => f.id !== userId)
-    await this.orgsRepo.save(org)
+    await this.orgsRepo.createQueryBuilder().relation('followers').of(id).remove(userId)
 
     return { followed: false }
   }

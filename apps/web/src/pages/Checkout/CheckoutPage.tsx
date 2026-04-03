@@ -20,7 +20,6 @@ export function CheckoutPage() {
   useEffect(() => {
     const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
     if(!publishableKey || publishableKey === 'pk_test_placeholder') {
-      console.error('Stripe publishable key is not configured');
       toast.error(t.checkout.configError);
       setTimeout(() => {
         window.location.href = '/';
@@ -38,7 +37,6 @@ export function CheckoutPage() {
       try {
         setPendingPayment(JSON.parse(saved));
       } catch (error) {
-        console.error('Failed to parse pending payment:', error);
         toast.error(t.checkout.loadFailed);
 
         // redirecting home after fail

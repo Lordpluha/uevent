@@ -290,7 +290,7 @@ export function RichTextEditor({
         namespace: 'RichTextEditor',
         theme: EDITOR_THEME,
         nodes: EDITOR_NODES,
-        onError: (error: Error) => console.error('[RichTextEditor]', error),
+        onError: (_error: Error) => undefined,
         editable: !(disabled || readOnly),
       }}
     >

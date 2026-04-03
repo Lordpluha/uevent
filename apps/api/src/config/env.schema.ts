@@ -6,7 +6,6 @@ export const DEFAULT_API_URL = `http://localhost:${DEFAULT_API_PORT}`
 export const DEFAULT_CLIENT_URL = `http://localhost:${DEFAULT_WEB_PORT}`
 export const DEFAULT_GOOGLE_CALLBACK_PATH = '/auth/google/callback'
 export const DEFAULT_GOOGLE_CALLBACK_URL = `${DEFAULT_API_URL}${DEFAULT_GOOGLE_CALLBACK_PATH}`
-export const DEFAULT_JWT_SECRET = 'changeme'
 export const DEFAULT_PAYMENT_CURRENCY = 'usd'
 export const DEFAULT_STRIPE_PLATFORM_FEE_CENTS = 100
 export const DEFAULT_SMTP_FROM_EMAIL = 'noreply@uevent.app'
@@ -43,9 +42,9 @@ export const envSchema = z.object({
   POSTGRES_USER: z.string().min(1),
   POSTGRES_PASSWORD: z.string().min(1),
   POSTGRES_DB: z.string().min(1),
-  DB_SYNCHRONIZE: toBoolean(true),
+  DB_SYNCHRONIZE: toBoolean(false),
 
-  JWT_SECRET: z.string().min(1),
+  JWT_SECRET: z.string().min(32),
 
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -72,9 +71,17 @@ export const envSchema = z.object({
     if (env.NODE_ENV === 'production') {
       if (env.DB_SYNCHRONIZE) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['DB_SYNCHRONIZE'],
           message: 'DB_SYNCHRONIZE must be false in production',
+        })
+      }
+
+      if (env.STRIPE_SECRET_KEY && !env.STRIPE_WEBHOOK_SECRET) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['STRIPE_WEBHOOK_SECRET'],
+          message: 'STRIPE_WEBHOOK_SECRET is required in production when STRIPE_SECRET_KEY is set',
         })
       }
     }

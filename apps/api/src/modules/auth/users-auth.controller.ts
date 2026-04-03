@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt'
 import { ZodValidationPipe } from 'nestjs-zod'
 import { Request, Response } from 'express'
 import { z } from 'zod'
+import { Throttle } from '@nestjs/throttler'
 import { UsersAuthService } from './users-auth.service'
 import { LoginDto, LoginDtoSchema } from './dto/login.dto'
 import { JwtGuard } from './guards/jwt.guard'
@@ -39,6 +40,7 @@ export class UsersAuthController {
   ) {}
 
   @Post('register')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Register user account' })
   @ApiZodBody(CreateUserDtoSchema)
   @ApiUserAuthResultResponse('Registers the user and sets HTTP-only access_token and refresh_token cookies.')
@@ -54,6 +56,7 @@ export class UsersAuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Login user account' })
   @ApiZodBody(LoginDtoSchema)
   @ApiUserAuthResultResponse('Logs in the user. On success sets HTTP-only auth cookies; on 2FA-enabled accounts returns a temp token.')
@@ -74,6 +77,7 @@ export class UsersAuthController {
   }
 
   @Post('2fa/verify')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Verify user login 2FA challenge' })
   @ApiZodBody(Verify2faSchema)
   @ApiUserAuthResultResponse('Completes 2FA login and sets HTTP-only auth cookies.')
@@ -124,6 +128,7 @@ export class UsersAuthController {
   }
 
   @Post('forgot-password')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Send user password reset code' })
   @ApiZodBody(ForgotPasswordSchema)
   @ApiOkResponse({ description: 'Password reset initiation result.', schema: messageSchema('If that email exists, a reset code has been sent.') })
@@ -134,6 +139,7 @@ export class UsersAuthController {
   }
 
   @Post('reset-password')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Reset user password' })
   @ApiZodBody(ResetPasswordSchema)
   @ApiOkResponse({ description: 'Password reset result.', schema: messageSchema('Password has been reset successfully') })

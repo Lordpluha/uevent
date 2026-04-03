@@ -2,6 +2,7 @@ import { Controller, Post, Delete, Get, Body, UseGuards, Res, Req, UnauthorizedE
 import { ZodValidationPipe } from 'nestjs-zod'
 import { Request, Response } from 'express'
 import { z } from 'zod'
+import { Throttle } from '@nestjs/throttler'
 import { OrgsAuthService } from './orgs-auth.service'
 import { LoginDto, LoginDtoSchema } from './dto/login.dto'
 import {
@@ -38,6 +39,7 @@ export class OrgsAuthController {
   ) {}
 
   @Post('register')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Register organization account' })
   @ApiZodBody(CreateOrganizationDtoSchema)
   @ApiOrganizationAuthResultResponse('Registers the organization and sets HTTP-only auth cookies.')
@@ -51,6 +53,7 @@ export class OrgsAuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Login organization account' })
   @ApiZodBody(LoginDtoSchema)
   @ApiOrganizationAuthResultResponse('Logs in organization account or returns 2FA temp token.')

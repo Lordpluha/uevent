@@ -10,7 +10,7 @@ import { ApiConfigService } from './config/api-config.service'
 import { MODULE_OPENAPI_SCHEMAS } from './common/swagger/openapi.schemas'
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true })
   const apiConfig = app.get(ApiConfigService)
   const storageDir = join(process.cwd(), 'storage')
   const staticDirs = [
@@ -28,6 +28,10 @@ async function bootstrap() {
   // Switch to 'extended' (qs) to support tags[]=x&tags[]=y → { tags: ['x','y'] }
   app.getHttpAdapter().getInstance().set('query parser', 'extended')
   app.use(cookieParser())
+  // biome-ignore lint/suspicious/noExplicitAny: helmet CJS module callable via require
+  app.use((require('helmet') as any)())
+  app.useBodyParser('json', { limit: '1mb' })
+  app.useBodyParser('urlencoded', { extended: true, limit: '1mb' })
   app.enableCors({
     origin: apiConfig.clientUrl,
     credentials: true,
@@ -35,6 +39,7 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language'],
   })
 
+  if (!apiConfig.isProd) {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('UEvent API')
     .setDescription(
@@ -84,6 +89,8 @@ async function bootstrap() {
       persistAuthorization: true,
     },
   })
+
+  }  // end if (!apiConfig.isProd)
 
   await app.listen(apiConfig.port)
 }

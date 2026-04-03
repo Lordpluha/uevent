@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Body, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common'
 import { TagsService } from './tags.service'
-import { CreateTagDto, CreateTagDtoSchema, UpdateTagDto, UpdateTagDtoSchema, FindOrCreateTagsDto, FindOrCreateTagsDtoSchema } from './dto'
+import { CreateTagDto, CreateTagDtoSchema, FindOrCreateTagsDto, FindOrCreateTagsDtoSchema } from './dto'
 import { GetTagsParams, GetTagsParamsSchema } from './params'
 import { ZodValidationPipe } from 'nestjs-zod'
 import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { JwtGuard } from '../auth/guards/jwt.guard'
-import { ApiAccessCookieAuth, ApiUuidParam, ApiZodBody, messageSchema, paginatedResponseSchema, tagResponseSchema } from '../../common/swagger/openapi.util'
+import { ApiAccessCookieAuth, ApiUuidParam, ApiZodBody, paginatedResponseSchema, tagResponseSchema } from '../../common/swagger/openapi.util'
 import { Tag } from './entities/tag.entity'
 
 @Controller('tags')
@@ -50,26 +50,5 @@ export class TagsController {
   @ApiOkResponse({ description: 'Tag details.', schema: tagResponseSchema })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.tagsService.findOne(id)
-  }
-
-  @Patch(':id')
-  @UseGuards(JwtGuard)
-  @ApiOperation({ summary: 'Update tag' })
-  @ApiAccessCookieAuth()
-  @ApiUuidParam('id', 'Tag id')
-  @ApiZodBody(UpdateTagDtoSchema)
-  @ApiOkResponse({ description: 'Updated tag.', schema: tagResponseSchema })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body(new ZodValidationPipe(UpdateTagDtoSchema)) dto: UpdateTagDto) {
-    return this.tagsService.update(id, dto)
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtGuard)
-  @ApiOperation({ summary: 'Delete tag' })
-  @ApiAccessCookieAuth()
-  @ApiUuidParam('id', 'Tag id')
-  @ApiOkResponse({ description: 'Tag removed.', schema: messageSchema('Tag removed') })
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.tagsService.remove(id)
   }
 }

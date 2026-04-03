@@ -6,4 +6,9 @@ export class AppController {
   getHello() {
     return 'Welcome to @uevent/api! Please refer to the API documentation for usage details.'
   }
+
+  @Get('health')
+  health() {
+    return { status: 'ok' }
+  }
 }

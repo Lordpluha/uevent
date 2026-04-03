@@ -131,7 +131,7 @@ export default function App() {
     // biome-ignore lint: intentional cookie-based locale for SSR
     document.cookie = `locale=${next}; path=/; max-age=31536000`
     // Fetch updated dictionary from public assets (no page reload needed)
-    fetchLocale(next).then(setT).catch(console.error)
+    fetchLocale(next).then(setT).catch(() => undefined)
   }, [])
 
   const applyTheme = useCallback((isLight: boolean) => {

@@ -374,9 +374,7 @@ export class GoogleAuthService {
         )
       }
 
-      throw new InternalServerErrorException(
-        `Failed to create Google Calendar event: ${googleErr?.message ?? 'unknown error'}`,
-      )
+      throw new InternalServerErrorException('Failed to add event to Google Calendar')
     }
   }
 

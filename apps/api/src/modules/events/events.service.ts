@@ -9,6 +9,7 @@ import { UpdateEventDto } from './dto/update-event.dto'
 import { GetEventsParams } from './params/get-events.params'
 import { Organization } from '../organizations/entities/organization.entity'
 import { Notification } from '../notifications/entities/notification.entity'
+import { User } from '../users/entities/user.entity'
 import { ContentLocalizationService } from '../../common/localization/content-localization.service'
 import { JwtPayload } from '../auth/types/jwt-payload.interface'
 
@@ -30,6 +31,9 @@ export class EventsService {
     @InjectRepository(Notification)
     private readonly notificationsRepo: Repository<Notification>,
 
+    @InjectRepository(User)
+    private readonly usersRepo: Repository<User>,
+
     private readonly contentLocalization: ContentLocalizationService,
   ) {}
 
@@ -48,19 +52,23 @@ export class EventsService {
     const savedEvent = await this.eventsRepo.save(event)
 
     if (savedEvent.organization_id) {
-      const org = await this.organizationsRepo.findOne({
-        where: { id: savedEvent.organization_id },
-        relations: ['followers'],
-      })
+      // Query only follower IDs that have both notification flags enabled — avoids loading all User data into memory
+      const recipientIds = await this.usersRepo
+        .createQueryBuilder('u')
+        .select('u.id', 'id')
+        .innerJoin('u.followed_organizations', 'org', 'org.id = :orgId', { orgId: savedEvent.organization_id })
+        .where('u.notifications_enabled = true')
+        .andWhere('u.subscription_notifications_enabled = true')
+        .getRawMany<{ id: string }>()
 
-      const recipients = (org?.followers ?? []).filter((u) => u.notifications_enabled && u.subscription_notifications_enabled)
-      if (recipients.length > 0) {
-        const notifications = recipients.map((user) =>
+      if (recipientIds.length > 0) {
+        const orgName = (await this.organizationsRepo.findOne({ where: { id: savedEvent.organization_id }, select: ['name'] }))?.name ?? 'An organization'
+        const notifications = recipientIds.map(({ id }) =>
           this.notificationsRepo.create({
             name: 'New event from organization',
-            content: `${org?.name ?? 'An organization'} published a new event: ${savedEvent.name}`,
+            content: `${orgName} published a new event: ${savedEvent.name}`,
             link: `/events/${savedEvent.id}`,
-            user_id: user.id,
+            user_id: id,
           }),
         )
         await this.notificationsRepo.save(notifications)
@@ -200,14 +208,14 @@ export class EventsService {
       if (ticket.user_id && ticket.user && ticket.status === 'PAID') {
         if (!seenUserIds.has(ticket.user_id)) {
           seenUserIds.add(ticket.user_id)
-          const user = ticket.user as unknown as Record<string, unknown>
-          const firstName = (user.first_name as string | null) ?? ''
-          const lastName = (user.last_name as string | null) ?? ''
+          const u = ticket.user
+          const firstName = u.first_name ?? ''
+          const lastName = u.last_name ?? ''
           attendeesFromTickets.push({
             id: ticket.user_id,
-            avatarUrl: user.avatar as string | undefined,
-            name: [firstName, lastName].filter(Boolean).join(' ') || (user.username as string) || 'User',
-            username: (user.username as string) || null,
+            avatarUrl: u.avatar ?? undefined,
+            name: [firstName, lastName].filter(Boolean).join(' ') || u.username || 'User',
+            username: u.username || null,
           })
         }
       }
@@ -221,7 +229,7 @@ export class EventsService {
       includeTickets: true,
       includeTags: true,
     })
-    const sanitized = this.sanitizeEvent(localized) as unknown as Record<string, unknown>
+    const sanitized: Record<string, unknown> = { ...this.sanitizeEvent(localized) as object }
 
     // Inject attendee count and conditionally the full attendees list
     sanitized.attendeeCount = seenUserIds.size

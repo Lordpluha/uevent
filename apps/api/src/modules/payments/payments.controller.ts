@@ -1,16 +1,12 @@
-import { Controller, Post, Get, Delete, Body, Param, Headers, RawBodyRequest, Req, Res, HttpCode, Logger, BadRequestException, ForbiddenException, InternalServerErrorException, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common'
+import { Controller, Post, Patch, Get, Delete, Body, Param, Headers, RawBodyRequest, Req, Res, HttpCode, Logger, BadRequestException, ForbiddenException, InternalServerErrorException, Query, UploadedFiles, UseGuards, UseInterceptors, ParseUUIDPipe } from '@nestjs/common'
 import { Request, Response } from 'express'
 import { PaymentsService } from './payments.service'
-import { EmailService } from '../notifications/email.service'
-import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
-import { User } from '../users/entities/user.entity'
 import Stripe from 'stripe'
 import { ApiConfigService } from '../../config/api-config.service'
 import { JwtGuard } from '../auth/guards/jwt.guard'
 import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard'
 import { ApiBody, ApiExtraModels, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
-import { ApiAccessCookieAuth, createPaymentIntentResponseSchema, emailSendResultSchema, paymentConfigResponseSchema, paymentIntentStatusResponseSchema } from '../../common/swagger/openapi.util'
+import { ApiAccessCookieAuth, createPaymentIntentResponseSchema, paymentConfigResponseSchema, paymentIntentStatusResponseSchema } from '../../common/swagger/openapi.util'
 import { Payment } from './entities/payment.entity'
 import { DEFAULT_PAYMENT_CURRENCY } from '../../config/env.schema'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
@@ -28,10 +24,7 @@ export class PaymentsController {
 
   constructor(
     private readonly paymentsService: PaymentsService,
-    private readonly emailService: EmailService,
     private readonly apiConfig: ApiConfigService,
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
   ) {}
 
   @Get('config')
@@ -142,8 +135,16 @@ export class PaymentsController {
     if(orderId) metadata.orderId = orderId
     if(ticketId) metadata.ticketId = ticketId
     metadata.quantity = String(pricing.quantity)
-    if(userEmail) metadata.userEmail = userEmail
-    if(userName) metadata.userName = userName
+    // For authenticated users, pin identity from server-side DB to prevent client spoofing
+    if (user?.type === 'user') {
+      const identity = await this.paymentsService.resolveUserIdentity(user.sub)
+      metadata.userId = user.sub
+      if (identity.email) metadata.userEmail = identity.email
+      if (identity.name) metadata.userName = identity.name
+    } else {
+      if(userEmail) metadata.userEmail = userEmail
+      if(userName) metadata.userName = userName
+    }
     if(eventTitle) metadata.eventTitle = eventTitle
     if(ticketName) metadata.ticketName = ticketName
     if(eventDate) metadata.eventDate = eventDate
@@ -246,13 +247,13 @@ export class PaymentsController {
     return this.paymentsService.createOrganizationPromoCode(user.sub, body)
   }
 
-  @Post('promo-codes/:id')
+  @Patch('promo-codes/:id')
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Update promo code for organization' })
   @ApiAccessCookieAuth()
   async updatePromoCode(
     @CurrentUser() user: JwtPayload,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: {
       discountPercent?: number
       maxUses?: number | null
@@ -265,130 +266,6 @@ export class PaymentsController {
       throw new ForbiddenException('Only organization accounts can update promo codes')
     }
     return this.paymentsService.updateOrganizationPromoCode(user.sub, id, body)
-  }
-
-  @Post('test-email')
-  @UseGuards(JwtGuard)
-  @ApiOperation({ summary: 'Send payment confirmation test email' })
-  @ApiAccessCookieAuth()
-  @ApiBody({ schema: { type: 'object', properties: { email: { type: 'string', format: 'email' } }, required: ['email'] } })
-  @ApiOkResponse({ description: 'Email send result.', schema: emailSendResultSchema })
-  async sendTestEmail(@Body() body: { email: string }) {
-    this.logger.log(`Testing email sending to: ${body.email}`)
-
-    try {
-      const result = await this.emailService.sendPaymentConfirmation({
-        userEmail: body.email,
-        userName: 'Test User',
-        eventTitle: 'Test Event',
-        ticketName: 'Test Ticket',
-        price: 29.99,
-        eventDate: '2026-03-28',
-        eventLocation: 'Test Location',
-        organizationName: 'Test Org',
-        paymentIntentId: 'pi_test_12345',
-      })
-
-      if(result) {
-        return {
-          success: true,
-          message: 'Test email sent successfully!',
-          messageId: result.messageId,
-        }
-      } else {
-        return {
-          success: false,
-          message: 'Email failed to send (check logs)',
-        }
-      }
-    } catch(error) {
-      this.logger.error(`Test email failed: ${error.message}`)
-      return {
-        success: false,
-        message: `Error: ${error.message}`,
-      }
-    }
-  }
-
-  @Post('send-confirmation')
-  @UseGuards(JwtGuard)
-  @ApiOperation({ summary: 'Send payment confirmation email' })
-  @ApiAccessCookieAuth()
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        userEmail: { type: 'string', format: 'email' },
-        userName: { type: 'string' },
-        eventTitle: { type: 'string' },
-        ticketName: { type: 'string' },
-        price: { type: 'number' },
-        eventDate: { type: 'string' },
-        eventLocation: { type: 'string' },
-        organizationName: { type: 'string' },
-        paymentIntentId: { type: 'string' },
-      },
-      required: ['userEmail'],
-    },
-  })
-  @ApiOkResponse({ description: 'Email send result.', schema: emailSendResultSchema })
-  async sendPaymentConfirmation(@Body() body: {
-    userEmail: string
-    userName?: string
-    eventTitle?: string
-    ticketName?: string
-    price?: number
-    eventDate?: string
-    eventLocation?: string
-    organizationName?: string
-    paymentIntentId?: string
-  }) {
-    this.logger.log(`Sending payment confirmation email to: ${body.userEmail}`)
-
-    // Check user preference for payment emails
-    const user = await this.usersRepository.findOne({ where: { email: body.userEmail } })
-    if(user && !user.payment_email_enabled) {
-      this.logger.log(`Payment email disabled for user ${body.userEmail} — skipping`)
-      return {
-        success: true,
-        message: 'Payment email disabled by user preference',
-      }
-    }
-
-    try {
-      const result = await this.emailService.sendPaymentConfirmation({
-        userEmail: body.userEmail,
-        userName: body.userName || 'Valued Customer',
-        eventTitle: body.eventTitle || 'Event',
-        ticketName: body.ticketName || 'Ticket',
-        price: body.price || 0,
-        eventDate: body.eventDate || '',
-        eventLocation: body.eventLocation || '',
-        organizationName: body.organizationName || 'Organization',
-        paymentIntentId: body.paymentIntentId || '',
-      })
-
-      if(result) {
-        this.logger.log(`✅ Payment confirmation email sent successfully to ${body.userEmail}`)
-        return {
-          success: true,
-          message: 'Payment confirmation email sent!',
-          messageId: result.messageId,
-        }
-      }else {
-        this.logger.warn(`❌ Payment confirmation email failed for ${body.userEmail}`)
-        return {
-          success: false,
-          message: 'Email failed to send (check logs)',
-        }
-      }
-    } catch(error) {
-      this.logger.error(`❌ Payment confirmation email error for ${body.userEmail}: ${error.message}`)
-      return {
-        success: false,
-        message: `Error: ${error.message}`,
-      }
-    }
   }
 
   @Get('organization/wallet')
@@ -544,9 +421,9 @@ export class PaymentsController {
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Download purchased ticket PDF by ticket ID' })
   @ApiAccessCookieAuth()
-  @ApiParam({ name: 'ticketId', description: 'Ticket UUID', schema: { type: 'string' } })
+  @ApiParam({ name: 'ticketId', description: 'Ticket UUID', schema: { type: 'string', format: 'uuid' } })
   async downloadTicketPdfByTicketId(
-    @Param('ticketId') ticketId: string,
+    @Param('ticketId', ParseUUIDPipe) ticketId: string,
     @CurrentUser() user: JwtPayload,
     @Res() res: Response,
   ) {

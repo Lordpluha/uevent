@@ -48,21 +48,23 @@ export class NotificationsService {
   }
 
   async findLatestByUser(user_id: string, limit: number, page: number = 1) {
-    return await this.notificationsRepo.find({
+    const [data, total] = await this.notificationsRepo.findAndCount({
       where: { user_id },
       order: { created_at: 'DESC' },
       take: limit,
       skip: (page - 1) * limit,
     })
+    return { data, meta: { total, page, limit, total_pages: Math.ceil(total / limit) } }
   }
 
   async findLatestByOrganization(organization_id: string, limit: number, page: number = 1) {
-    return await this.notificationsRepo.find({
+    const [data, total] = await this.notificationsRepo.findAndCount({
       where: { organization_id },
       order: { created_at: 'DESC' },
       take: limit,
       skip: (page - 1) * limit,
     })
+    return { data, meta: { total, page, limit, total_pages: Math.ceil(total / limit) } }
   }
 
   async findOneForUser(id: string, user_id: string) {

@@ -541,25 +541,23 @@ export class PaymentsService {
     if (!ticketId) return
 
     const quantity = Math.max(1, Number(metadata?.quantity ?? 1))
-    const ticket = await this.ticketsRepository.findOneBy({ id: ticketId })
-    if (!ticket) {
-      this.logger.warn(`Ticket ${ticketId} not found while marking payment as sold`)
-      return
-    }
 
-    if (ticket.quantity_limited && ticket.quantity_total !== null) {
-      const remaining = Math.max(0, ticket.quantity_total - ticket.quantity_sold)
-      if (quantity > remaining) {
-        this.logger.warn(`Payment quantity ${quantity} exceeds remaining ticket stock ${remaining} for ticket ${ticketId}`)
-        ticket.quantity_sold = ticket.quantity_total
-      } else {
-        ticket.quantity_sold += quantity
-      }
-    } else {
-      ticket.quantity_sold += quantity
-    }
+    // Atomic conditional increment — avoids race condition from read-modify-save.
+    // Only increments when stock is unlimited OR there is sufficient remaining capacity.
+    const result = await this.ticketsRepository
+      .createQueryBuilder()
+      .update()
+      .set({ quantity_sold: () => `quantity_sold + ${quantity}` })
+      .where('id = :id', { id: ticketId })
+      .andWhere(
+        '(quantity_limited = false OR quantity_total IS NULL OR quantity_sold + :qty <= quantity_total)',
+        { qty: quantity },
+      )
+      .execute()
 
-    await this.ticketsRepository.save(ticket)
+    if (result.affected === 0) {
+      this.logger.warn(`Could not increment quantity_sold for ticket ${ticketId}: not found or insufficient stock`)
+    }
   }
 
   private async createOrganizationPurchaseNotification(metadata?: Record<string, string>) {
@@ -974,6 +972,16 @@ export class PaymentsService {
     return this.apiConfig.stripePlatformFeeCents
   }
 
+  async resolveUserIdentity(userId: string): Promise<{ email: string; name: string }> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      select: { email: true, first_name: true, last_name: true, username: true },
+    })
+    if (!user) return { email: '', name: '' }
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || ''
+    return { email: user.email, name }
+  }
+
   async createPaymentIntent(amount: number, currency?: string, metadata?: Record<string, string>) {
     try {
       const resolvedCurrency = (currency ?? this.apiConfig.paymentCurrency).toLowerCase()
@@ -998,7 +1006,7 @@ export class PaymentsService {
       return paymentIntent
     } catch(error) {
       this.logger.error(`Failed to create payment intent: ${error.message}`)
-      throw new BadRequestException(`Failed to create payment intent: ${error.message}`)
+      throw new BadRequestException('Failed to create payment intent')
     }
   }
 
@@ -1028,52 +1036,49 @@ export class PaymentsService {
   }
 
   private async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
-    try {
-      this.logger.log(`WEBHOOK RECEIVED: Payment succeeded: ${paymentIntent.id}`)
-      this.logger.log(`Payment metadata:`, JSON.stringify(paymentIntent.metadata))
-      this.logger.log(`Payment method type: ${paymentIntent.payment_method_types[0] || 'unknown'}`)
+    this.logger.log(`WEBHOOK RECEIVED: Payment succeeded: ${paymentIntent.id}`)
+    this.logger.log(`Payment method type: ${paymentIntent.payment_method_types[0] || 'unknown'}`)
 
-      let payment = await this.paymentRepository.findOne({
-        where: { stripePaymentIntentId: paymentIntent.id },
+    let payment = await this.paymentRepository.findOne({
+      where: { stripePaymentIntentId: paymentIntent.id },
+    })
+
+    const alreadySucceeded = payment?.status === PaymentStatus.SUCCEEDED
+
+    if(!payment) {
+      payment = this.paymentRepository.create({
+        id: uuidv4(),
+        stripePaymentIntentId: paymentIntent.id,
+        amount: paymentIntent.amount / 100,
+        currency: paymentIntent.currency.toUpperCase(),
+        status: PaymentStatus.SUCCEEDED,
+        metadata: paymentIntent.metadata,
       })
+    }else {
+      payment.status = PaymentStatus.SUCCEEDED
+      payment.metadata = paymentIntent.metadata
+    }
 
-      const alreadySucceeded = payment?.status === PaymentStatus.SUCCEEDED
+    await this.paymentRepository.save(payment)
 
-      if(!payment) {
-        this.logger.log(`Creating new payment record...`)
-        payment = this.paymentRepository.create({
-          id: uuidv4(),
-          stripePaymentIntentId: paymentIntent.id,
-          amount: paymentIntent.amount / 100,
-          currency: paymentIntent.currency.toUpperCase(),
-          status: PaymentStatus.SUCCEEDED,
-          metadata: paymentIntent.metadata,
-        })
-      }else {
-        payment.status = PaymentStatus.SUCCEEDED
-        payment.metadata = paymentIntent.metadata
-      }
+    if (alreadySucceeded) {
+      this.logger.log(`Payment ${paymentIntent.id} already processed as succeeded; ensuring side effects are complete`)
+    }
 
-      await this.paymentRepository.save(payment)
+    await this.applySucceededPaymentSideEffects(payment, paymentIntent.id)
+    // Use server-stored userId from metadata when available; fall back to email lookup for guest checkout
+    const explicitUserId = paymentIntent.metadata?.userId || undefined
+    await this.issuePurchasedTickets(paymentIntent.metadata, paymentIntent.id, explicitUserId)
 
-      if (alreadySucceeded) {
-        this.logger.log(`Payment ${paymentIntent.id} already processed as succeeded; ensuring side effects are complete`)
-      }
+    this.logger.log(`Payment ${paymentIntent.id} processed`)
 
-      await this.applySucceededPaymentSideEffects(payment, paymentIntent.id)
-      await this.issuePurchasedTickets(paymentIntent.metadata, paymentIntent.id)
-
-      this.logger.log(`Payment ${paymentIntent.id} saved to database`)
-
-      // payment confirmation email
-      if(paymentIntent.metadata) {
-        this.logger.log(`Sending email to: ${paymentIntent.metadata.userEmail}`)
-        await this.sendPaymentConfirmationEmail(paymentIntent)
-      }else {
-        this.logger.warn(`No metadata found - skipping email`)
-      }
-    } catch(error) {
-      this.logger.error(`Error handling payment success: ${error.message}`)
+    // payment confirmation email (failures must not bubble — email is non-critical)
+    if(paymentIntent.metadata) {
+      await this.sendPaymentConfirmationEmail(paymentIntent).catch((e: Error) =>
+        this.logger.error(`Failed to send payment confirmation email for ${paymentIntent.id}: ${e.message}`),
+      )
+    }else {
+      this.logger.warn(`No metadata found - skipping email`)
     }
   }
 
@@ -1089,7 +1094,7 @@ export class PaymentsService {
       // Check user preference for payment emails
       const user = await this.usersRepository.findOne({ where: { email: metadata.userEmail } })
       if(user && !user.payment_email_enabled) {
-        this.logger.log(`Payment email disabled for user ${metadata.userEmail} — skipping`)
+        this.logger.log(`Payment email disabled — skipping confirmation`)
         return
       }
 
@@ -1105,7 +1110,7 @@ export class PaymentsService {
         paymentIntentId: paymentIntent.id,
       })
 
-      this.logger.log(`Payment confirmation email sent to ${metadata.userEmail}`)
+      this.logger.log(`Payment confirmation email sent for payment ${paymentIntent.id}`)
     } catch(error) {
       this.logger.error(`Failed to send payment confirmation email: ${error.message}`)
     }
@@ -1146,7 +1151,7 @@ export class PaymentsService {
         const failedUser = await this.usersRepository.findOne({ where: { email: failedUserEmail } })
         if (!failedUser || failedUser.payment_email_enabled) {
           const meta = paymentIntent.metadata?.userEmail ? paymentIntent.metadata : payment?.metadata ?? {}
-          this.logger.log(`Sending failed payment email to: ${failedUserEmail}`)
+          this.logger.log(`Sending failed payment email for payment ${paymentIntent.id}`)
           await this.emailService.sendPaymentFailedEmail(
             failedUserEmail,
             meta.userName || 'Valued Customer',
@@ -1156,13 +1161,14 @@ export class PaymentsService {
             paymentIntent.id,
           )
         } else {
-          this.logger.log(`Payment email disabled for user ${failedUserEmail} — skipping failed email`)
+          this.logger.log(`Payment email disabled — skipping failed email`)
         }
       } else {
         this.logger.warn(`No email found in webhook metadata or database - skipping failed payment email`)
       }
-    } catch(error) {
-      this.logger.error(`Error handling payment failure: ${error.message}`)
+    } catch(error: unknown) {
+      this.logger.error(`Error handling payment failure: ${(error as Error).message}`)
+      throw error
     }
   }
 
@@ -1195,7 +1201,7 @@ export class PaymentsService {
           if (payment.metadata?.userEmail) {
             const refundUser = await this.usersRepository.findOne({ where: { email: payment.metadata.userEmail } })
             if (!refundUser || refundUser.payment_email_enabled) {
-              this.logger.log(`Sending refund email to: ${payment.metadata.userEmail}`)
+              this.logger.log(`Sending refund email for payment ${paymentIntentId}`)
               await this.emailService.sendRefundEmail(
                 payment.metadata.userEmail,
                 payment.metadata.userName,
@@ -1205,7 +1211,7 @@ export class PaymentsService {
                 paymentIntentId,
               )
             } else {
-              this.logger.log(`Payment email disabled for user ${payment.metadata.userEmail} — skipping refund email`)
+              this.logger.log(`Payment email disabled for payer — skipping refund email`)
             }
           } else {
             this.logger.warn(`No metadata found - skipping refund email`)
@@ -1214,8 +1220,9 @@ export class PaymentsService {
       }else {
         this.logger.warn(`Could not find payment for charge ${charge.id}`)
       }
-    } catch(error) {
-      this.logger.error(`Error handling charge refund: ${error.message}`)
+    } catch(error: unknown) {
+      this.logger.error(`Error handling charge refund: ${(error as Error).message}`)
+      throw error
     }
   }
 
