@@ -87,4 +87,8 @@ export class ApiConfigService {
       synchronize: this.configService.get('DB_SYNCHRONIZE', { infer: true }),
     }
   }
+
+  get databaseUrl(): string | undefined {
+    return this.configService.get('DATABASE_URL', { infer: true })
+  }
 }

@@ -37,11 +37,13 @@ export const envSchema = z.object({
   CLIENT_URL: z.url(),
   API_URL: z.url(),
 
-  POSTGRES_HOST: z.string().min(1),
-  POSTGRES_PORT: toNumber(5432),
-  POSTGRES_USER: z.string().min(1),
-  POSTGRES_PASSWORD: z.string().min(1),
-  POSTGRES_DB: z.string().min(1),
+  // Either DATABASE_URL (e.g. Neon/Vercel) or individual POSTGRES_* vars must be provided.
+  DATABASE_URL: z.string().url().optional(),
+  POSTGRES_HOST: z.string().min(1).optional(),
+  POSTGRES_PORT: toNumber(5432).optional(),
+  POSTGRES_USER: z.string().min(1).optional(),
+  POSTGRES_PASSWORD: z.string().min(1).optional(),
+  POSTGRES_DB: z.string().min(1).optional(),
   DB_SYNCHRONIZE: toBoolean(false),
 
   JWT_SECRET: z.string().min(32),
@@ -68,6 +70,19 @@ export const envSchema = z.object({
   VAPID_SUBJECT: z.string().optional(),
 })
   .superRefine((env, ctx) => {
+    if (!env.DATABASE_URL) {
+      const required: Array<keyof typeof env> = ['POSTGRES_HOST', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB']
+      for (const key of required) {
+        if (!env[key]) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [key],
+            message: `${key} is required when DATABASE_URL is not set`,
+          })
+        }
+      }
+    }
+
     if (env.NODE_ENV === 'production') {
       if (env.DB_SYNCHRONIZE) {
         ctx.addIssue({

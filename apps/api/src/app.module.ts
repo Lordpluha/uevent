@@ -21,16 +21,28 @@ import { ApiConfigService } from './config/api-config.service'
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     TypeOrmModule.forRootAsync({
       inject: [ApiConfigService],
-      useFactory: (apiConfig: ApiConfigService) => ({
-        type: 'postgres' as const,
-        host: apiConfig.dbConfig.host,
-        port: apiConfig.dbConfig.port,
-        username: apiConfig.dbConfig.username,
-        password: apiConfig.dbConfig.password,
-        database: apiConfig.dbConfig.database,
-        synchronize: apiConfig.dbConfig.synchronize,
-        autoLoadEntities: true,
-      }),
+      useFactory: (apiConfig: ApiConfigService) => {
+        const dbUrl = apiConfig.databaseUrl
+        if (dbUrl) {
+          return {
+            type: 'postgres' as const,
+            url: dbUrl,
+            ssl: { rejectUnauthorized: false },
+            synchronize: apiConfig.dbConfig.synchronize,
+            autoLoadEntities: true,
+          }
+        }
+        return {
+          type: 'postgres' as const,
+          host: apiConfig.dbConfig.host,
+          port: apiConfig.dbConfig.port,
+          username: apiConfig.dbConfig.username,
+          password: apiConfig.dbConfig.password,
+          database: apiConfig.dbConfig.database,
+          synchronize: apiConfig.dbConfig.synchronize,
+          autoLoadEntities: true,
+        }
+      },
     }),
     UsersModule,
     NotificationsModule,
