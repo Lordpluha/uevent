@@ -1,14 +1,10 @@
 import { createApp, createIdentityProvider } from '@kottster/server';
 import schema from '../../kottster-app.json';
 
-/* 
- * For security, consider moving the secret data to environment variables.
- * See https://kottster.app/docs/deploying#before-you-deploy
- */
 export const app = createApp({
   schema,
-  secretKey: 'Tl0_J08dOHwn6eh0fxidp0HYWDPGbzZT',
-  kottsterApiToken: 'QKVnkPopCKT4smsaDaabvA5AYY5Llp5l',
+  secretKey: process.env.KOTTSTER_SECRET_KEY!,
+  kottsterApiToken: process.env.KOTTSTER_API_TOKEN!,
 
   /*
    * The identity provider configuration.
@@ -18,10 +14,10 @@ export const app = createApp({
     fileName: 'app.db',
 
     passwordHashAlgorithm: 'bcrypt',
-    jwtSecretSalt: 'DQrrqYCyMCDV38jH',
-    
+    jwtSecretSalt: process.env.JWT_SECRET_SALT!,
+
     /* The root admin user credentials */
-    rootUsername: 'admin',
-    rootPassword: 'admin',
+    rootUsername: process.env.ROOT_USERNAME ?? 'admin',
+    rootPassword: process.env.ROOT_PASSWORD!,
   }),
 });
