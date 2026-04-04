@@ -12,9 +12,12 @@ import { DEFAULT_PAYMENT_CURRENCY } from '../../config/env.schema'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { JwtPayload } from '../auth/types/jwt-payload.interface'
 import { FilesInterceptor } from '@nestjs/platform-express'
-import { diskStorage } from 'multer'
+import { memoryStorage } from 'multer'
+import { writeFileSync, mkdirSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
+
+const STORAGE_ROOT = process.env.VERCEL ? '/tmp/storage' : join(process.cwd(), 'storage')
 
 @Controller('payments')
 @ApiTags('Payments')
@@ -302,10 +305,7 @@ export class PaymentsController {
   @ApiAccessCookieAuth()
   @UseInterceptors(
     FilesInterceptor('documents', 10, {
-      storage: diskStorage({
-        destination: join(process.cwd(), 'storage', 'verifications'),
-        filename: (_req, file, cb) => cb(null, `${randomUUID()}${extname(file.originalname)}`),
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         const allowedMimePrefixes = ['image/']
         const allowedMimeExact = [
@@ -346,7 +346,13 @@ export class PaymentsController {
       throw new BadRequestException('No verification documents uploaded')
     }
 
-    const documentUrls = files.map((file) => `${this.apiConfig.apiUrl}/storage/verifications/${file.filename}`)
+    const dir = join(STORAGE_ROOT, 'verifications')
+    mkdirSync(dir, { recursive: true })
+    const documentUrls = files.map((file) => {
+      const filename = `${randomUUID()}${extname(file.originalname)}`
+      writeFileSync(join(dir, filename), file.buffer)
+      return `${this.apiConfig.apiUrl}/storage/verifications/${filename}`
+    })
 
     return this.paymentsService.submitOrganizationVerification(user.sub, {
       additionalInformation: body.additionalInformation,

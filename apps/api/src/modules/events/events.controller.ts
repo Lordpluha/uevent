@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, UseInterceptors, UploadedFiles, BadRequestException, Headers, UseGuards, ForbiddenException } from '@nestjs/common'
 import { FilesInterceptor } from '@nestjs/platform-express'
-import { diskStorage } from 'multer'
+import { memoryStorage } from 'multer'
+import { writeFileSync, mkdirSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { EventsService } from './events.service'
@@ -16,6 +17,8 @@ import { ApiAcceptLanguageHeader, ApiAccessCookieAuth, ApiMultipartFile, ApiUuid
 import { Event } from './entities/event.entity'
 import { Tag } from '../tags/entities/tag.entity'
 import { Ticket } from '../tickets/entities/ticket.entity'
+
+const STORAGE_ROOT = process.env.VERCEL ? '/tmp/storage' : join(process.cwd(), 'storage')
 
 @Controller('events')
 @ApiTags('Events')
@@ -116,12 +119,7 @@ export class EventsController {
   @ApiOkResponse({ description: 'Updated event with gallery images.', schema: eventResponseSchema })
   @UseInterceptors(
     FilesInterceptor('images', 20, {
-      storage: diskStorage({
-        destination: join(process.cwd(), 'storage', 'events'),
-        filename: (_req, file, cb) => {
-          cb(null, `${randomUUID()}${extname(file.originalname)}`)
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {
           return cb(new BadRequestException('Only image files are allowed'), false)
@@ -137,8 +135,14 @@ export class EventsController {
     @CurrentUser() user: JwtPayload,
   ) {
     if (!files?.length) throw new BadRequestException('No files uploaded')
+    const dir = join(STORAGE_ROOT, 'events')
+    mkdirSync(dir, { recursive: true })
     const base = this.apiConfig.apiUrl
-    const imageUrls = files.map((f) => `${base}/storage/events/${f.filename}`)
+    const imageUrls = files.map((f) => {
+      const filename = `${randomUUID()}${extname(f.originalname)}`
+      writeFileSync(join(dir, filename), f.buffer)
+      return `${base}/storage/events/${filename}`
+    })
     return this.eventsService.addGalleryImages(id, imageUrls, user)
   }
 

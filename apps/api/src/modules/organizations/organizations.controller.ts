@@ -1,6 +1,7 @@
 import { Controller, Patch, Param, Delete, ParseUUIDPipe, Query, UseGuards, ForbiddenException, Get, Body, Post, UseInterceptors, UploadedFile, BadRequestException, Headers } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { diskStorage } from 'multer'
+import { memoryStorage } from 'multer'
+import { writeFileSync, mkdirSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { OrganizationsService } from './organizations.service'
@@ -17,6 +18,8 @@ import { JwtPayload } from '../auth/types/jwt-payload.interface'
 import { ApiConfigService } from '../../config/api-config.service'
 import { ApiAcceptLanguageHeader, ApiAccessCookieAuth, ApiMultipartFile, ApiUuidParam, ApiZodBody, messageSchema, organizationResponseSchema, paginatedResponseSchema } from '../../common/swagger/openapi.util'
 import { Organization } from './entities/organization.entity'
+
+const STORAGE_ROOT = process.env.VERCEL ? '/tmp/storage' : join(process.cwd(), 'storage')
 
 @Controller('organizations')
 @ApiTags('Organizations')
@@ -115,10 +118,7 @@ export class OrganizationsController {
   @ApiOkResponse({ description: 'Organization logo URL.', schema: { type: 'object', properties: { avatarUrl: { type: 'string' } }, required: ['avatarUrl'] } })
   @UseInterceptors(
     FileInterceptor('logo', {
-      storage: diskStorage({
-        destination: join(process.cwd(), 'storage', 'organizations'),
-        filename: (_req, file, cb) => cb(null, `${randomUUID()}${extname(file.originalname)}`),
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {
           return cb(new BadRequestException('Only image files are allowed'), false)
@@ -138,8 +138,12 @@ export class OrganizationsController {
     }
     if (!file) throw new BadRequestException('No file uploaded')
 
+    const dir = join(STORAGE_ROOT, 'organizations')
+    mkdirSync(dir, { recursive: true })
+    const filename = `${randomUUID()}${extname(file.originalname)}`
+    writeFileSync(join(dir, filename), file.buffer)
     const base = this.apiConfig.apiUrl
-    const avatarUrl = `${base}/storage/organizations/${file.filename}`
+    const avatarUrl = `${base}/storage/organizations/${filename}`
     await this.organizationsService.setAvatar(id, avatarUrl)
     return { avatarUrl }
   }
@@ -154,10 +158,7 @@ export class OrganizationsController {
   @ApiOkResponse({ description: 'Organization cover URL.', schema: { type: 'object', properties: { coverUrl: { type: 'string' } }, required: ['coverUrl'] } })
   @UseInterceptors(
     FileInterceptor('cover', {
-      storage: diskStorage({
-        destination: join(process.cwd(), 'storage', 'organizations'),
-        filename: (_req, file, cb) => cb(null, `${randomUUID()}${extname(file.originalname)}`),
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {
           return cb(new BadRequestException('Only image files are allowed'), false)
@@ -177,8 +178,12 @@ export class OrganizationsController {
     }
     if (!file) throw new BadRequestException('No file uploaded')
 
+    const dir = join(STORAGE_ROOT, 'organizations')
+    mkdirSync(dir, { recursive: true })
+    const filename = `${randomUUID()}${extname(file.originalname)}`
+    writeFileSync(join(dir, filename), file.buffer)
     const base = this.apiConfig.apiUrl
-    const coverUrl = `${base}/storage/organizations/${file.filename}`
+    const coverUrl = `${base}/storage/organizations/${filename}`
     await this.organizationsService.setCover(id, coverUrl)
     return { coverUrl }
   }

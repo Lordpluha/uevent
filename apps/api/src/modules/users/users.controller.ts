@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Delete, ParseUUIDPipe, Query, Post, UseGuards, UseInterceptors, UploadedFile, BadRequestException, Patch, Body, ForbiddenException } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { diskStorage } from 'multer'
+import { memoryStorage } from 'multer'
+import { writeFileSync, mkdirSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { UsersService } from './users.service'
@@ -14,6 +15,8 @@ import { JwtPayload } from '../auth/types/jwt-payload.interface'
 import { ApiConfigService } from '../../config/api-config.service'
 import { ApiAccessCookieAuth, ApiMultipartFile, ApiUuidParam, ApiZodBody, messageSchema, paginatedResponseSchema, userResponseSchema } from '../../common/swagger/openapi.util'
 import { User } from './entities/user.entity'
+
+const STORAGE_ROOT = process.env.VERCEL ? '/tmp/storage' : join(process.cwd(), 'storage')
 
 @Controller('users')
 @ApiTags('Users')
@@ -91,10 +94,7 @@ export class UsersController {
   @ApiOkResponse({ description: 'Avatar URL.', schema: { type: 'object', properties: { avatarUrl: { type: 'string' } }, required: ['avatarUrl'] } })
   @UseInterceptors(
     FileInterceptor('avatar', {
-      storage: diskStorage({
-        destination: join(process.cwd(), 'storage', 'users'),
-        filename: (_req, file, cb) => cb(null, `${randomUUID()}${extname(file.originalname)}`),
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {
           return cb(new BadRequestException('Only image files are allowed'), false)
@@ -113,8 +113,12 @@ export class UsersController {
     }
     if (!file) throw new BadRequestException('No file uploaded')
 
+    const dir = join(STORAGE_ROOT, 'users')
+    mkdirSync(dir, { recursive: true })
+    const filename = `${randomUUID()}${extname(file.originalname)}`
+    writeFileSync(join(dir, filename), file.buffer)
     const base = this.apiConfig.apiUrl
-    const avatarUrl = `${base}/storage/users/${file.filename}`
+    const avatarUrl = `${base}/storage/users/${filename}`
     await this.usersService.setAvatar(user.sub, avatarUrl)
     return { avatarUrl }
   }

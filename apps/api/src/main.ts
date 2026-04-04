@@ -12,7 +12,7 @@ import { MODULE_OPENAPI_SCHEMAS } from './common/swagger/openapi.schemas'
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true })
   const apiConfig = app.get(ApiConfigService)
-  const storageDir = join(process.cwd(), 'storage')
+  const storageDir = process.env.VERCEL ? '/tmp/storage' : join(process.cwd(), 'storage')
   const staticDirs = [
     storageDir,
     join(storageDir, 'events'),
