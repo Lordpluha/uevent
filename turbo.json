@@ -5,7 +5,32 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["build/**", "dist/**"]
+      "outputs": ["build/**", "dist/**"],
+      "env": [
+        "KOTTSTER_SECRET_KEY",
+        "KOTTSTER_API_TOKEN",
+        "JWT_SECRET_SALT",
+        "ROOT_USERNAME",
+        "ROOT_PASSWORD",
+        "POSTGRES_PORT",
+        "POSTGRES_DB",
+        "POSTGRES_HOST",
+        "POSTGRES_PASSWORD",
+        "PGPASSWORD",
+        "POSTGRES_URL_NO_SSL",
+        "PGHOST_UNPOOLED",
+        "POSTGRES_URL_NON_POOLING",
+        "PGUSER",
+        "POSTGRES_URL",
+        "DATABASE_URL_UNPOOLED",
+        "POSTGRES_USER",
+        "PGDATABASE",
+        "DATABASE_URL",
+        "NEON_PROJECT_ID",
+        "POSTGRES_PRISMA_URL",
+        "POSTGRES_DATABASE",
+        "PGHOST"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
