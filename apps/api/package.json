@@ -32,6 +32,7 @@
     "dotenv": "^17.3.1",
     "googleapis": "^171.4.0",
     "helmet": "^8.1.0",
+    "multer": "^2.1.1",
     "nestjs-stripe": "^1.0.0",
     "nestjs-zod": "^5.1.1",
     "nodemailer": "^8.0.4",
