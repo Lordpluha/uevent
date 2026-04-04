@@ -5,7 +5,7 @@ import { NestFactory } from '@nestjs/core'
 import type { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { AppModule } from './app.module'
-import * as cookieParser from 'cookie-parser'
+import cookieParser from 'cookie-parser'
 import { ApiConfigService } from './config/api-config.service'
 import { MODULE_OPENAPI_SCHEMAS } from './common/swagger/openapi.schemas'
 
