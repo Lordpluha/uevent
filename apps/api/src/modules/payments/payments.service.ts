@@ -6,7 +6,7 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { toBuffer } from 'qrcode'
 import { Payment, PaymentStatus } from './entities/payment.entity'
 import { EmailService } from '../notifications/email.service'
-import { v4 as uuidv4 } from 'uuid'
+import { v7 as uuidv7 } from 'uuid'
 import { Ticket, TicketStatus } from '../tickets/entities/ticket.entity'
 import { Notification } from '../notifications/entities/notification.entity'
 import { User } from '../users/entities/user.entity'
@@ -735,7 +735,7 @@ export class PaymentsService {
     if (!payment) {
       const paymentIntent = await this.getPaymentIntent(paymentIntentId)
       payment = this.paymentRepository.create({
-        id: uuidv4(),
+        id: uuidv7(),
         stripePaymentIntentId: paymentIntent.id,
         amount: paymentIntent.amount / 100,
         currency: paymentIntent.currency.toUpperCase(),
@@ -912,11 +912,11 @@ export class PaymentsService {
   }
 
   async createFreeCheckout(metadata?: Record<string, string>, currency?: string) {
-    const paymentIntentId = `free_${uuidv4()}`
+    const paymentIntentId = `free_${uuidv7()}`
     const resolvedCurrency = (currency ?? this.apiConfig.paymentCurrency).toUpperCase()
 
     const payment = this.paymentRepository.create({
-      id: uuidv4(),
+      id: uuidv7(),
       stripePaymentIntentId: paymentIntentId,
       amount: 0,
       currency: resolvedCurrency,
@@ -1047,7 +1047,7 @@ export class PaymentsService {
 
     if(!payment) {
       payment = this.paymentRepository.create({
-        id: uuidv4(),
+        id: uuidv7(),
         stripePaymentIntentId: paymentIntent.id,
         amount: paymentIntent.amount / 100,
         currency: paymentIntent.currency.toUpperCase(),
@@ -1128,7 +1128,7 @@ export class PaymentsService {
 
       if(!payment) {
         payment = this.paymentRepository.create({
-          id: uuidv4(),
+          id: uuidv7(),
           stripePaymentIntentId: paymentIntent.id,
           amount: paymentIntent.amount / 100,
           currency: paymentIntent.currency.toUpperCase(),
