@@ -6,7 +6,7 @@ dotenv.config({ path: resolve(__dirname, '../.env') });
 
 import { DataSource } from 'typeorm';
 import { faker } from '@faker-js/faker';
-import { v7 as uuidv7 } from 'uuid';
+import { uuidv7 } from 'uuidv7';
 import {type Options, argon2id, hash} from 'argon2';
 import { User } from '../src/modules/users/entities/user.entity';
 import { UserSession } from '../src/modules/users/entities/user-session.entity';

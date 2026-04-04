@@ -1,5 +1,5 @@
 import { PrimaryColumn, BeforeInsert } from 'typeorm'
-import { v7 as uuidv7 } from 'uuid'
+import { uuidv7 } from 'uuidv7'
 import { ApiProperty } from '@nestjs/swagger'
 
 export abstract class UuidEntity {
