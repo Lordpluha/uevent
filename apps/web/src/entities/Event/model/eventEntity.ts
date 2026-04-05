@@ -96,6 +96,7 @@ export type ApiEvent = {
   location_map_url?: string | null
   online_link?: string | null
   organizer?: string | null
+  organization?: { id?: string | null; name?: string | null; logo?: string | null } | null
   attendeeCount?: number | null
   attendeesPublic?: boolean | null
   attendees_public?: boolean | null

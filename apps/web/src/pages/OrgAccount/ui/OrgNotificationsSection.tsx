@@ -2,7 +2,7 @@ import { organizationsApi } from '@entities/Organization'
 import { Switch } from '@shared/components'
 import { useAppContext } from '@shared/lib'
 import { useMutation } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useRequiredOrgAccountData } from './useOrgAccountData'
 
@@ -12,6 +12,14 @@ export function OrgNotificationsSection() {
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(org?.notificationsEnabled ?? true)
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(org?.pushNotificationsEnabled ?? false)
+
+  useEffect(() => {
+    if (org) {
+      setNotificationsEnabled(org.notificationsEnabled ?? true)
+      setPushNotificationsEnabled(org.pushNotificationsEnabled ?? false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [org])
 
   const updateMutation = useMutation({
     mutationFn: (dto: { notificationsEnabled?: boolean; pushNotificationsEnabled?: boolean }) =>

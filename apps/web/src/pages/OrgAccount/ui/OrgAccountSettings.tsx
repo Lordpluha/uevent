@@ -2,7 +2,7 @@ import { organizationsApi } from '@entities/Organization'
 import { Button, Field, FieldDescription, FieldLabel, Input } from '@shared/components'
 import { useAppContext } from '@shared/lib'
 import { useMutation } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useRequiredOrgAccountData } from './useOrgAccountData'
 
@@ -11,6 +11,11 @@ export function OrgAccountSettings() {
   const { org, isLoading, invalidateOrgQueries } = useRequiredOrgAccountData()
   const [email, setEmail] = useState(org?.email ?? '')
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' })
+
+  useEffect(() => {
+    if (org?.email) setEmail(org.email)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [org?.email])
 
   const saveEmailMutation = useMutation({
     mutationFn: () => organizationsApi.updateMyEmail({ email }),

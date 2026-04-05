@@ -2,7 +2,7 @@ import { organizationsApi } from '@entities/Organization'
 import { Button, Field, FieldLabel, Input, Textarea } from '@shared/components'
 import { useAppContext } from '@shared/lib'
 import { useMutation } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useRequiredOrgAccountData } from './useOrgAccountData'
 
@@ -17,6 +17,20 @@ export function OrgProfileSection() {
     location: org?.location ?? '',
     phone: org?.phone ?? '',
   })
+
+  useEffect(() => {
+    if (org) {
+      setProfileForm({
+        title: org.title ?? '',
+        slogan: org.slogan ?? '',
+        description: org.description ?? '',
+        category: org.category ?? '',
+        location: org.location ?? '',
+        phone: org.phone ?? '',
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [org])
 
   const saveProfileMutation = useMutation({
     mutationFn: () =>
