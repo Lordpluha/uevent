@@ -13,6 +13,7 @@ interface PaymentConfirmationData {
   eventLocation?: string
   organizationName?: string
   paymentIntentId: string
+  ticketPdf?: { buffer: Buffer; fileName: string }
 }
 
 @Injectable()
@@ -20,6 +21,33 @@ export class EmailService implements OnModuleInit {
   private transporter: Transporter | undefined
   private readonly logger = new Logger(EmailService.name)
   private static readonly SMTP_VERIFY_TIMEOUT_MS = 5000
+  /** Minimum gap between consecutive SMTP DATA commands to avoid rate-limit errors (e.g. Mailtrap 550). */
+  private static readonly EMAIL_RATE_DELAY_MS = 1200
+  private sendQueue: Promise<void> = Promise.resolve()
+
+  /**
+   * Serialises all outgoing mail through a single promise chain and inserts a
+   * fixed delay after each send so the SMTP server is not flooded.
+   */
+  private enqueueEmail<T>(sendFn: () => Promise<T>): Promise<T> {
+    let outerResolve!: (v: T) => void
+    let outerReject!: (e: unknown) => void
+    const resultPromise = new Promise<T>((res, rej) => {
+      outerResolve = res
+      outerReject = rej
+    })
+    this.sendQueue = this.sendQueue
+      .then(() => sendFn())
+      .then((result) => {
+        outerResolve(result)
+        return new Promise<void>((resolve) => setTimeout(resolve, EmailService.EMAIL_RATE_DELAY_MS))
+      })
+      .catch((err: unknown) => {
+        outerReject(err)
+        return new Promise<void>((resolve) => setTimeout(resolve, EmailService.EMAIL_RATE_DELAY_MS))
+      })
+    return resultPromise
+  }
 
   constructor(private readonly apiConfig: ApiConfigService) {}
 
@@ -130,19 +158,28 @@ export class EmailService implements OnModuleInit {
 
       const htmlTemplate = this.generatePaymentConfirmationTemplate(safeData, qrCodeDataUrl)
 
-      const mailOptions = {
+      const mailOptions: Parameters<Transporter['sendMail']>[0] = {
         from: this.apiConfig.smtpConfig.fromEmail,
         to: safeData.userEmail,
         subject: `Payment Confirmed - ${safeData.eventTitle} Ticket`,
         html: htmlTemplate,
         text: this.generatePlainTextTemplate(safeData),
+        attachments: data.ticketPdf
+          ? [
+              {
+                filename: data.ticketPdf.fileName,
+                content: data.ticketPdf.buffer,
+                contentType: 'application/pdf',
+              },
+            ]
+          : [],
       }
 
       this.logger.log(`Sending payment confirmation email...`)
       this.logger.log(`   To: ${safeData.userEmail}`)
       this.logger.log(`   Subject: ${mailOptions.subject}`)
 
-      const result = await this.transporter.sendMail(mailOptions)
+      const result = await this.enqueueEmail(() => this.transporter!.sendMail(mailOptions))
 
       this.logger.log(`Email sent successfully!`)
       this.logger.log(`   Message ID: ${result.messageId}`)
@@ -705,13 +742,15 @@ Event Management Platform
 </body>
 </html>`
 
-      const result = await this.transporter.sendMail({
-        from: this.apiConfig.smtpConfig.fromEmail,
-        to: userEmail,
-        subject: `New event from ${safeOrgName}: ${safeEventTitle}`,
-        html,
-        text: `Hey ${safeUserName},\n\n${safeOrgName} just published a new event: "${safeEventTitle}".\n\nView it here: ${eventUrl}\n\nUEVENT Team`,
-      })
+      const result = await this.enqueueEmail(() =>
+        this.transporter!.sendMail({
+          from: this.apiConfig.smtpConfig.fromEmail,
+          to: userEmail,
+          subject: `New event from ${safeOrgName}: ${safeEventTitle}`,
+          html,
+          text: `Hey ${safeUserName},\n\n${safeOrgName} just published a new event: "${safeEventTitle}".\n\nView it here: ${eventUrl}\n\nUEVENT Team`,
+        }),
+      )
       this.logger.log(`Subscription notification email sent to ${userEmail} (${result.messageId})`)
       return result
     } catch (error) {
@@ -812,13 +851,15 @@ Event Management Platform
 </body>
 </html>`
 
-      const result = await this.transporter.sendMail({
-        from: this.apiConfig.smtpConfig.fromEmail,
-        to: orgEmail,
-        subject: `New ticket purchase: ${quantity}× ${safeTicketName} — ${safeEventTitle}`,
-        html,
-        text: `Hello ${safeOrgName},\n\nA new attendee (${safeBuyerName}) just purchased ${quantity}× ${safeTicketName} for "${safeEventTitle}".\n\nOrder ID: ${paymentIntentId}\n\nUEVENT Team`,
-      })
+      const result = await this.enqueueEmail(() =>
+        this.transporter!.sendMail({
+          from: this.apiConfig.smtpConfig.fromEmail,
+          to: orgEmail,
+          subject: `New ticket purchase: ${quantity}× ${safeTicketName} — ${safeEventTitle}`,
+          html,
+          text: `Hello ${safeOrgName},\n\nA new attendee (${safeBuyerName}) just purchased ${quantity}× ${safeTicketName} for "${safeEventTitle}".\n\nOrder ID: ${paymentIntentId}\n\nUEVENT Team`,
+        }),
+      )
       this.logger.log(`New attendee email sent to org ${orgEmail} (${result.messageId})`)
       return result
     } catch (error) {
@@ -866,7 +907,7 @@ Event Management Platform
       }
 
       this.logger.log(`Sending payment failed email to ${userEmail}`)
-      const result = await this.transporter.sendMail(mailOptions)
+      const result = await this.enqueueEmail(() => this.transporter!.sendMail(mailOptions))
 
       this.logger.log(`Payment failed email sent to ${userEmail}`)
       return result
@@ -914,7 +955,7 @@ Event Management Platform
       }
 
       this.logger.log(`Sending refund email to ${userEmail}`)
-      const result = await this.transporter.sendMail(mailOptions)
+      const result = await this.enqueueEmail(() => this.transporter!.sendMail(mailOptions))
 
       this.logger.log(`Refund email sent to ${userEmail}`)
       return result
@@ -1698,7 +1739,7 @@ Event Management Platform
       }
 
       this.logger.log(`Sending login notification email to ${userEmail}`)
-      const result = await this.transporter.sendMail(mailOptions)
+      const result = await this.enqueueEmail(() => this.transporter!.sendMail(mailOptions))
       this.logger.log(`Login notification email sent to ${userEmail}`)
       return result
     } catch (error) {
@@ -1745,7 +1786,7 @@ Event Management Platform
       }
 
       this.logger.log(`Sending password reset email to ${userEmail}`)
-      const result = await this.transporter.sendMail(mailOptions)
+      const result = await this.enqueueEmail(() => this.transporter!.sendMail(mailOptions))
       this.logger.log(`Password reset email sent to ${userEmail}`)
       return result
     } catch (error) {

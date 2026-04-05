@@ -839,18 +839,28 @@ export class PaymentsService {
     if (!this.isPaymentEffectApplied(payment, 'confirmationEmailSent') && user.payment_email_enabled) {
       const meta = payment.metadata ?? {}
       if (meta.userEmail && meta.userName) {
-        this.emailService
-          .sendPaymentConfirmation({
-            userEmail: meta.userEmail,
-            userName: meta.userName,
-            eventTitle: meta.eventTitle || 'Ticket Purchase',
-            ticketName: meta.ticketName || 'Ticket',
-            price: Number(payment.amount),
-            eventDate: meta.eventDate || '',
-            eventLocation: meta.eventLocation || '',
-            organizationName: meta.organizationName || '',
-            paymentIntentId,
-          })
+        this.buildTicketPdfBuffer(
+          paymentIntentId,
+          user.email,
+          meta,
+          Number(payment.amount),
+          payment.currency || this.apiConfig.paymentCurrency.toUpperCase(),
+          payment.createdAt ? new Date(payment.createdAt) : undefined,
+        )
+          .then((ticketPdf) =>
+            this.emailService.sendPaymentConfirmation({
+              userEmail: meta.userEmail,
+              userName: meta.userName,
+              eventTitle: meta.eventTitle || 'Ticket Purchase',
+              ticketName: meta.ticketName || 'Ticket',
+              price: Number(payment.amount),
+              eventDate: meta.eventDate || '',
+              eventLocation: meta.eventLocation || '',
+              organizationName: meta.organizationName || '',
+              paymentIntentId,
+              ticketPdf,
+            }),
+          )
           .then(() => this.markPaymentEffectApplied(payment, 'confirmationEmailSent'))
           .catch((e: Error) =>
             this.logger.warn(
@@ -865,6 +875,103 @@ export class PaymentsService {
 
   findStoredPaymentByIntentId(paymentIntentId: string) {
     return this.paymentRepository.findOne({ where: { stripePaymentIntentId: paymentIntentId } })
+  }
+
+  private async buildTicketPdfBuffer(
+    paymentIntentId: string,
+    userEmail: string,
+    metadata: Record<string, string>,
+    amount: number,
+    currency: string,
+    createdAt?: Date,
+  ): Promise<{ buffer: Buffer; fileName: string } | undefined> {
+    try {
+      const eventTitle = metadata.eventTitle || 'Event'
+      const ticketName = metadata.ticketName || 'Ticket'
+      const quantity = Math.max(1, Number(metadata.quantity ?? 1))
+      const amountLine = `${Number.isFinite(amount) ? amount.toFixed(2) : '0.00'} ${currency}`
+      const purchaseDate = createdAt ?? new Date()
+
+      const qrPayload = JSON.stringify({
+        paymentIntentId,
+        eventTitle,
+        ticketName,
+        quantity,
+        amount: Number.isFinite(amount) ? amount : 0,
+        currency,
+        userEmail,
+        issuedAt: purchaseDate.toISOString(),
+      })
+
+      const qrPng = await toBuffer(qrPayload, { type: 'png', width: 220, margin: 1 })
+
+      const pdf = await PDFDocument.create()
+      const page = pdf.addPage([595.28, 841.89])
+      const regular = await pdf.embedFont(StandardFonts.Helvetica)
+      const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
+      const qrImage = await pdf.embedPng(qrPng)
+
+      const { width, height } = page.getSize()
+      const margin = 48
+
+      page.drawRectangle({
+        x: margin,
+        y: height - 235,
+        width: width - margin * 2,
+        height: 180,
+        color: rgb(0.96, 0.98, 1),
+        borderColor: rgb(0.12, 0.32, 0.62),
+        borderWidth: 1,
+      })
+
+      page.drawText('UEVENT TICKET', {
+        x: margin + 16,
+        y: height - 90,
+        size: 24,
+        font: bold,
+        color: rgb(0.08, 0.18, 0.38),
+      })
+
+      page.drawText(`Order: ${paymentIntentId}`, {
+        x: margin + 16,
+        y: height - 122,
+        size: 11,
+        font: regular,
+        color: rgb(0.22, 0.28, 0.36),
+      })
+
+      const lines: [string, string][] = [
+        ['Event', eventTitle],
+        ['Ticket', ticketName],
+        ['Quantity', String(quantity)],
+        ['Paid', amountLine],
+        ['Buyer', userEmail],
+        ['Issued', purchaseDate.toISOString().slice(0, 19).replace('T', ' ')],
+      ]
+
+      let y = height - 290
+      for (const [label, value] of lines) {
+        page.drawText(`${label}:`, { x: margin, y, size: 12, font: bold, color: rgb(0.14, 0.16, 0.2) })
+        page.drawText(value, { x: margin + 90, y, size: 12, font: regular, color: rgb(0.14, 0.16, 0.2) })
+        y -= 24
+      }
+
+      const qrSize = 170
+      page.drawImage(qrImage, { x: width - margin - qrSize, y: 120, width: qrSize, height: qrSize })
+      page.drawText('QR verification data', {
+        x: width - margin - qrSize,
+        y: 100,
+        size: 10,
+        font: regular,
+        color: rgb(0.35, 0.38, 0.44),
+      })
+
+      const bytes = await pdf.save()
+      return { buffer: Buffer.from(bytes), fileName: `uevent-ticket-${paymentIntentId}.pdf` }
+    } catch (err: unknown) {
+      this.logger.warn(`Could not generate ticket PDF for ${paymentIntentId}: ${(err as Error).message}`)
+      return undefined
+    }
   }
 
   async buildTicketPdfForUser(paymentIntentId: string, userId: string) {
@@ -1023,18 +1130,28 @@ export class PaymentsService {
     if (freeMetadata.userEmail && freeMetadata.userName) {
       const freeUser = await this.usersRepository.findOne({ where: { email: freeMetadata.userEmail } })
       if (!freeUser || freeUser.payment_email_enabled) {
-        this.emailService
-          .sendPaymentConfirmation({
-            userEmail: freeMetadata.userEmail,
-            userName: freeMetadata.userName,
-            eventTitle: freeMetadata.eventTitle || 'Ticket Purchase',
-            ticketName: freeMetadata.ticketName || 'Ticket',
-            price: 0,
-            eventDate: freeMetadata.eventDate || '',
-            eventLocation: freeMetadata.eventLocation || '',
-            organizationName: freeMetadata.organizationName || '',
-            paymentIntentId,
-          })
+        this.buildTicketPdfBuffer(
+          paymentIntentId,
+          freeMetadata.userEmail,
+          freeMetadata,
+          0,
+          savedPayment.currency,
+          savedPayment.createdAt ? new Date(savedPayment.createdAt) : undefined,
+        )
+          .then((ticketPdf) =>
+            this.emailService.sendPaymentConfirmation({
+              userEmail: freeMetadata.userEmail,
+              userName: freeMetadata.userName,
+              eventTitle: freeMetadata.eventTitle || 'Ticket Purchase',
+              ticketName: freeMetadata.ticketName || 'Ticket',
+              price: 0,
+              eventDate: freeMetadata.eventDate || '',
+              eventLocation: freeMetadata.eventLocation || '',
+              organizationName: freeMetadata.organizationName || '',
+              paymentIntentId,
+              ticketPdf,
+            }),
+          )
           .catch((e) => this.logger.warn(`Failed to send free checkout confirmation email: ${e.message}`))
       }
     }
