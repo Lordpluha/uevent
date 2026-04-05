@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1800 1200">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 34px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 500 16px Arial, sans-serif; fill: #334155; }
+      .zone { fill: none; stroke: #cbd5e1; stroke-width: 1.6; stroke-dasharray: 6 6; }
+      .zoneTitle { font: 700 16px Arial, sans-serif; fill: #0f172a; }
+      .component { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 14; }
+      .external { fill: #ecfeff; stroke: #0891b2; stroke-width: 2; rx: 14; }
+      .database { fill: #eef2ff; stroke: #4f46e5; stroke-width: 2; rx: 14; }
+      .componentTitle { font: 700 15px Arial, sans-serif; fill: #0f172a; }
+      .componentText { font: 500 12px Arial, sans-serif; fill: #334155; }
+      .arrow { stroke: #475569; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .label { font: 500 12px Arial, sans-serif; fill: #1f2937; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1800" height="1200" />
+  <text x="44" y="58" class="title">uEvent Component Diagram</text>
+  <text x="44" y="86" class="subtitle">Web + Admin frontends, NestJS API modules, data store, and external integrations</text>
+
+  <rect x="40" y="120" width="1720" height="1020" class="zone" />
+  <text x="58" y="148" class="zoneTitle">uEvent Platform</text>
+
+  <rect x="70" y="180" width="520" height="420" class="zone" />
+  <text x="88" y="208" class="zoneTitle">Frontend Layer</text>
+
+  <rect x="110" y="240" width="220" height="130" class="component" />
+  <text x="134" y="268" class="componentTitle">Web App (React)</text>
+  <text x="126" y="292" class="componentText">- events, checkout, profile</text>
+  <text x="126" y="312" class="componentText">- notifications bell/profile tab</text>
+  <text x="126" y="332" class="componentText">- i18n, routing, pages/widgets</text>
+
+  <rect x="350" y="240" width="220" height="130" class="component" />
+  <text x="370" y="268" class="componentTitle">Admin App (React)</text>
+  <text x="366" y="292" class="componentText">- moderation dashboard</text>
+  <text x="366" y="312" class="componentText">- users/events/payments views</text>
+  <text x="366" y="332" class="componentText">- organization verification flows</text>
+
+  <rect x="110" y="400" width="460" height="160" class="component" />
+  <text x="132" y="428" class="componentTitle">Shared Frontend Components</text>
+  <text x="126" y="452" class="componentText">- entities/features/widgets/shared</text>
+  <text x="126" y="472" class="componentText">- API client + auth context</text>
+  <text x="126" y="492" class="componentText">- payment/checkout helpers</text>
+  <text x="126" y="512" class="componentText">- notification UI hooks</text>
+
+  <rect x="640" y="180" width="760" height="760" class="zone" />
+  <text x="658" y="208" class="zoneTitle">Backend Layer (NestJS API)</text>
+
+  <rect x="680" y="240" width="220" height="130" class="component" />
+  <text x="718" y="268" class="componentTitle">Auth Module</text>
+  <text x="696" y="292" class="componentText">- users/org login/register</text>
+  <text x="696" y="312" class="componentText">- JWT cookies, sessions, 2FA</text>
+  <text x="696" y="332" class="componentText">- Google auth callback</text>
+
+  <rect x="930" y="240" width="220" height="130" class="component" />
+  <text x="960" y="268" class="componentTitle">Events Module</text>
+  <text x="946" y="292" class="componentText">- browse/create/update events</text>
+  <text x="946" y="312" class="componentText">- event subscriptions</text>
+  <text x="946" y="332" class="componentText">- notify followers on new event</text>
+
+  <rect x="1180" y="240" width="220" height="130" class="component" />
+  <text x="1200" y="268" class="componentTitle">Organizations Module</text>
+  <text x="1196" y="292" class="componentText">- profiles, cover/avatar</text>
+  <text x="1196" y="312" class="componentText">- follow/unfollow endpoints</text>
+  <text x="1196" y="332" class="componentText">- organization public pages</text>
+
+  <rect x="680" y="410" width="220" height="130" class="component" />
+  <text x="712" y="438" class="componentTitle">Payments Module</text>
+  <text x="696" y="462" class="componentText">- create payment intent</text>
+  <text x="696" y="482" class="componentText">- Stripe webhooks + reconcile</text>
+  <text x="696" y="502" class="componentText">- ticket issue + finance flows</text>
+
+  <rect x="930" y="410" width="220" height="130" class="component" />
+  <text x="952" y="438" class="componentTitle">Notifications Module</text>
+  <text x="946" y="462" class="componentText">- in-app notifications</text>
+  <text x="946" y="482" class="componentText">- push subscriptions</text>
+  <text x="946" y="502" class="componentText">- mail service integration</text>
+
+  <rect x="1180" y="410" width="220" height="130" class="component" />
+  <text x="1224" y="438" class="componentTitle">Users Module</text>
+  <text x="1196" y="462" class="componentText">- profile/preferences</text>
+  <text x="1196" y="482" class="componentText">- notification/email flags</text>
+  <text x="1196" y="502" class="componentText">- followed organizations relation</text>
+
+  <rect x="680" y="580" width="220" height="130" class="component" />
+  <text x="728" y="608" class="componentTitle">Tickets Module</text>
+  <text x="696" y="632" class="componentText">- ticket entities</text>
+  <text x="696" y="652" class="componentText">- attendee visibility logic</text>
+  <text x="696" y="672" class="componentText">- user ticket ownership</text>
+
+  <rect x="930" y="580" width="220" height="130" class="component" />
+  <text x="994" y="608" class="componentTitle">Files Module</text>
+  <text x="946" y="632" class="componentText">- media uploads</text>
+  <text x="946" y="652" class="componentText">- storage URLs</text>
+  <text x="946" y="672" class="componentText">- event/org assets</text>
+
+  <rect x="1180" y="580" width="220" height="130" class="component" />
+  <text x="1248" y="608" class="componentTitle">Tags Module</text>
+  <text x="1196" y="632" class="componentText">- tags dictionary</text>
+  <text x="1196" y="652" class="componentText">- event categorization</text>
+  <text x="1196" y="672" class="componentText">- filters/search support</text>
+
+  <rect x="680" y="750" width="720" height="150" class="database" />
+  <text x="708" y="780" class="componentTitle">PostgreSQL (TypeORM Entities)</text>
+  <text x="696" y="806" class="componentText">users, organizations, events, tickets, payments, notifications, promo_codes,</text>
+  <text x="696" y="826" class="componentText">event_subscriptions, organization_transactions, organization_verification, withdrawals</text>
+  <text x="696" y="846" class="componentText">+ relations for followers/attendees/sessions</text>
+
+  <rect x="1450" y="240" width="280" height="300" class="zone" />
+  <text x="1468" y="268" class="zoneTitle">External Services</text>
+
+  <rect x="1480" y="300" width="220" height="100" class="external" />
+  <text x="1548" y="328" class="componentTitle">Stripe API</text>
+  <text x="1496" y="352" class="componentText">- payment intents</text>
+  <text x="1496" y="372" class="componentText">- webhook events</text>
+
+  <rect x="1480" y="430" width="220" height="100" class="external" />
+  <text x="1548" y="458" class="componentTitle">SMTP Server</text>
+  <text x="1496" y="482" class="componentText">- payment confirmation email</text>
+  <text x="1496" y="502" class="componentText">- transporter verify/send</text>
+
+  <path d="M330 305 L680 305" class="arrow" />
+  <text x="456" y="292" class="label">REST/JSON + auth cookies</text>
+
+  <path d="M790 370 L790 410" class="arrow" />
+  <path d="M1040 370 L1040 410" class="arrow" />
+  <path d="M1290 370 L1290 410" class="arrow" />
+
+  <path d="M900 475 L930 475" class="arrow" />
+  <path d="M1150 475 L1180 475" class="arrow" />
+  <path d="M900 645 L930 645" class="arrow" />
+  <path d="M1150 645 L1180 645" class="arrow" />
+
+  <path d="M790 540 L790 580" class="arrow" />
+
+  <path d="M1590 400 L1590 430" class="arrow" />
+  <text x="1602" y="418" class="label">payment status / metadata</text>
+
+  <path d="M900 448 L900 220 L1480 220 L1480 350" class="arrow" />
+  <text x="1118" y="212" class="label">payment intents + verify</text>
+
+  <path d="M1480 385 L1450 385 L1450 560 L900 560 L900 500" class="arrow" />
+  <text x="1100" y="548" class="label">webhooks</text>
+
+  <path d="M1150 460 L1480 480" class="arrow" />
+  <text x="1280" y="446" class="label">send email</text>
+
+  <path d="M790 710 L790 750" class="arrow" />
+  <path d="M1040 710 L1040 750" class="arrow" />
+  <path d="M1290 710 L1290 750" class="arrow" />
+
+  <rect x="70" y="640" width="520" height="220" class="external" />
+  <text x="88" y="668" class="componentTitle">Operational Components</text>
+  <text x="84" y="692" class="componentText">- Docker Compose orchestrates api/web/admin/postgres</text>
+  <text x="84" y="712" class="componentText">- Seed script initializes tags/events/tickets/promo data</text>
+  <text x="84" y="732" class="componentText">- Static storage folders for events/organizations/users</text>
+  <text x="84" y="752" class="componentText">- API env config validates required runtime keys</text>
+
+  <path d="M590 730 L680 790" class="arrow" />
+  <text x="590" y="776" class="label">bootstrap + schema/data lifecycle</text>
+
+  <rect x="1450" y="590" width="280" height="250" class="external" />
+  <text x="1468" y="618" class="componentTitle">Key Runtime Rules</text>
+  <text x="1462" y="642" class="componentText">1. New event -> notify org followers</text>
+  <text x="1462" y="662" class="componentText">2. Payment succeeded -> side-effects + tickets</text>
+  <text x="1462" y="682" class="componentText">3. Reconcile endpoint restores missed effects</text>
+  <text x="1462" y="702" class="componentText">4. Email depends on SMTP + user settings</text>
+  <text x="1462" y="722" class="componentText">5. Notifications available via bell/profile</text>
+</svg>

@@ -47,6 +47,8 @@ export const eventSchema = z.object({
   locationTo: z.string().optional(),
   organizer: z.string(),
   organizerOrgId: z.string().optional(),
+  organizerHref: z.string().optional(),
+  organizerAvatarUrl: z.string().url().optional(),
   rating: z.number(),
   attendeeCount: z.number(),
   attendeesPublic: z.boolean().optional(),
@@ -96,6 +98,7 @@ export type ApiEvent = {
   location_map_url?: string | null;
   online_link?: string | null;
   organizer?: string | null;
+  organization?: { id?: string; name?: string | null; avatar?: string | null } | null;
   attendeeCount?: number | null;
   attendeesPublic?: boolean | null;
   attendees_public?: boolean | null;

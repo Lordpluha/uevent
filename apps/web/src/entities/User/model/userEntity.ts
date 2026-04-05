@@ -81,8 +81,8 @@ export const formatJoinedAt = (value?: string | null): string => {
 export const mapApiUser = (raw: ApiUser): User => {
   const id = String(raw.id);
   const composedName = [raw.first_name, raw.last_name].filter(Boolean).join(' ').trim();
-  const name = raw.name?.trim() || composedName || id;
   const username = raw.username?.trim() || id;
+  const name = raw.name?.trim() || composedName || username;
 
   return {
     id,

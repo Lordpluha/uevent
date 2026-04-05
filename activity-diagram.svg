@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1780" height="1280" viewBox="0 0 1780 1280">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 34px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 500 16px Arial, sans-serif; fill: #334155; }
+      .laneTitle { font: 700 16px Arial, sans-serif; fill: #0f172a; }
+      .lane { fill: none; stroke: #cbd5e1; stroke-width: 1.5; stroke-dasharray: 5 5; }
+      .node { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 14; }
+      .decision { fill: #ffffff; stroke: #334155; stroke-width: 2; }
+      .text { font: 600 14px Arial, sans-serif; fill: #0f172a; }
+      .small { font: 500 12px Arial, sans-serif; fill: #334155; }
+      .arrow { stroke: #475569; stroke-width: 2.2; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1780" height="1280" />
+  <text x="44" y="58" class="title">uEvent Activity Diagram (Code-Aligned)</text>
+  <text x="44" y="86" class="subtitle">Flow: discover event -> optional subscribe/follow -> checkout -> payment succeeded -> ticket + notifications (+ optional email)</text>
+
+  <rect x="40" y="120" width="520" height="1110" class="lane" />
+  <rect x="580" y="120" width="620" height="1110" class="lane" />
+  <rect x="1220" y="120" width="520" height="1110" class="lane" />
+  <text x="58" y="148" class="laneTitle">User (Web App)</text>
+  <text x="598" y="148" class="laneTitle">API (NestJS)</text>
+  <text x="1238" y="148" class="laneTitle">External (Stripe / SMTP)</text>
+
+  <circle cx="300" cy="200" r="16" fill="#0f172a" />
+  <text x="332" y="206" class="small">Start</text>
+
+  <rect x="180" y="245" width="240" height="56" class="node" />
+  <text x="222" y="279" class="text">Open Events page</text>
+
+  <rect x="180" y="330" width="240" height="56" class="node" />
+  <text x="214" y="364" class="text">View event details</text>
+
+  <polygon points="300,418 366,470 300,522 234,470" class="decision" />
+  <text x="259" y="476" class="text">Subscribe event?</text>
+
+  <polygon points="300,560 366,612 300,664 234,612" class="decision" />
+  <text x="260" y="618" class="text">Follow org?</text>
+
+  <polygon points="300,700 366,752 300,804 234,752" class="decision" />
+  <text x="266" y="758" class="text">Buy ticket?</text>
+
+  <rect x="180" y="840" width="240" height="56" class="node" />
+  <text x="207" y="874" class="text">Enter card and confirm</text>
+
+  <rect x="180" y="1060" width="240" height="56" class="node" />
+  <text x="205" y="1094" class="text">Open bell/profile notifications</text>
+
+  <circle cx="300" cy="1190" r="18" fill="#ffffff" stroke="#0f172a" stroke-width="3" />
+  <circle cx="300" cy="1190" r="10" fill="#0f172a" />
+
+  <rect x="750" y="245" width="280" height="56" class="node" />
+  <text x="804" y="279" class="text">Fetch events list</text>
+
+  <rect x="750" y="330" width="280" height="56" class="node" />
+  <text x="785" y="364" class="text">Fetch event + organizer</text>
+
+  <rect x="750" y="445" width="280" height="56" class="node" />
+  <text x="782" y="479" class="text">Save event subscription</text>
+
+  <rect x="750" y="585" width="280" height="56" class="node" />
+  <text x="800" y="619" class="text">Save org follow link</text>
+
+  <rect x="750" y="670" width="280" height="56" class="node" />
+  <text x="772" y="704" class="text">On new org event -> notify followers</text>
+
+  <rect x="750" y="840" width="280" height="56" class="node" />
+  <text x="790" y="874" class="text">Create PaymentIntent</text>
+
+  <polygon points="890,936 976,996 890,1056 804,996" class="decision" />
+  <text x="848" y="1002" class="text">Payment succeeded?</text>
+
+  <rect x="750" y="1085" width="280" height="56" class="node" />
+  <text x="771" y="1119" class="text">Apply side effects + issue ticket</text>
+
+  <polygon points="1088,1085 1162,1113 1088,1141 1014,1113" class="decision" />
+  <text x="1042" y="1118" class="small">Email allowed?</text>
+
+  <rect x="1335" y="840" width="280" height="56" class="node" />
+  <text x="1380" y="874" class="text">Stripe confirms payment</text>
+
+  <rect x="1335" y="1085" width="280" height="56" class="node" />
+  <text x="1397" y="1119" class="text">Send SMTP email</text>
+
+  <path d="M300 216 L300 245" class="arrow" />
+  <path d="M300 301 L300 330" class="arrow" />
+  <path d="M300 386 L300 418" class="arrow" />
+
+  <path d="M420 273 L750 273" class="arrow" />
+  <path d="M420 358 L750 358" class="arrow" />
+
+  <path d="M300 522 L300 560" class="arrow" />
+  <text x="374" y="470" class="small">Yes</text>
+  <text x="176" y="470" class="small">Skip</text>
+  <path d="M234 470 L160 470 L160 612 L234 612" class="arrow" />
+  <path d="M420 470 L750 470" class="arrow" />
+
+  <path d="M300 664 L300 700" class="arrow" />
+  <text x="374" y="612" class="small">Yes</text>
+  <text x="176" y="612" class="small">No</text>
+  <path d="M420 612 L750 612" class="arrow" />
+  <path d="M1030 612 L1140 612 L1140 698 L1030 698" class="arrow" />
+  <text x="1040" y="600" class="small">later when org creates event</text>
+
+  <text x="374" y="752" class="small">Yes</text>
+  <text x="176" y="752" class="small">No</text>
+  <path d="M234 752 L160 752 L160 1088 L180 1088" class="arrow" />
+  <path d="M300 804 L300 840" class="arrow" />
+  <path d="M420 868 L750 868" class="arrow" />
+
+  <path d="M1030 868 L1335 868" class="arrow" />
+  <path d="M1335 896 L976 976" class="arrow" />
+  <path d="M890 896 L890 936" class="arrow" />
+
+  <text x="980" y="1068" class="small">Yes</text>
+  <text x="780" y="984" class="small">No</text>
+  <path d="M804 996 L700 996 L700 358 L750 358" class="arrow" />
+  <path d="M890 1056 L890 1085" class="arrow" />
+
+  <path d="M1030 1113 L1014 1113" class="arrow" />
+  <path d="M1162 1113 L1335 1113" class="arrow" />
+  <text x="1172" y="1102" class="small">Yes</text>
+  <text x="1032" y="1156" class="small">No</text>
+
+  <path d="M1014 1113 L430 1088" class="arrow" />
+  <path d="M1335 1113 L430 1088" class="arrow" />
+  <path d="M300 1116 L300 1172" class="arrow" />
+
+  <rect x="1328" y="240" width="340" height="260" rx="12" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5" />
+  <text x="1348" y="272" class="text">Legend (matches current code)</text>
+  <text x="1348" y="300" class="small">1. Event subscribe is stored separately.</text>
+  <text x="1348" y="324" class="small">2. Follow org powers "new event" alerts.</text>
+  <text x="1348" y="348" class="small">3. Payment success triggers:</text>
+  <text x="1366" y="372" class="small">- sale/promo/stock side effects</text>
+  <text x="1366" y="394" class="small">- ticket issuance to user</text>
+  <text x="1366" y="416" class="small">- in-app org notification</text>
+  <text x="1348" y="446" class="small">4. Email is optional (SMTP + user preference).</text>
+  <text x="1348" y="470" class="small">5. Success page may call reconcile as recovery path.</text>
+</svg>

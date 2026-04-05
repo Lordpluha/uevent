@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1320" viewBox="0 0 1900 1320">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 34px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 500 16px Arial, sans-serif; fill: #334155; }
+      .entity { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 12; }
+      .core { fill: #ecfeff; stroke: #0891b2; stroke-width: 2; rx: 12; }
+      .finance { fill: #eef2ff; stroke: #4f46e5; stroke-width: 2; rx: 12; }
+      .titleTxt { font: 700 14px Arial, sans-serif; fill: #0f172a; }
+      .field { font: 500 12px Arial, sans-serif; fill: #334155; }
+      .rel { stroke: #475569; stroke-width: 2.2; fill: none; marker-end: url(#arr); }
+      .relTxt { font: 500 12px Arial, sans-serif; fill: #1f2937; }
+      .legend { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.4; rx: 10; }
+      .legendTxt { font: 500 12px Arial, sans-serif; fill: #7c2d12; }
+    </style>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569" />
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1900" height="1320" class="bg" />
+  <text x="42" y="58" class="title">uEvent Database Diagram (ER)</text>
+  <text x="42" y="86" class="subtitle">Core entities and key relations in PostgreSQL / TypeORM model</text>
+
+  <rect x="70" y="140" width="250" height="190" class="core" />
+  <text x="94" y="166" class="titleTxt">users</text>
+  <text x="86" y="190" class="field">PK id (uuid)</text>
+  <text x="86" y="210" class="field">email, username</text>
+  <text x="86" y="230" class="field">first_name, last_name</text>
+  <text x="86" y="250" class="field">notifications flags</text>
+  <text x="86" y="270" class="field">hidden_from_attendees</text>
+  <text x="86" y="290" class="field">created_at, updated_at</text>
+
+  <rect x="390" y="140" width="260" height="190" class="core" />
+  <text x="414" y="166" class="titleTxt">organizations</text>
+  <text x="406" y="190" class="field">PK id (uuid)</text>
+  <text x="406" y="210" class="field">name, email</text>
+  <text x="406" y="230" class="field">description, website</text>
+  <text x="406" y="250" class="field">avatar, cover</text>
+  <text x="406" y="270" class="field">social links</text>
+  <text x="406" y="290" class="field">created_at, updated_at</text>
+
+  <rect x="730" y="140" width="280" height="220" class="core" />
+  <text x="754" y="166" class="titleTxt">events</text>
+  <text x="746" y="190" class="field">PK id (uuid)</text>
+  <text x="746" y="210" class="field">FK organization_id -> organizations.id</text>
+  <text x="746" y="230" class="field">name, description, format</text>
+  <text x="746" y="250" class="field">datetime_start, datetime_end</text>
+  <text x="746" y="270" class="field">location, location_from, location_to</text>
+  <text x="746" y="290" class="field">attendees_public, notify_new_attendees</text>
+  <text x="746" y="310" class="field">created_at, updated_at</text>
+
+  <rect x="1060" y="140" width="280" height="220" class="core" />
+  <text x="1084" y="166" class="titleTxt">tickets</text>
+  <text x="1076" y="190" class="field">PK id (uuid)</text>
+  <text x="1076" y="210" class="field">FK event_id -> events.id</text>
+  <text x="1076" y="230" class="field">FK user_id -> users.id (nullable)</text>
+  <text x="1076" y="250" class="field">name, status, price, quantity</text>
+  <text x="1076" y="270" class="field">datetime_start, datetime_end</text>
+  <text x="1076" y="290" class="field">private_info (payment marker)</text>
+  <text x="1076" y="310" class="field">created_at, updated_at</text>
+
+  <rect x="1420" y="140" width="280" height="210" class="finance" />
+  <text x="1444" y="166" class="titleTxt">payments</text>
+  <text x="1436" y="190" class="field">PK id (uuid)</text>
+  <text x="1436" y="210" class="field">stripe_payment_intent_id (unique)</text>
+  <text x="1436" y="230" class="field">user_id (nullable)</text>
+  <text x="1436" y="250" class="field">amount, currency, status</text>
+  <text x="1436" y="270" class="field">metadata (json)</text>
+  <text x="1436" y="290" class="field">created_at, updated_at</text>
+
+  <rect x="70" y="420" width="280" height="180" class="entity" />
+  <text x="94" y="446" class="titleTxt">notifications</text>
+  <text x="86" y="470" class="field">PK id (uuid)</text>
+  <text x="86" y="490" class="field">user_id (nullable)</text>
+  <text x="86" y="510" class="field">organization_id (nullable)</text>
+  <text x="86" y="530" class="field">name, content, link, read</text>
+  <text x="86" y="550" class="field">created_at</text>
+
+  <rect x="390" y="420" width="260" height="180" class="entity" />
+  <text x="414" y="446" class="titleTxt">event_subscriptions</text>
+  <text x="406" y="470" class="field">PK id (uuid)</text>
+  <text x="406" y="490" class="field">FK event_id -> events.id</text>
+  <text x="406" y="510" class="field">FK user_id -> users.id</text>
+  <text x="406" y="530" class="field">created_at</text>
+
+  <rect x="730" y="420" width="280" height="180" class="entity" />
+  <text x="754" y="446" class="titleTxt">organization_followers (join)</text>
+  <text x="746" y="470" class="field">FK organization_id -> organizations.id</text>
+  <text x="746" y="490" class="field">FK user_id -> users.id</text>
+  <text x="746" y="510" class="field">many-to-many followers mapping</text>
+  <text x="746" y="530" class="field">used for new event alerts</text>
+
+  <rect x="1060" y="420" width="280" height="180" class="entity" />
+  <text x="1084" y="446" class="titleTxt">tags</text>
+  <text x="1076" y="470" class="field">PK id (uuid)</text>
+  <text x="1076" y="490" class="field">name (unique)</text>
+  <text x="1076" y="510" class="field">created_at, updated_at</text>
+
+  <rect x="1420" y="420" width="280" height="180" class="entity" />
+  <text x="1444" y="446" class="titleTxt">event_tags (join)</text>
+  <text x="1436" y="470" class="field">FK event_id -> events.id</text>
+  <text x="1436" y="490" class="field">FK tag_id -> tags.id</text>
+  <text x="1436" y="510" class="field">many-to-many event taxonomy</text>
+
+  <rect x="70" y="680" width="300" height="200" class="finance" />
+  <text x="94" y="706" class="titleTxt">organization_transactions</text>
+  <text x="86" y="730" class="field">PK id (uuid)</text>
+  <text x="86" y="750" class="field">organization_id</text>
+  <text x="86" y="770" class="field">type: sale/withdrawal_request/... </text>
+  <text x="86" y="790" class="field">amount, currency, balance_after</text>
+  <text x="86" y="810" class="field">source_payment_intent_id (nullable)</text>
+  <text x="86" y="830" class="field">source_withdrawal_request_id (nullable)</text>
+  <text x="86" y="850" class="field">created_at</text>
+
+  <rect x="420" y="680" width="280" height="200" class="finance" />
+  <text x="444" y="706" class="titleTxt">organization_verifications</text>
+  <text x="436" y="730" class="field">PK id (uuid)</text>
+  <text x="436" y="750" class="field">organization_id (unique)</text>
+  <text x="436" y="770" class="field">status + submission fields</text>
+  <text x="436" y="790" class="field">admin comment / moderation data</text>
+  <text x="436" y="810" class="field">created_at, updated_at</text>
+
+  <rect x="750" y="680" width="310" height="220" class="finance" />
+  <text x="774" y="706" class="titleTxt">organization_withdrawal_requests</text>
+  <text x="766" y="730" class="field">PK id (uuid)</text>
+  <text x="766" y="750" class="field">organization_id</text>
+  <text x="766" y="770" class="field">amount, currency</text>
+  <text x="766" y="790" class="field">status: pending/approved/rejected</text>
+  <text x="766" y="810" class="field">admin_comment</text>
+  <text x="766" y="830" class="field">processed_at</text>
+  <text x="766" y="850" class="field">created_at, updated_at</text>
+
+  <rect x="1110" y="680" width="280" height="180" class="finance" />
+  <text x="1134" y="706" class="titleTxt">promo_codes</text>
+  <text x="1126" y="730" class="field">PK id (uuid)</text>
+  <text x="1126" y="750" class="field">FK event_id -> events.id</text>
+  <text x="1126" y="770" class="field">code (unique), discount_percent</text>
+  <text x="1126" y="790" class="field">usage_limit, usage_count</text>
+  <text x="1126" y="810" class="field">active_until</text>
+
+  <rect x="1450" y="680" width="340" height="250" class="legend" />
+  <text x="1470" y="708" class="titleTxt">Legend / Reading Notes</text>
+  <text x="1464" y="734" class="legendTxt">- Colored blocks group core and finance entities.</text>
+  <text x="1464" y="756" class="legendTxt">- Diagram is conceptual ER view of TypeORM model.</text>
+  <text x="1464" y="778" class="legendTxt">- Webhook/reconcile logic uses payments + tickets +</text>
+  <text x="1464" y="800" class="legendTxt">  organization_transactions + notifications.</text>
+  <text x="1464" y="822" class="legendTxt">- Followers mapping drives organizer event alerts.</text>
+  <text x="1464" y="844" class="legendTxt">- Email toggles are in users flags.</text>
+
+  <path d="M650 220 L730 220" class="rel" />
+  <text x="670" y="208" class="relTxt">1:N</text>
+
+  <path d="M1010 220 L1060 220" class="rel" />
+  <text x="1022" y="208" class="relTxt">1:N</text>
+
+  <path d="M1340 230 L1420 230" class="rel" />
+  <text x="1362" y="218" class="relTxt">logical link</text>
+
+  <path d="M210 330 L210 420" class="rel" />
+  <text x="222" y="380" class="relTxt">1:N</text>
+
+  <path d="M200 330 L520 420" class="rel" />
+  <text x="330" y="366" class="relTxt">1:N subscriptions</text>
+
+  <path d="M520 330 L870 420" class="rel" />
+  <text x="664" y="366" class="relTxt">M:N followers</text>
+
+  <path d="M195 330 L800 420" class="rel" />
+  <text x="460" y="388" class="relTxt">M:N followers</text>
+
+  <path d="M870 360 L520 420" class="rel" />
+  <text x="670" y="404" class="relTxt">1:N subscriptions</text>
+
+  <path d="M950 300 L1420 470" class="rel" />
+  <text x="1160" y="368" class="relTxt">M:N via event_tags</text>
+
+  <path d="M1340 500 L1420 500" class="rel" />
+  <text x="1352" y="488" class="relTxt">tag links</text>
+
+  <path d="M520 330 L220 680" class="rel" />
+  <text x="304" y="520" class="relTxt">org finance</text>
+
+  <path d="M520 330 L560 680" class="rel" />
+  <text x="574" y="520" class="relTxt">org verification</text>
+
+  <path d="M520 330 L900 680" class="rel" />
+  <text x="780" y="520" class="relTxt">withdrawals</text>
+
+  <path d="M870 360 L1240 680" class="rel" />
+  <text x="1088" y="530" class="relTxt">promo per event</text>
+
+  <path d="M1530 350 L300 680" class="rel" />
+  <text x="800" y="640" class="relTxt">payment intent referenced in transactions</text>
+</svg>

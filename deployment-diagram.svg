@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1160" viewBox="0 0 1800 1160">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 34px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 500 16px Arial, sans-serif; fill: #334155; }
+      .zone { fill: none; stroke: #cbd5e1; stroke-width: 1.6; stroke-dasharray: 6 6; }
+      .zoneTitle { font: 700 16px Arial, sans-serif; fill: #0f172a; }
+      .node { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 14; }
+      .runtime { fill: #ecfeff; stroke: #0891b2; stroke-width: 2; rx: 14; }
+      .data { fill: #eef2ff; stroke: #4f46e5; stroke-width: 2; rx: 14; }
+      .textTitle { font: 700 15px Arial, sans-serif; fill: #0f172a; }
+      .text { font: 500 12px Arial, sans-serif; fill: #334155; }
+      .edge { stroke: #475569; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .label { font: 500 12px Arial, sans-serif; fill: #1f2937; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1800" height="1160" />
+  <text x="42" y="58" class="title">uEvent Deployment Diagram</text>
+  <text x="42" y="86" class="subtitle">Container-based deployment for web, admin, api, postgres, static storage, and external providers</text>
+
+  <rect x="40" y="120" width="1720" height="1000" class="zone" />
+  <text x="58" y="148" class="zoneTitle">Deployment Environment</text>
+
+  <rect x="70" y="190" width="430" height="220" class="zone" />
+  <text x="88" y="218" class="zoneTitle">Client Devices</text>
+
+  <rect x="100" y="250" width="170" height="120" class="node" />
+  <text x="132" y="278" class="textTitle">User Browser</text>
+  <text x="116" y="302" class="text">- Web UI</text>
+  <text x="116" y="322" class="text">- Checkout flow</text>
+
+  <rect x="300" y="250" width="170" height="120" class="node" />
+  <text x="330" y="278" class="textTitle">Admin Browser</text>
+  <text x="316" y="302" class="text">- Admin dashboard</text>
+  <text x="316" y="322" class="text">- Moderation tools</text>
+
+  <rect x="540" y="190" width="900" height="760" class="zone" />
+  <text x="558" y="218" class="zoneTitle">Docker Host (docker-compose)</text>
+
+  <rect x="580" y="250" width="240" height="140" class="runtime" />
+  <text x="626" y="278" class="textTitle">web container</text>
+  <text x="596" y="302" class="text">apps/web (React Router)</text>
+  <text x="596" y="322" class="text">serves user frontend</text>
+  <text x="596" y="342" class="text">uses API base URL</text>
+
+  <rect x="860" y="250" width="240" height="140" class="runtime" />
+  <text x="900" y="278" class="textTitle">admin container</text>
+  <text x="876" y="302" class="text">apps/admin (React)</text>
+  <text x="876" y="322" class="text">admin moderation UI</text>
+  <text x="876" y="342" class="text">finance/verification pages</text>
+
+  <rect x="1140" y="250" width="260" height="200" class="runtime" />
+  <text x="1228" y="278" class="textTitle">api container</text>
+  <text x="1160" y="302" class="text">apps/api (NestJS + TypeORM)</text>
+  <text x="1160" y="322" class="text">Auth / Events / Payments / Notifications</text>
+  <text x="1160" y="342" class="text">JWT cookies + Stripe webhook endpoint</text>
+  <text x="1160" y="362" class="text">SMTP email sender</text>
+  <text x="1160" y="382" class="text">storage and uploads endpoints</text>
+
+  <rect x="580" y="500" width="300" height="170" class="data" />
+  <text x="632" y="528" class="textTitle">postgres container</text>
+  <text x="598" y="552" class="text">Main relational data:</text>
+  <text x="598" y="572" class="text">users, organizations, events, tickets,</text>
+  <text x="598" y="592" class="text">payments, notifications, promo codes,</text>
+  <text x="598" y="612" class="text">verification, withdrawals, transactions</text>
+
+  <rect x="920" y="500" width="480" height="170" class="data" />
+  <text x="948" y="528" class="textTitle">Host Volumes / Persistent Files</text>
+  <text x="938" y="552" class="text">- apps/api/storage/events</text>
+  <text x="938" y="572" class="text">- apps/api/storage/organizations</text>
+  <text x="938" y="592" class="text">- apps/api/storage/users</text>
+  <text x="938" y="612" class="text">- apps/api/uploads</text>
+
+  <rect x="540" y="720" width="900" height="200" class="zone" />
+  <text x="558" y="748" class="zoneTitle">External Integrations</text>
+
+  <rect x="590" y="780" width="250" height="110" class="runtime" />
+  <text x="680" y="808" class="textTitle">Stripe</text>
+  <text x="606" y="832" class="text">PaymentIntents + webhooks</text>
+  <text x="606" y="852" class="text">status and metadata callbacks</text>
+
+  <rect x="880" y="780" width="250" height="110" class="runtime" />
+  <text x="972" y="808" class="textTitle">SMTP</text>
+  <text x="896" y="832" class="text">Payment confirmation email</text>
+  <text x="896" y="852" class="text">best-effort delivery path</text>
+
+  <rect x="1170" y="780" width="250" height="110" class="runtime" />
+  <text x="1242" y="808" class="textTitle">Google OAuth</text>
+  <text x="1186" y="832" class="text">login callback for accounts</text>
+  <text x="1186" y="852" class="text">used by auth module</text>
+
+  <rect x="1470" y="190" width="280" height="420" class="runtime" />
+  <text x="1490" y="218" class="textTitle">Runtime Notes</text>
+  <text x="1484" y="244" class="text">1. API is central integration point.</text>
+  <text x="1484" y="266" class="text">2. Stripe webhook drives payment success effects.</text>
+  <text x="1484" y="288" class="text">3. Reconcile endpoint recovers missed effects.</text>
+  <text x="1484" y="310" class="text">4. Email depends on SMTP config and user flags.</text>
+  <text x="1484" y="332" class="text">5. Followed organizations trigger new-event alerts.</text>
+  <text x="1484" y="354" class="text">6. Postgres + host volumes persist data.</text>
+
+  <path d="M270 310 L580 310" class="edge" />
+  <text x="382" y="298" class="label">HTTPS</text>
+
+  <path d="M470 310 L860 310" class="edge" />
+  <text x="630" y="298" class="label">HTTPS</text>
+
+  <path d="M820 320 L1140 320" class="edge" />
+  <text x="960" y="308" class="label">REST API</text>
+
+  <path d="M1100 320 L1140 360" class="edge" />
+  <text x="1080" y="350" class="label">REST API</text>
+
+  <path d="M1270 450 L1270 500" class="edge" />
+  <text x="1282" y="486" class="label">TypeORM TCP</text>
+
+  <path d="M1140 420 L980 500" class="edge" />
+  <text x="1030" y="474" class="label">read/write media</text>
+
+  <path d="M1140 790 L1140 740 L840 740 L840 780" class="edge" />
+  <text x="952" y="732" class="label">HTTPS API</text>
+
+  <path d="M1140 820 L1130 820" class="edge" />
+  <text x="1110" y="808" class="label">SMTP</text>
+
+  <path d="M1270 780 L1270 450" class="edge" />
+  <text x="1282" y="640" class="label">OAuth callback</text>
+
+  <path d="M840 820 L760 820 L760 420 L1140 420" class="edge" />
+  <text x="776" y="808" class="label">webhook events</text>
+</svg>

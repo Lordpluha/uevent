@@ -96,13 +96,27 @@ export function EventDetails({ event, eventId }: Props) {
 
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
-            {event.organizer[0]}
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">{t.events.details.organizedBy}</p>
-            <p className="text-sm font-semibold text-foreground">{event.organizer}</p>
-          </div>
+          <Link
+            to={event.organizerOrgId ? `/organizations/${event.organizerOrgId}` : '#'}
+            className={event.organizerOrgId ? 'group flex items-center gap-3' : 'flex items-center gap-3'}
+            aria-label={event.organizerOrgId ? `Open organization ${event.organizer}` : undefined}
+            onClick={event.organizerOrgId ? undefined : (e) => e.preventDefault()}
+          >
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-primary/20 text-sm font-bold text-primary transition-colors group-hover:bg-primary/30">
+              {event.organizerAvatarUrl ? (
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={event.organizerAvatarUrl} alt={event.organizer} />
+                  <AvatarFallback className="text-sm">{event.organizer[0]}</AvatarFallback>
+                </Avatar>
+              ) : (
+                event.organizer[0]
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">{t.events.details.organizedBy}</p>
+              <p className="text-sm font-semibold text-foreground group-hover:text-primary">{event.organizer}</p>
+            </div>
+          </Link>
         </div>
         <div className="flex items-center gap-1.5">
           <Star className="h-4 w-4 fill-rose-500 text-rose-500" />

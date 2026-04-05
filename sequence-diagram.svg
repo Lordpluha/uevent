@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1260" viewBox="0 0 1900 1260">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 34px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 500 16px Arial, sans-serif; fill: #334155; }
+      .actorBox { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 10; }
+      .actorText { font: 700 14px Arial, sans-serif; fill: #0f172a; }
+      .life { stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 6 6; }
+      .msg { stroke: #334155; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .ret { stroke: #64748b; stroke-width: 1.8; fill: none; stroke-dasharray: 6 4; marker-end: url(#arrowLight); }
+      .label { font: 500 12px Arial, sans-serif; fill: #1f2937; }
+      .phase { fill: #ecfeff; stroke: #0891b2; stroke-width: 1.4; rx: 10; }
+      .phaseTitle { font: 700 13px Arial, sans-serif; fill: #0f172a; }
+      .note { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.4; rx: 8; }
+      .noteText { font: 500 12px Arial, sans-serif; fill: #7c2d12; }
+      .sep { stroke: #cbd5e1; stroke-width: 1.5; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#334155" />
+    </marker>
+    <marker id="arrowLight" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1900" height="1260" class="bg" />
+  <text x="42" y="58" class="title">uEvent Sequence Diagram</text>
+  <text x="42" y="86" class="subtitle">Main flow: event view -> optional org follow -> checkout -> Stripe success -> ticket issue + notifications + optional email</text>
+
+  <!-- Participants -->
+  <rect x="70" y="130" width="150" height="44" class="actorBox" />
+  <text x="112" y="158" class="actorText">User</text>
+
+  <rect x="280" y="130" width="180" height="44" class="actorBox" />
+  <text x="326" y="158" class="actorText">Web App</text>
+
+  <rect x="540" y="130" width="210" height="44" class="actorBox" />
+  <text x="575" y="158" class="actorText">API: Events/Org</text>
+
+  <rect x="810" y="130" width="220" height="44" class="actorBox" />
+  <text x="846" y="158" class="actorText">API: Payments</text>
+
+  <rect x="1090" y="130" width="180" height="44" class="actorBox" />
+  <text x="1128" y="158" class="actorText">Stripe</text>
+
+  <rect x="1330" y="130" width="230" height="44" class="actorBox" />
+  <text x="1362" y="158" class="actorText">API: Notifications</text>
+
+  <rect x="1620" y="130" width="200" height="44" class="actorBox" />
+  <text x="1673" y="158" class="actorText">SMTP</text>
+
+  <!-- Lifelines -->
+  <line x1="145" y1="174" x2="145" y2="1180" class="life" />
+  <line x1="370" y1="174" x2="370" y2="1180" class="life" />
+  <line x1="645" y1="174" x2="645" y2="1180" class="life" />
+  <line x1="920" y1="174" x2="920" y2="1180" class="life" />
+  <line x1="1180" y1="174" x2="1180" y2="1180" class="life" />
+  <line x1="1445" y1="174" x2="1445" y2="1180" class="life" />
+  <line x1="1720" y1="174" x2="1720" y2="1180" class="life" />
+
+  <!-- Phase 1 -->
+  <rect x="50" y="200" width="1800" height="220" class="phase" />
+  <text x="66" y="224" class="phaseTitle">Phase 1: Discover event and optional organizer follow</text>
+
+  <path d="M145 255 L370 255" class="msg" />
+  <text x="198" y="245" class="label">Open event page</text>
+
+  <path d="M370 285 L645 285" class="msg" />
+  <text x="442" y="275" class="label">GET /events/:id + related data</text>
+
+  <path d="M645 315 L370 315" class="ret" />
+  <text x="464" y="305" class="label">Event details + organizer</text>
+
+  <path d="M145 350 L370 350" class="msg" />
+  <text x="176" y="340" class="label">Click Follow organizer (optional)</text>
+
+  <path d="M370 380 L645 380" class="msg" />
+  <text x="442" y="370" class="label">POST /organizations/:id/follow</text>
+
+  <path d="M645 410 L370 410" class="ret" />
+  <text x="500" y="400" class="label">{ followed: true }</text>
+
+  <line x1="50" y1="445" x2="1850" y2="445" class="sep" />
+
+  <!-- Phase 2 -->
+  <rect x="50" y="460" width="1800" height="290" class="phase" />
+  <text x="66" y="484" class="phaseTitle">Phase 2: Checkout + payment confirmation</text>
+
+  <path d="M145 520 L370 520" class="msg" />
+  <text x="206" y="510" class="label">Buy ticket</text>
+
+  <path d="M370 550 L920 550" class="msg" />
+  <text x="590" y="540" class="label">POST /payments/intent (ticket metadata)</text>
+
+  <path d="M920 580 L1180 580" class="msg" />
+  <text x="1002" y="570" class="label">Create PaymentIntent</text>
+
+  <path d="M1180 610 L920 610" class="ret" />
+  <text x="1010" y="600" class="label">paymentIntent + client_secret</text>
+
+  <path d="M920 640 L370 640" class="ret" />
+  <text x="604" y="630" class="label">client_secret</text>
+
+  <path d="M370 670 L1180 670" class="msg" />
+  <text x="710" y="660" class="label">stripe.confirmPayment()</text>
+
+  <path d="M1180 700 L370 700" class="ret" />
+  <text x="734" y="690" class="label">status = succeeded/processing</text>
+
+  <path d="M370 730 L920 730" class="msg" />
+  <text x="588" y="720" class="label">GET /payments/:intentId (poll status)</text>
+
+  <path d="M920 760 L370 760" class="ret" />
+  <text x="690" y="750" class="label">stored status</text>
+
+  <!-- Phase 3 -->
+  <rect x="50" y="780" width="1800" height="300" class="phase" />
+  <text x="66" y="804" class="phaseTitle">Phase 3: Success side-effects and notifications</text>
+
+  <path d="M1180 840 L920 840" class="msg" />
+  <text x="970" y="830" class="label">Webhook: payment_intent.succeeded</text>
+
+  <path d="M920 870 L920 920" class="msg" />
+  <text x="932" y="900" class="label">apply side-effects + issue tickets</text>
+
+  <path d="M920 950 L1445 950" class="msg" />
+  <text x="1112" y="940" class="label">Create in-app notifications</text>
+
+  <path d="M1445 980 L920 980" class="ret" />
+  <text x="1160" y="970" class="label">saved</text>
+
+  <path d="M920 1010 L1720 1010" class="msg" />
+  <text x="1218" y="1000" class="label">Send payment email (if SMTP + user flag)</text>
+
+  <path d="M1720 1040 L920 1040" class="ret" />
+  <text x="1370" y="1030" class="label">ok / skipped</text>
+
+  <path d="M370 1070 L920 1070" class="msg" />
+  <text x="585" y="1060" class="label">POST /payments/:intentId/reconcile (fallback)</text>
+
+  <path d="M920 1100 L370 1100" class="ret" />
+  <text x="630" y="1090" class="label">{ success: true }</text>
+
+  <path d="M370 1130 L145 1130" class="ret" />
+  <text x="190" y="1120" class="label">Show success + ticket download + notifications</text>
+
+  <!-- Notes -->
+  <rect x="1320" y="220" width="500" height="140" class="note" />
+  <text x="1338" y="248" class="noteText">Notes:</text>
+  <text x="1338" y="272" class="noteText">1. Follow organizer controls "new event" alerts.</text>
+  <text x="1338" y="294" class="noteText">2. Event subscription exists as separate preference.</text>
+  <text x="1338" y="316" class="noteText">3. Email is best-effort; delivery may be skipped by config/preferences.</text>
+
+  <rect x="1320" y="830" width="500" height="160" class="note" />
+  <text x="1338" y="858" class="noteText">Webhook/reconcile semantics:</text>
+  <text x="1338" y="882" class="noteText">- Primary path: Stripe webhook triggers side-effects.</text>
+  <text x="1338" y="904" class="noteText">- Recovery path: success page may call reconcile endpoint.</text>
+  <text x="1338" y="926" class="noteText">- Both paths protect against duplicate side-effects.</text>
+  <text x="1338" y="948" class="noteText">- Ticket PDF download uses payment intent ownership checks.</text>
+</svg>

@@ -62,6 +62,10 @@ export const mapApiEvent = (event: ApiEvent): EventModel => {
       ? soldFromQuantities
       : (event.tickets ?? []).filter((ticket) => ticket.status === 'PAID' || ticket.user_id).length
 
+  const organizerOrgId = event.organization?.id ? String(event.organization.id) : event.organization_id ? String(event.organization_id) : undefined
+  const organizerName = event.organization?.name?.trim() || event.organizer?.trim() || organizerOrgId || '—'
+  const organizerAvatarUrl = event.organization?.avatar?.trim() || undefined
+
   return {
     id: event.id,
     title: event.name,
@@ -72,8 +76,10 @@ export const mapApiEvent = (event: ApiEvent): EventModel => {
     location: event.location ?? undefined,
     googleMapsUrl: event.location_map_url ?? undefined,
     onlineUrl: event.online_link ?? undefined,
-    organizer: event.organizer ?? (event.organization_id ? String(event.organization_id) : '—'),
-    organizerOrgId: event.organization_id ? String(event.organization_id) : undefined,
+    organizer: organizerName,
+    organizerOrgId,
+    organizerHref: organizerOrgId ? `/organizations/${organizerOrgId}` : undefined,
+    organizerAvatarUrl,
     rating: 0,
     attendeeCount: event.attendeeCount ?? attendeeCountFromTickets ?? event.attendees?.length ?? 0,
     attendeesPublic: event.attendees_public ?? event.attendeesPublic ?? false,
