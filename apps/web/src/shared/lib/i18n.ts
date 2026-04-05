@@ -464,6 +464,7 @@ export type Dictionary = {
     calendarAdded: string
     calendarUnavailable: string
     downloadTicket: string
+    joinEvent: string
     discoverMore: string
   }
   paymentFailed: {

@@ -14,7 +14,6 @@ import {
   ExternalLink,
   Lock,
   MapPin,
-  Star,
   Users,
   Video,
 } from 'lucide-react'
@@ -120,11 +119,7 @@ export function EventDetails({ event, eventId }: Props) {
             <p className="text-sm font-semibold text-foreground">{event.organizer}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <Star className="h-4 w-4 fill-rose-500 text-rose-500" />
-          <span className="text-sm font-bold text-foreground">{event.rating.toFixed(1)}</span>
-          <span className="text-xs text-muted-foreground">{t.events.details.rating}</span>
-        </div>
+
       </div>
 
       <div className="mb-6">

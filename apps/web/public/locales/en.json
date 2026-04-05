@@ -501,6 +501,7 @@
     "calendarAdded": "Event and ticket added to your Google Calendar",
     "calendarUnavailable": "Calendar sync unavailable",
     "downloadTicket": "Download ticket",
+    "joinEvent": "Join event",
     "discoverMore": "Discover more events"
   },
   "paymentFailed": {

@@ -27,6 +27,7 @@ export function CheckoutSuccessPage() {
   const currency = getCurrencySymbol({ currency: searchParams.get('currency'), paymentConfig })
   const orderId = searchParams.get('order')
   const ticketId = searchParams.get('ticketId')
+  const onlineUrl = searchParams.get('onlineUrl')
 
   const { data: paymentData, isLoading: isPaymentLoading } = useQuery<{
     status: string
@@ -191,8 +192,16 @@ export function CheckoutSuccessPage() {
             <Download className="h-4 w-4" />
             {t.checkoutSuccess.downloadTicket}
           </Button>
+          {onlineUrl && (
+            <a href={onlineUrl} target="_blank" rel="noreferrer">
+              <Button className="gap-1.5">
+                <ExternalLink className="h-4 w-4" />
+                {t.checkoutSuccess.joinEvent}
+              </Button>
+            </a>
+          )}
           <Link to={eventId ? `/events/${eventId}` : '/events'}>
-            <Button className="gap-1.5">
+            <Button className="gap-1.5" variant={onlineUrl ? 'outline' : 'default'}>
               <Ticket className="h-4 w-4" />
               {t.common.backToEvent}
             </Button>

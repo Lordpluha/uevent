@@ -19,6 +19,7 @@ type PendingPayment = {
   currency?: string
   paymentIntentId?: string
   email?: string
+  onlineUrl?: string
 }
 
 export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
@@ -43,6 +44,8 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
       currency: pendingPayment?.currency ?? '$',
       order: pendingPayment?.paymentIntentId ?? paymentIntentId ?? clientSecret,
     })
+
+    if (pendingPayment?.onlineUrl) params.set('onlineUrl', pendingPayment.onlineUrl)
 
     return `/checkout/${eventId}/success?${params.toString()}`
   }

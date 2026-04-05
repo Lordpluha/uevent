@@ -47,7 +47,6 @@ export const eventSchema = z.object({
   locationTo: z.string().optional(),
   organizer: z.string(),
   organizerOrgId: z.string().optional(),
-  rating: z.number(),
   attendeeCount: z.number(),
   attendeesPublic: z.boolean().optional(),
   attendees: z.array(eventAttendeeSchema).optional(),

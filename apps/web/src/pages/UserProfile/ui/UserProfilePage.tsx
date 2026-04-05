@@ -16,7 +16,7 @@ import {
 import { ShareButton } from '@shared/components/ShareButton/ShareButton'
 import { SITE_URL } from '@shared/config/app'
 import { useAppContext } from '@shared/lib'
-import { CalendarDays, ChevronLeft, Globe, MapPin, Star, UserRoundX } from 'lucide-react'
+import { ArrowRight, CalendarDays, ChevronLeft, Globe, MapPin, UserRoundX } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 
 export function UserProfilePage() {
@@ -149,7 +149,7 @@ export function UserProfilePage() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">{t.userProfile.recentEvents}</h2>
           <Link to="/events" className="flex items-center gap-1 text-xs text-primary hover:underline">
-            {t.userProfile.seeAll} <Star className="h-3 w-3" />
+            {t.userProfile.seeAll} <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
         <div className="flex flex-wrap gap-4">

@@ -74,7 +74,6 @@ export const mapApiEvent = (event: ApiEvent): EventModel => {
     onlineUrl: event.online_link ?? undefined,
     organizer: event.organizer ?? event.organization?.name ?? (event.organization_id ? String(event.organization_id) : '—'),
     organizerOrgId: event.organization?.id ? String(event.organization.id) : (event.organization_id ? String(event.organization_id) : undefined),
-    rating: 0,
     attendeeCount: event.attendeeCount ?? attendeeCountFromTickets ?? event.attendees?.length ?? 0,
     attendeesPublic: event.attendees_public ?? event.attendeesPublic ?? false,
     attendees: event.attendees ?? [],

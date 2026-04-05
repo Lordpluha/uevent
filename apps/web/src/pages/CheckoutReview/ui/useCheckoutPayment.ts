@@ -22,7 +22,7 @@ interface UseCheckoutPaymentOptions {
   appliedPromoId?: string
   appliedPromoDiscount?: number
   me?: { email?: string; name?: string } | null
-  event?: { title?: string; date?: string; time?: string; location?: string; organizer?: string } | null
+  event?: { title?: string; date?: string; time?: string; location?: string; organizer?: string; onlineUrl?: string } | null
 }
 
 export function useCheckoutPayment({
@@ -93,6 +93,7 @@ export function useCheckoutPayment({
           eventDate: event?.date,
           eventLocation: event?.location,
           organizationName: event?.organizer,
+          onlineUrl: event?.onlineUrl,
         }),
       )
 

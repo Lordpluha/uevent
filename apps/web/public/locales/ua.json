@@ -501,6 +501,7 @@
     "calendarAdded": "Подію та квиток додано до вашого Google Календаря",
     "calendarUnavailable": "Синхронізація з календарем недоступна",
     "downloadTicket": "Завантажити квиток",
+    "joinEvent": "Приєднатись до події",
     "discoverMore": "Більше подій"
   },
   "paymentFailed": {

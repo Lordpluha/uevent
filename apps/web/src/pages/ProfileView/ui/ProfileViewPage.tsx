@@ -14,7 +14,7 @@ import {
 } from '@shared/components'
 import { useAppContext } from '@shared/lib'
 import { cn } from '@shared/lib/utils'
-import { Bell, CalendarDays, ExternalLink, LayoutDashboard, Settings, Star, Ticket, Users } from 'lucide-react'
+import { ArrowRight, Bell, CalendarDays, ExternalLink, LayoutDashboard, Settings, Ticket, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate } from 'react-router'
 import { ProfileHeroCard } from './ProfileHeroCard'
@@ -205,7 +205,7 @@ export function ProfileViewPage() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold">{t.profile.myEvents}</h2>
             <Link to="/events" className="flex items-center gap-1 text-xs text-primary hover:underline">
-              {t.common.seeAll} <Star className="h-3 w-3" />
+              {t.common.seeAll} <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
           {myEvents.length === 0 ? (

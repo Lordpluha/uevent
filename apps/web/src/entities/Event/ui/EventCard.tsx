@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage, Badge, Card, CardContent } from '@
 import { useAppContext } from '@shared/lib'
 import { cn } from '@shared/lib/utils'
 import { cva } from 'class-variance-authority'
-import { MapPin, Star, Video } from 'lucide-react'
+import { MapPin, Video } from 'lucide-react'
 import type { EventFormat } from '../model/event'
 import type { EventAttendee } from '../model/eventEntity'
 
@@ -16,7 +16,6 @@ export type EventCardProps = {
   format: EventFormat
   location?: string
   organizer: string
-  rating: number
   attendeeCount: number
   attendees?: Attendee[]
   /** Visual size variant */
@@ -75,7 +74,6 @@ export const EventCard = ({
   format,
   location: _location,
   organizer,
-  rating,
   attendeeCount,
   attendees = [],
   size = 'default',
@@ -129,10 +127,7 @@ export const EventCard = ({
               {attendeeCount.toLocaleString()} {t.entityCard.attendees}
             </span>
           </div>
-          <div className="flex items-center gap-1">
-            <Star className="h-3.5 w-3.5 fill-rose-500 text-rose-500" />
-            <span className="text-sm font-semibold text-foreground">{rating.toFixed(1)}</span>
-          </div>
+
         </div>
       </CardContent>
     </Card>
