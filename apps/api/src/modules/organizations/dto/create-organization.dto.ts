@@ -1,6 +1,5 @@
 import z from 'zod'
 
-
 export const CreateOrganizationDtoSchema = z.object({
   name: z.string(),
   email: z.email(),

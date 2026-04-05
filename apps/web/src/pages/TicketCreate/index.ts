@@ -1,1 +1,1 @@
-export { TicketCreatePage } from './ui/TicketCreatePage';
+export { TicketCreatePage } from './ui/TicketCreatePage'

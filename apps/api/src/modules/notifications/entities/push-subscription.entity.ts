@@ -1,4 +1,4 @@
-import { Entity, Column, Index, CreateDateColumn } from 'typeorm'
+import { Column, CreateDateColumn, Entity, Index } from 'typeorm'
 import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('push_subscriptions')
@@ -15,6 +15,10 @@ export class PushSubscription extends UuidEntity {
   @Index('idx_push_subscription_user_id')
   @Column({ type: 'uuid', nullable: true })
   user_id: string | null
+
+  @Index('idx_push_subscription_org_id')
+  @Column({ type: 'uuid', nullable: true })
+  organization_id: string | null
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date

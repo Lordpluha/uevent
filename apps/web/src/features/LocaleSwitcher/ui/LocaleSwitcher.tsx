@@ -1,13 +1,13 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components';
-import { useAppContext, type Locale } from '@shared/lib';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components'
+import { type Locale, useAppContext } from '@shared/lib'
 
 export const LocaleSwitcher = () => {
-  const { locale, setLocale, t } = useAppContext();
+  const { locale, setLocale, t } = useAppContext()
   const locales: { value: Locale; label: string; flag: string }[] = [
     { value: 'en', label: t.localeSwitcher.english, flag: '🇬🇧' },
     { value: 'ua', label: t.localeSwitcher.ukrainian, flag: '🇺🇦' },
-  ];
-  const current = locales.find((l) => l.value === locale);
+  ]
+  const current = locales.find((l) => l.value === locale)
 
   return (
     <Select value={locale} onValueChange={(value) => setLocale(value as Locale)}>
@@ -27,5 +27,5 @@ export const LocaleSwitcher = () => {
         ))}
       </SelectContent>
     </Select>
-  );
-};
+  )
+}

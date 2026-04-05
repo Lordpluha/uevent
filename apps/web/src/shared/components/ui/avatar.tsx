@@ -1,14 +1,13 @@
-import type { ComponentProps } from 'react';
-import { Avatar as AvatarPrimitive } from '@base-ui/react/avatar';
-
-import { cn } from '@shared/lib/utils';
+import { Avatar as AvatarPrimitive } from '@base-ui/react/avatar'
+import { cn } from '@shared/lib/utils'
+import type { ComponentProps } from 'react'
 
 function Avatar({
   className,
   size = 'default',
   ...props
 }: AvatarPrimitive.Root.Props & {
-  size?: 'default' | 'sm' | 'lg';
+  size?: 'default' | 'sm' | 'lg'
 }) {
   return (
     <AvatarPrimitive.Root
@@ -20,7 +19,7 @@ function Avatar({
       )}
       {...props}
     />
-  );
+  )
 }
 
 function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
@@ -30,7 +29,7 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
       className={cn('aspect-square size-full rounded-full object-cover', className)}
       {...props}
     />
-  );
+  )
 }
 
 function AvatarFallback({ className, ...props }: AvatarPrimitive.Fallback.Props) {
@@ -43,7 +42,7 @@ function AvatarFallback({ className, ...props }: AvatarPrimitive.Fallback.Props)
       )}
       {...props}
     />
-  );
+  )
 }
 
 function AvatarBadge({ className, ...props }: ComponentProps<'span'>) {
@@ -59,7 +58,7 @@ function AvatarBadge({ className, ...props }: ComponentProps<'span'>) {
       )}
       {...props}
     />
-  );
+  )
 }
 
 function AvatarGroup({ className, ...props }: ComponentProps<'div'>) {
@@ -72,7 +71,7 @@ function AvatarGroup({ className, ...props }: ComponentProps<'div'>) {
       )}
       {...props}
     />
-  );
+  )
 }
 
 function AvatarGroupCount({ className, ...props }: ComponentProps<'div'>) {
@@ -85,7 +84,7 @@ function AvatarGroupCount({ className, ...props }: ComponentProps<'div'>) {
       )}
       {...props}
     />
-  );
+  )
 }
 
-export { Avatar, AvatarImage, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarBadge };
+export { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage }

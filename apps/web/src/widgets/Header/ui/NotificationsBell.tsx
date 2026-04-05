@@ -1,6 +1,4 @@
-import { Bell, ExternalLink } from 'lucide-react';
-import { useMemo } from 'react';
-import { useNavigate } from 'react-router';
+import { useMarkNotificationRead, useMyNotifications } from '@entities/Notification'
 import {
   Badge,
   DropdownMenu,
@@ -9,30 +7,29 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { useMarkNotificationRead, useMyNotifications } from '@entities/Notification';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { Bell, ExternalLink } from 'lucide-react'
+import { useMemo } from 'react'
+import { useNavigate } from 'react-router'
 
 type NotificationsBellProps = {
-  enabled: boolean;
-};
+  enabled: boolean
+}
 
 function formatNotificationDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleString();
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleString()
 }
 
 export function NotificationsBell({ enabled }: NotificationsBellProps) {
-  const { t } = useAppContext();
-  const navigate = useNavigate();
-  const { data: notifications = [], isLoading } = useMyNotifications(enabled, 20);
-  const markReadMutation = useMarkNotificationRead();
+  const { t } = useAppContext()
+  const navigate = useNavigate()
+  const { data: notifications = [], isLoading } = useMyNotifications(enabled, 20)
+  const markReadMutation = useMarkNotificationRead()
 
-  const unreadCount = useMemo(
-    () => notifications.filter((n) => !n.read).length,
-    [notifications],
-  );
+  const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications])
 
   return (
     <DropdownMenu>
@@ -50,7 +47,9 @@ export function NotificationsBell({ enabled }: NotificationsBellProps) {
       <DropdownMenuContent align="end" className="w-80 max-w-[90vw]">
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>{t.notificationsBell.title}</span>
-          <Badge variant="secondary">{unreadCount} {t.notificationsBell.unread}</Badge>
+          <Badge variant="secondary">
+            {unreadCount} {t.notificationsBell.unread}
+          </Badge>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {isLoading ? (
@@ -63,10 +62,10 @@ export function NotificationsBell({ enabled }: NotificationsBellProps) {
               key={item.id}
               onClick={() => {
                 if (!item.read && !markReadMutation.isPending) {
-                  markReadMutation.mutate(item.id);
+                  markReadMutation.mutate(item.id)
                 }
                 if (item.link) {
-                  navigate(item.link);
+                  navigate(item.link)
                 }
               }}
               className={`items-start ${item.link ? 'cursor-pointer' : ''}`}
@@ -87,5 +86,5 @@ export function NotificationsBell({ enabled }: NotificationsBellProps) {
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

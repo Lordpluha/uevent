@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { Notification } from './entities'
-import { CreateNotificationDto, UpdateNotificationDto } from './dto'
+import { Organization } from '../organizations/entities/organization.entity'
 import { User } from '../users/entities/user.entity'
+import { CreateNotificationDto, UpdateNotificationDto } from './dto'
+import { Notification } from './entities'
 import { PushNotificationService } from './push-notification.service'
 
 @Injectable()
@@ -14,6 +15,9 @@ export class NotificationsService {
 
     @InjectRepository(User)
     private readonly usersRepo: Repository<User>,
+
+    @InjectRepository(Organization)
+    private readonly orgsRepo: Repository<Organization>,
 
     private readonly pushService: PushNotificationService,
   ) {}
@@ -29,11 +33,30 @@ export class NotificationsService {
         select: ['id', 'push_notifications_enabled'],
       })
       if (user?.push_notifications_enabled) {
-        this.pushService.sendToUser(saved.user_id, {
-          title: saved.name,
-          body: saved.content,
-          url: saved.link ?? '/',
-        }).catch(() => undefined)
+        this.pushService
+          .sendToUser(saved.user_id, {
+            title: saved.name,
+            body: saved.content,
+            url: saved.link ?? '/',
+          })
+          .catch(() => undefined)
+      }
+    }
+
+    // Fire a browser push if the target organization has it enabled
+    if (saved.organization_id) {
+      const org = await this.orgsRepo.findOne({
+        where: { id: saved.organization_id },
+        select: ['id', 'push_notifications_enabled'],
+      })
+      if (org?.push_notifications_enabled) {
+        this.pushService
+          .sendToOrganization(saved.organization_id, {
+            title: saved.name,
+            body: saved.content,
+            url: saved.link ?? '/',
+          })
+          .catch(() => undefined)
       }
     }
 

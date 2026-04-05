@@ -212,6 +212,7 @@
     "gmt": "GMT",
     "retry": "Retry",
     "goBack": "← Go back",
+    "unknown": "Unknown",
     "home": "Home",
     "open": "Open",
     "share": "Share",
@@ -409,6 +410,16 @@
       "noEvents": "No events yet. Create your first event.",
       "openEvent": "Open event",
       "addTicket": "Add ticket"
+    },
+    "notifications": {
+      "title": "Notification settings",
+      "subtitle": "Control how your organization receives notifications.",
+      "emailNotifications": "Email notifications",
+      "emailNotificationsDesc": "Receive email alerts for new attendees and important events.",
+      "pushNotifications": "Push notifications",
+      "pushNotificationsDesc": "Receive browser push notifications for real-time updates.",
+      "updated": "Notification settings updated",
+      "updateFailed": "Failed to update notification settings"
     }
   },
   "orgEdit": {
@@ -856,7 +867,14 @@
     "pickDateRange": "Pick a date range",
     "locationPlaceholder": "Location…",
     "noLocations": "No locations found",
-    "all": "All"
+    "all": "All",
+    "sortBy": "Sort by",
+    "sortOrder": "Order",
+    "sortDate": "Date",
+    "sortName": "Name",
+    "sortAttendees": "Attendees",
+    "sortAsc": "Ascending",
+    "sortDesc": "Descending"
   },
   "searchModal": {
     "loadingEvents": "Loading events…",
@@ -963,5 +981,14 @@
     "title": "Sidebar",
     "mobileDescription": "Displays the mobile sidebar.",
     "toggle": "Toggle Sidebar"
+  },
+  "comments": {
+    "title": "Comments",
+    "noComments": "No comments yet. Be the first to share your thoughts!",
+    "placeholder": "Write a comment…",
+    "post": "Post",
+    "delete": "Delete comment",
+    "loginToComment": "Log in to leave a comment.",
+    "createFailed": "Failed to post comment"
   }
 }

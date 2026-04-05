@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 /* ── Raw backend shapes (as returned by the API) ─────────── */
 
@@ -6,7 +6,7 @@ export const backendTagSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable().optional(),
-});
+})
 
 export const backendTicketSchema = z.object({
   id: z.number(),
@@ -21,7 +21,7 @@ export const backendTicketSchema = z.object({
   seat: z.string().nullable().optional(),
   ticketType: z.string().optional(),
   currency: z.string().optional(),
-});
+})
 
 export const backendEventSchema = z.object({
   id: z.string(),
@@ -41,14 +41,18 @@ export const backendEventSchema = z.object({
   rating: z.number().optional(),
   attendeeCount: z.number().optional(),
   attendees_public: z.boolean().optional(),
-  attendees: z.array(z.object({
-    id: z.string(),
-    avatarUrl: z.string().optional(),
-    name: z.string(),
-    username: z.string().nullable().optional(),
-  })).optional(),
+  attendees: z
+    .array(
+      z.object({
+        id: z.string(),
+        avatarUrl: z.string().optional(),
+        name: z.string(),
+        username: z.string().nullable().optional(),
+      }),
+    )
+    .optional(),
   isBookmarked: z.boolean().optional(),
-});
+})
 
 export const backendEventListResponseSchema = z.object({
   data: z.array(backendEventSchema),
@@ -58,9 +62,9 @@ export const backendEventListResponseSchema = z.object({
     limit: z.number(),
     total_pages: z.number(),
   }),
-});
+})
 
-export type BackendTag = z.infer<typeof backendTagSchema>;
-export type BackendTicket = z.infer<typeof backendTicketSchema>;
-export type BackendEvent = z.infer<typeof backendEventSchema>;
-export type BackendEventListResponse = z.infer<typeof backendEventListResponseSchema>;
+export type BackendTag = z.infer<typeof backendTagSchema>
+export type BackendTicket = z.infer<typeof backendTicketSchema>
+export type BackendEvent = z.infer<typeof backendEventSchema>
+export type BackendEventListResponse = z.infer<typeof backendEventListResponseSchema>

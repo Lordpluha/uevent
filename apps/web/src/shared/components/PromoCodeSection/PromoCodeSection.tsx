@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { Tag, Check, X } from 'lucide-react';
-import { Button, Input } from '@shared/components/ui';
-import { api } from '@shared/api';
-import { useAppContext } from '@shared/lib';
+import { api } from '@shared/api'
+import { Button, Input } from '@shared/components/ui'
+import { useAppContext } from '@shared/lib'
+import { Check, Tag, X } from 'lucide-react'
+import { useState } from 'react'
 
 interface PromoCodeSectionProps {
-  eventId?: string;
-  onApplyPromo: (promo: { code: string; id: string; discountPercent: number }) => void;
-  onRemovePromo: () => void;
-  appliedCode?: string;
-  appliedDiscount?: number;
+  eventId?: string
+  onApplyPromo: (promo: { code: string; id: string; discountPercent: number }) => void
+  onRemovePromo: () => void
+  appliedCode?: string
+  appliedDiscount?: number
 }
 
 export function PromoCodeSection({
@@ -19,44 +19,47 @@ export function PromoCodeSection({
   appliedCode,
   appliedDiscount,
 }: PromoCodeSectionProps) {
-  const { t } = useAppContext();
-  const [promoInput, setPromoInput] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { t } = useAppContext()
+  const [promoInput, setPromoInput] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleApply = async () => {
-    const code = promoInput.trim().toUpperCase();
+    const code = promoInput.trim().toUpperCase()
     if (!code) {
-      setError(t.promoCode.enterCode);
-      return;
+      setError(t.promoCode.enterCode)
+      return
     }
 
-    setLoading(true);
-    setError('');
+    setLoading(true)
+    setError('')
 
     try {
-      const response = await api.post<{ id: string; code: string; discountPercent: number }>('/payments/promo-codes/validate', {
-        code,
-        eventId,
-      });
+      const response = await api.post<{ id: string; code: string; discountPercent: number }>(
+        '/payments/promo-codes/validate',
+        {
+          code,
+          eventId,
+        },
+      )
       onApplyPromo({
         code: response.data.code,
         id: response.data.id,
         discountPercent: response.data.discountPercent,
-      });
-      setPromoInput('');
+      })
+      setPromoInput('')
     } catch {
-      setError(t.promoCode.invalidCode);
+      setError(t.promoCode.invalidCode)
     }
 
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   const handleRemove = () => {
-    setPromoInput('');
-    setError('');
-    onRemovePromo();
-  };
+    setPromoInput('')
+    setError('')
+    onRemovePromo()
+  }
 
   // If promo is applied, show success state
   if (appliedCode && appliedDiscount) {
@@ -71,7 +74,9 @@ export function PromoCodeSection({
               <p className="text-sm font-semibold text-green-900 dark:text-green-200">
                 {t.promoCode.applied.replace('{{code}}', appliedCode)}
               </p>
-              <p className="text-xs text-green-700 dark:text-green-300">{t.promoCode.discountValue.replace('{{discount}}', String(appliedDiscount))}</p>
+              <p className="text-xs text-green-700 dark:text-green-300">
+                {t.promoCode.discountValue.replace('{{discount}}', String(appliedDiscount))}
+              </p>
             </div>
           </div>
           <button
@@ -84,7 +89,7 @@ export function PromoCodeSection({
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -101,19 +106,14 @@ export function PromoCodeSection({
           placeholder={t.promoCode.inputPlaceholder}
           value={promoInput}
           onChange={(e) => {
-            setPromoInput(e.target.value);
-            setError('');
+            setPromoInput(e.target.value)
+            setError('')
           }}
           onKeyDown={(e) => e.key === 'Enter' && !loading && handleApply()}
           disabled={loading}
           className="text-sm"
         />
-        <Button
-          size="sm"
-          onClick={handleApply}
-          disabled={loading || !promoInput.trim()}
-          variant="outline"
-        >
+        <Button size="sm" onClick={handleApply} disabled={loading || !promoInput.trim()} variant="outline">
           {loading ? t.promoCode.checking : t.promoCode.apply}
         </Button>
       </div>
@@ -126,5 +126,5 @@ export function PromoCodeSection({
           .replace('{{discount2}}', '10')}
       </p>
     </div>
-  );
+  )
 }

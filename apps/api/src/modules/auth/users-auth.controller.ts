@@ -1,23 +1,47 @@
-import { Controller, Post, Delete, Get, Body, UseGuards, Res, Req, Param, ParseUUIDPipe, UnauthorizedException } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { ZodValidationPipe } from 'nestjs-zod'
-import { Request, Response } from 'express'
-import { z } from 'zod'
+import { ApiBody, ApiExtraModels, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
-import { UsersAuthService } from './users-auth.service'
-import { LoginDto, LoginDtoSchema } from './dto/login.dto'
-import { JwtGuard } from './guards/jwt.guard'
-import { CurrentUser } from './decorators/current-user.decorator'
-import { JwtPayload } from './types/jwt-payload.interface'
+import { Request, Response } from 'express'
+import { ZodValidationPipe } from 'nestjs-zod'
+import { z } from 'zod'
+import { clearAuthCookies, setAuthCookies } from '../../common/auth-cookie.util'
+import {
+  ApiAccessCookieAuth,
+  ApiRefreshCookieAuth,
+  ApiUuidParam,
+  ApiZodBody,
+  messageSchema,
+} from '../../common/swagger/openapi.util'
+import { ApiConfigService } from '../../config/api-config.service'
 import { CreateUserDto, CreateUserDtoSchema } from '../users/dto/create-user.dto'
 import { User } from '../users/entities/user.entity'
 import { UserSession } from '../users/entities/user-session.entity'
+import { CurrentUser } from './decorators/current-user.decorator'
+import {
+  ApiTwoFaEnabledResponse,
+  ApiTwoFaSetupResponse,
+  ApiUserAuthResultResponse,
+  ApiUserMeResponse,
+  ApiUserSessionsResponse,
+} from './decorators/swagger'
+import { LoginDto, LoginDtoSchema } from './dto/login.dto'
+import { JwtGuard } from './guards/jwt.guard'
 import { TwoFaEnabledModel, TwoFaRequiredModel, TwoFaSetupModel, UserAuthSuccessModel } from './openapi.models'
-import { setAuthCookies, clearAuthCookies } from '../../common/auth-cookie.util'
-import { ApiConfigService } from '../../config/api-config.service'
-import { ApiBody, ApiExtraModels, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { ApiAccessCookieAuth, ApiRefreshCookieAuth, ApiUuidParam, ApiZodBody, messageSchema } from '../../common/swagger/openapi.util'
-import { ApiTwoFaEnabledResponse, ApiTwoFaSetupResponse, ApiUserAuthResultResponse, ApiUserMeResponse, ApiUserSessionsResponse } from './decorators/swagger'
+import { JwtPayload } from './types/jwt-payload.interface'
+import { UsersAuthService } from './users-auth.service'
 
 const Verify2faSchema = z.object({ tempToken: z.string(), code: z.string().length(6) })
 const Confirm2faSchema = z.object({ code: z.string().length(6) })
@@ -59,7 +83,9 @@ export class UsersAuthController {
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Login user account' })
   @ApiZodBody(LoginDtoSchema)
-  @ApiUserAuthResultResponse('Logs in the user. On success sets HTTP-only auth cookies; on 2FA-enabled accounts returns a temp token.')
+  @ApiUserAuthResultResponse(
+    'Logs in the user. On success sets HTTP-only auth cookies; on 2FA-enabled accounts returns a temp token.',
+  )
   async login(
     @Body(new ZodValidationPipe(LoginDtoSchema)) dto: LoginDto,
     @Req() req: Request,
@@ -107,10 +133,7 @@ export class UsersAuthController {
   @ApiAccessCookieAuth()
   @ApiZodBody(Confirm2faSchema)
   @ApiTwoFaEnabledResponse('2FA confirmation result.')
-  confirm2fa(
-    @CurrentUser() user: JwtPayload,
-    @Body(new ZodValidationPipe(Confirm2faSchema)) body: { code: string },
-  ) {
+  confirm2fa(@CurrentUser() user: JwtPayload, @Body(new ZodValidationPipe(Confirm2faSchema)) body: { code: string }) {
     return this.usersAuthService.confirm2fa(user.sub, body.code)
   }
 
@@ -120,10 +143,7 @@ export class UsersAuthController {
   @ApiAccessCookieAuth()
   @ApiZodBody(Disable2faSchema)
   @ApiTwoFaEnabledResponse('2FA disable result.')
-  disable2fa(
-    @CurrentUser() user: JwtPayload,
-    @Body(new ZodValidationPipe(Disable2faSchema)) body: { code: string },
-  ) {
+  disable2fa(@CurrentUser() user: JwtPayload, @Body(new ZodValidationPipe(Disable2faSchema)) body: { code: string }) {
     return this.usersAuthService.disable2fa(user.sub, body.code)
   }
 
@@ -131,10 +151,11 @@ export class UsersAuthController {
   @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Send user password reset code' })
   @ApiZodBody(ForgotPasswordSchema)
-  @ApiOkResponse({ description: 'Password reset initiation result.', schema: messageSchema('If that email exists, a reset code has been sent.') })
-  forgotPassword(
-    @Body(new ZodValidationPipe(ForgotPasswordSchema)) body: { email: string },
-  ) {
+  @ApiOkResponse({
+    description: 'Password reset initiation result.',
+    schema: messageSchema('If that email exists, a reset code has been sent.'),
+  })
+  forgotPassword(@Body(new ZodValidationPipe(ForgotPasswordSchema)) body: { email: string }) {
     return this.usersAuthService.forgotPassword(body.email)
   }
 
@@ -142,7 +163,10 @@ export class UsersAuthController {
   @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Reset user password' })
   @ApiZodBody(ResetPasswordSchema)
-  @ApiOkResponse({ description: 'Password reset result.', schema: messageSchema('Password has been reset successfully') })
+  @ApiOkResponse({
+    description: 'Password reset result.',
+    schema: messageSchema('Password has been reset successfully'),
+  })
   resetPassword(
     @Body(new ZodValidationPipe(ResetPasswordSchema)) body: { email: string; code: string; password: string },
   ) {
@@ -153,10 +177,7 @@ export class UsersAuthController {
   @ApiOperation({ summary: 'Refresh user auth session' })
   @ApiRefreshCookieAuth()
   @ApiUserAuthResultResponse('Rotates tokens and resets HTTP-only auth cookies.')
-  async refresh(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token = (req.cookies as Record<string, string>)?.refresh_token
     if (!token) throw new UnauthorizedException('No refresh token')
     const tokens = await this.usersAuthService.refresh(token)
@@ -167,10 +188,7 @@ export class UsersAuthController {
   @Delete('logout')
   @ApiOperation({ summary: 'Logout user account' })
   @ApiOkResponse({ description: 'Clears HTTP-only auth cookies.', schema: messageSchema('Logged out') })
-  async logout(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     // Best-effort session cleanup — always clear cookies even if token is invalid
     try {
       const token = (req.cookies as Record<string, string>)?.access_token
@@ -180,7 +198,9 @@ export class UsersAuthController {
           await this.usersAuthService.logout(payload.session_id)
         }
       }
-    } catch { /* best-effort cleanup */ }
+    } catch {
+      /* best-effort cleanup */
+    }
     clearAuthCookies(res, this.apiConfig.isProd)
     return { message: 'Logged out' }
   }

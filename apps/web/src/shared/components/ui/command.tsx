@@ -1,10 +1,10 @@
-import type { ComponentProps, ReactNode } from 'react';
-import { Command as CommandPrimitive } from 'cmdk';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@shared/components/ui/dialog'
+import { InputGroup, InputGroupAddon } from '@shared/components/ui/input-group'
 
-import { cn } from '@shared/lib/utils';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
-import { InputGroup, InputGroupAddon } from '@shared/components/ui/input-group';
-import { SearchIcon, CheckIcon } from 'lucide-react';
+import { cn } from '@shared/lib/utils'
+import { Command as CommandPrimitive } from 'cmdk'
+import { CheckIcon, SearchIcon } from 'lucide-react'
+import type { ComponentProps, ReactNode } from 'react'
 
 function Command({ className, ...props }: ComponentProps<typeof CommandPrimitive>) {
   return (
@@ -16,7 +16,7 @@ function Command({ className, ...props }: ComponentProps<typeof CommandPrimitive
       )}
       {...props}
     />
-  );
+  )
 }
 
 function CommandDialog({
@@ -27,11 +27,11 @@ function CommandDialog({
   showCloseButton = false,
   ...props
 }: Omit<ComponentProps<typeof Dialog>, 'children'> & {
-  title?: string;
-  description?: string;
-  className?: string;
-  showCloseButton?: boolean;
-  children: ReactNode;
+  title?: string
+  description?: string
+  className?: string
+  showCloseButton?: boolean
+  children: ReactNode
 }) {
   return (
     <Dialog {...props}>
@@ -46,7 +46,7 @@ function CommandDialog({
         {children}
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 function CommandInput({ className, ...props }: ComponentProps<typeof CommandPrimitive.Input>) {
@@ -66,7 +66,7 @@ function CommandInput({ className, ...props }: ComponentProps<typeof CommandPrim
         </InputGroupAddon>
       </InputGroup>
     </div>
-  );
+  )
 }
 
 function CommandList({ className, ...props }: ComponentProps<typeof CommandPrimitive.List>) {
@@ -76,7 +76,7 @@ function CommandList({ className, ...props }: ComponentProps<typeof CommandPrimi
       className={cn('no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-none', className)}
       {...props}
     />
-  );
+  )
 }
 
 function CommandEmpty({ className, ...props }: ComponentProps<typeof CommandPrimitive.Empty>) {
@@ -86,7 +86,7 @@ function CommandEmpty({ className, ...props }: ComponentProps<typeof CommandPrim
       className={cn('py-6 text-center text-xs/relaxed', className)}
       {...props}
     />
-  );
+  )
 }
 
 function CommandGroup({ className, ...props }: ComponentProps<typeof CommandPrimitive.Group>) {
@@ -99,7 +99,7 @@ function CommandGroup({ className, ...props }: ComponentProps<typeof CommandPrim
       )}
       {...props}
     />
-  );
+  )
 }
 
 function CommandSeparator({ className, ...props }: ComponentProps<typeof CommandPrimitive.Separator>) {
@@ -109,7 +109,7 @@ function CommandSeparator({ className, ...props }: ComponentProps<typeof Command
       className={cn('-mx-1 my-1 h-px bg-border/50', className)}
       {...props}
     />
-  );
+  )
 }
 
 function CommandItem({ className, children, ...props }: ComponentProps<typeof CommandPrimitive.Item>) {
@@ -125,7 +125,7 @@ function CommandItem({ className, children, ...props }: ComponentProps<typeof Co
       {children}
       <CheckIcon className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" />
     </CommandPrimitive.Item>
-  );
+  )
 }
 
 function CommandShortcut({ className, ...props }: ComponentProps<'span'>) {
@@ -138,17 +138,17 @@ function CommandShortcut({ className, ...props }: ComponentProps<'span'>) {
       )}
       {...props}
     />
-  );
+  )
 }
 
 export {
   Command,
   CommandDialog,
-  CommandInput,
-  CommandList,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
-  CommandShortcut,
+  CommandList,
   CommandSeparator,
-};
+  CommandShortcut,
+}

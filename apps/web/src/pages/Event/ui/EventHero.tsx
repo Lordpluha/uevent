@@ -1,16 +1,16 @@
-import { Images, MapPin, Video } from 'lucide-react';
-import { Badge } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import type { EventModel } from '@entities/Event';
+import type { EventModel } from '@entities/Event'
+import { Badge } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { Images, MapPin, Video } from 'lucide-react'
 
 interface Props {
-  event: EventModel;
-  hasGallery: boolean;
-  onOpenGallery: (index: number) => void;
+  event: EventModel
+  hasGallery: boolean
+  onOpenGallery: (index: number) => void
 }
 
 export function EventHero({ event, hasGallery, onOpenGallery }: Props) {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
   return (
     <button
       type="button"
@@ -46,5 +46,5 @@ export function EventHero({ event, hasGallery, onOpenGallery }: Props) {
         </div>
       )}
     </button>
-  );
+  )
 }

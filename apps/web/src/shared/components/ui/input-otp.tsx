@@ -1,16 +1,15 @@
-import { useContext } from 'react';
-import type { ComponentProps } from 'react';
-import { OTPInput, OTPInputContext } from 'input-otp';
-
-import { cn } from '@shared/lib/utils';
-import { MinusIcon } from 'lucide-react';
+import { cn } from '@shared/lib/utils'
+import { OTPInput, OTPInputContext } from 'input-otp'
+import { MinusIcon } from 'lucide-react'
+import type { ComponentProps } from 'react'
+import { useContext } from 'react'
 
 function InputOTP({
   className,
   containerClassName,
   ...props
 }: ComponentProps<typeof OTPInput> & {
-  containerClassName?: string;
+  containerClassName?: string
 }) {
   return (
     <OTPInput
@@ -20,7 +19,7 @@ function InputOTP({
       className={cn('disabled:cursor-not-allowed', className)}
       {...props}
     />
-  );
+  )
 }
 
 function InputOTPGroup({ className, ...props }: ComponentProps<'div'>) {
@@ -33,7 +32,7 @@ function InputOTPGroup({ className, ...props }: ComponentProps<'div'>) {
       )}
       {...props}
     />
-  );
+  )
 }
 
 function InputOTPSlot({
@@ -41,10 +40,10 @@ function InputOTPSlot({
   className,
   ...props
 }: ComponentProps<'div'> & {
-  index: number;
+  index: number
 }) {
-  const inputOTPContext = useContext(OTPInputContext);
-  const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {};
+  const inputOTPContext = useContext(OTPInputContext)
+  const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {}
 
   return (
     <div
@@ -63,19 +62,15 @@ function InputOTPSlot({
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function InputOTPSeparator({ ...props }: ComponentProps<'div'>) {
   return (
-    <div
-      data-slot="input-otp-separator"
-      className="flex items-center [&_svg:not([class*='size-'])]:size-4"
-      {...props}
-    >
+    <div data-slot="input-otp-separator" className="flex items-center [&_svg:not([class*='size-'])]:size-4" {...props}>
       <MinusIcon />
     </div>
-  );
+  )
 }
 
-export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator };
+export { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot }

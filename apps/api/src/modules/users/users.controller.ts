@@ -1,20 +1,44 @@
-import { Controller, Get, Param, Delete, ParseUUIDPipe, Query, Post, UseGuards, UseInterceptors, UploadedFile, BadRequestException, Patch, Body, ForbiddenException } from '@nestjs/common'
-import { FileInterceptor } from '@nestjs/platform-express'
-import { memoryStorage } from 'multer'
-import { writeFileSync, mkdirSync } from 'node:fs'
-import { extname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { UsersService } from './users.service'
-import { GetUsersParams, GetUsersParamsSchema } from './params'
-import { UpdateUserDto, UpdateUserDtoSchema } from './dto/update-user.dto'
-import { ZodValidationPipe } from 'nestjs-zod'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiBadRequestResponse, ApiExtraModels, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
-import { JwtGuard } from '../auth/guards/jwt.guard'
-import { CurrentUser } from '../auth/decorators/current-user.decorator'
-import { JwtPayload } from '../auth/types/jwt-payload.interface'
+import { memoryStorage } from 'multer'
+import { ZodValidationPipe } from 'nestjs-zod'
+import { ALLOWED_IMAGE_MIMES, mimeToExt } from '../../common/file-upload.util'
+import {
+  ApiAccessCookieAuth,
+  ApiMultipartFile,
+  ApiUuidParam,
+  ApiZodBody,
+  messageSchema,
+  paginatedResponseSchema,
+  userResponseSchema,
+} from '../../common/swagger/openapi.util'
 import { ApiConfigService } from '../../config/api-config.service'
-import { ApiAccessCookieAuth, ApiMultipartFile, ApiUuidParam, ApiZodBody, messageSchema, paginatedResponseSchema, userResponseSchema } from '../../common/swagger/openapi.util'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
+import { JwtGuard } from '../auth/guards/jwt.guard'
+import { JwtPayload } from '../auth/types/jwt-payload.interface'
+import { UpdateUserDto, UpdateUserDtoSchema } from './dto/update-user.dto'
 import { User } from './entities/user.entity'
+import { GetUsersParams, GetUsersParamsSchema } from './params'
+import { UsersService } from './users.service'
 
 const STORAGE_ROOT = process.env.VERCEL ? '/tmp/storage' : join(process.cwd(), 'storage')
 
@@ -38,7 +62,10 @@ export class UsersController {
 
   @Get('count')
   @ApiOperation({ summary: 'Get total user count' })
-  @ApiOkResponse({ description: 'Total number of registered users.', schema: { type: 'object', properties: { count: { type: 'integer' } } } })
+  @ApiOkResponse({
+    description: 'Total number of registered users.',
+    schema: { type: 'object', properties: { count: { type: 'integer' } } },
+  })
   count() {
     return this.usersService.count()
   }
@@ -57,10 +84,7 @@ export class UsersController {
   @ApiAccessCookieAuth()
   @ApiUuidParam('id', 'User id')
   @ApiOkResponse({ description: 'User removed.', schema: messageSchema('User removed') })
-  remove(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
     if (user.type !== 'user' || user.sub !== id) {
       throw new ForbiddenException('You can delete only your user profile')
     }
@@ -91,23 +115,23 @@ export class UsersController {
   @ApiAccessCookieAuth()
   @ApiMultipartFile('avatar', false, 'User avatar image.')
   @ApiBadRequestResponse({ description: 'Invalid file payload.' })
-  @ApiOkResponse({ description: 'Avatar URL.', schema: { type: 'object', properties: { avatarUrl: { type: 'string' } }, required: ['avatarUrl'] } })
+  @ApiOkResponse({
+    description: 'Avatar URL.',
+    schema: { type: 'object', properties: { avatarUrl: { type: 'string' } }, required: ['avatarUrl'] },
+  })
   @UseInterceptors(
     FileInterceptor('avatar', {
       storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
-          return cb(new BadRequestException('Only image files are allowed'), false)
+        if (!ALLOWED_IMAGE_MIMES.has(file.mimetype)) {
+          return cb(new BadRequestException('Only JPEG, PNG, GIF, WEBP and AVIF files are allowed'), false)
         }
         cb(null, true)
       },
       limits: { fileSize: 2 * 1024 * 1024 },
     }),
   )
-  async uploadMyAvatar(
-    @CurrentUser() user: JwtPayload,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
+  async uploadMyAvatar(@CurrentUser() user: JwtPayload, @UploadedFile() file: Express.Multer.File) {
     if (user.type !== 'user') {
       throw new BadRequestException('Only user accounts can upload profile avatars')
     }
@@ -115,7 +139,7 @@ export class UsersController {
 
     const dir = join(STORAGE_ROOT, 'users')
     mkdirSync(dir, { recursive: true })
-    const filename = `${randomUUID()}${extname(file.originalname)}`
+    const filename = `${randomUUID()}${mimeToExt(file.mimetype)}`
     writeFileSync(join(dir, filename), file.buffer)
     const base = this.apiConfig.apiUrl
     const avatarUrl = `${base}/storage/users/${filename}`

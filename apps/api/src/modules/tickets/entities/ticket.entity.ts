@@ -1,9 +1,9 @@
-import { Entity, Column, Index, ManyToOne, OneToMany, JoinColumn, CreateDateColumn } from 'typeorm'
-import { User } from '../../users/entities/user.entity'
-import { File } from '../../files/entities/file.entity'
-import { Event } from '../../events/entities/event.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
+import { Event } from '../../events/entities/event.entity'
+import { File } from '../../files/entities/file.entity'
+import { User } from '../../users/entities/user.entity'
 
 export enum TicketStatus {
   DRAFT = 'DRAFT',
@@ -14,7 +14,6 @@ export enum TicketStatus {
 
 @Entity('tickets')
 export class Ticket extends UuidEntity {
-
   @Column({ nullable: true })
   @ApiPropertyOptional({ nullable: true })
   image: string

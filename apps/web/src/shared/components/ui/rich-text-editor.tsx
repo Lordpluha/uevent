@@ -1,51 +1,49 @@
-import type { ComponentProps, PropsWithChildren } from 'react';
-import { useCallback, useEffect, useState } from 'react';
-
-import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
-import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { ContentEditable } from '@lexical/react/LexicalContentEditable';
-import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
-import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
-import { ListPlugin } from '@lexical/react/LexicalListPlugin';
-import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
-import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
-import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
-import { $convertFromMarkdownString, $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown';
-import { $createHeadingNode, $createQuoteNode, HeadingNode, QuoteNode } from '@lexical/rich-text';
+import { CodeNode } from '@lexical/code'
+import { AutoLinkNode, LinkNode } from '@lexical/link'
 import {
   INSERT_ORDERED_LIST_COMMAND,
   INSERT_UNORDERED_LIST_COMMAND,
   ListItemNode,
   ListNode,
   REMOVE_LIST_COMMAND,
-} from '@lexical/list';
-import { AutoLinkNode, LinkNode } from '@lexical/link';
-import { CodeNode } from '@lexical/code';
+} from '@lexical/list'
+import { $convertFromMarkdownString, $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown'
+import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin'
+import { LexicalComposer } from '@lexical/react/LexicalComposer'
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import { ContentEditable } from '@lexical/react/LexicalContentEditable'
+import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary'
+import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
+import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin'
+import { ListPlugin } from '@lexical/react/LexicalListPlugin'
+import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin'
+import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
+import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
+import { $createHeadingNode, $createQuoteNode, HeadingNode, QuoteNode } from '@lexical/rich-text'
+import { useAppContext } from '@shared/lib'
+import { cn } from '@shared/lib/utils'
 import {
   $createParagraphNode,
   $getSelection,
   $isRangeSelection,
-  FORMAT_TEXT_COMMAND,
   type EditorState,
   type ElementNode,
+  FORMAT_TEXT_COMMAND,
   type TextFormatType,
-} from 'lexical';
-
-import { useAppContext } from '@shared/lib';
-import { cn } from '@shared/lib/utils';
+} from 'lexical'
+import type { ComponentProps, PropsWithChildren } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
-type BlockType = 'paragraph' | 'h1' | 'h2' | 'h3' | 'bullet' | 'number' | 'quote';
+type BlockType = 'paragraph' | 'h1' | 'h2' | 'h3' | 'bullet' | 'number' | 'quote'
 
 /* ── Toolbar button ───────────────────────────────────────────────────── */
 
 interface ToolbarBtnProps extends PropsWithChildren {
-  active?: boolean;
-  title: string;
-  onPress: () => void;
+  active?: boolean
+  title: string
+  onPress: () => void
 }
 
 function ToolbarBtn({ active, title, onPress, children }: ToolbarBtnProps) {
@@ -54,105 +52,99 @@ function ToolbarBtn({ active, title, onPress, children }: ToolbarBtnProps) {
       type="button"
       title={title}
       onMouseDown={(e) => {
-        e.preventDefault();
-        onPress();
+        e.preventDefault()
+        onPress()
       }}
       className={cn(
         'flex h-7 min-w-7 items-center justify-center rounded px-1 text-sm transition-colors',
-        active
-          ? 'bg-primary text-primary-foreground'
-          : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+        active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
       )}
     >
       {children}
     </button>
-  );
+  )
 }
 
 /* ── Toolbar plugin ───────────────────────────────────────────────────── */
 
 function ToolbarPlugin() {
-  const { t } = useAppContext();
-  const [editor] = useLexicalComposerContext();
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isUnderline, setIsUnderline] = useState(false);
-  const [isStrike, setIsStrike] = useState(false);
-  const [isCode, setIsCode] = useState(false);
-  const [blockType, setBlockType] = useState<BlockType>('paragraph');
+  const { t } = useAppContext()
+  const [editor] = useLexicalComposerContext()
+  const [isBold, setIsBold] = useState(false)
+  const [isItalic, setIsItalic] = useState(false)
+  const [isUnderline, setIsUnderline] = useState(false)
+  const [isStrike, setIsStrike] = useState(false)
+  const [isCode, setIsCode] = useState(false)
+  const [blockType, setBlockType] = useState<BlockType>('paragraph')
 
   const updateToolbar = useCallback(() => {
-    const selection = $getSelection();
-    if (!$isRangeSelection(selection)) return;
+    const selection = $getSelection()
+    if (!$isRangeSelection(selection)) return
 
-    setIsBold(selection.hasFormat('bold'));
-    setIsItalic(selection.hasFormat('italic'));
-    setIsUnderline(selection.hasFormat('underline'));
-    setIsStrike(selection.hasFormat('strikethrough'));
-    setIsCode(selection.hasFormat('code'));
+    setIsBold(selection.hasFormat('bold'))
+    setIsItalic(selection.hasFormat('italic'))
+    setIsUnderline(selection.hasFormat('underline'))
+    setIsStrike(selection.hasFormat('strikethrough'))
+    setIsCode(selection.hasFormat('code'))
 
-    const anchor = selection.anchor.getNode();
-    const element =
-      anchor.getKey() === 'root' ? anchor : anchor.getTopLevelElementOrThrow();
-    const elementDOM = editor.getElementByKey(element.getKey());
-    if (!elementDOM) return;
+    const anchor = selection.anchor.getNode()
+    const element = anchor.getKey() === 'root' ? anchor : anchor.getTopLevelElementOrThrow()
+    const elementDOM = editor.getElementByKey(element.getKey())
+    if (!elementDOM) return
 
-    const tag = elementDOM.tagName.toLowerCase();
-    if (tag === 'h1') setBlockType('h1');
-    else if (tag === 'h2') setBlockType('h2');
-    else if (tag === 'h3') setBlockType('h3');
-    else if (tag === 'blockquote') setBlockType('quote');
-    else if (tag === 'ul') setBlockType('bullet');
-    else if (tag === 'ol') setBlockType('number');
-    else setBlockType('paragraph');
-  }, [editor]);
+    const tag = elementDOM.tagName.toLowerCase()
+    if (tag === 'h1') setBlockType('h1')
+    else if (tag === 'h2') setBlockType('h2')
+    else if (tag === 'h3') setBlockType('h3')
+    else if (tag === 'blockquote') setBlockType('quote')
+    else if (tag === 'ul') setBlockType('bullet')
+    else if (tag === 'ol') setBlockType('number')
+    else setBlockType('paragraph')
+  }, [editor])
 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
-      editorState.read(updateToolbar);
-    });
-  }, [editor, updateToolbar]);
+      editorState.read(updateToolbar)
+    })
+  }, [editor, updateToolbar])
 
-  const dispatchFmt = (fmt: TextFormatType) =>
-    editor.dispatchCommand(FORMAT_TEXT_COMMAND, fmt);
+  const dispatchFmt = (fmt: TextFormatType) => editor.dispatchCommand(FORMAT_TEXT_COMMAND, fmt)
 
   const formatBlock = (type: BlockType) => {
     if (type === 'bullet') {
-      if (blockType === 'bullet') editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
-      else editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
-      return;
+      if (blockType === 'bullet') editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined)
+      else editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)
+      return
     }
     if (type === 'number') {
-      if (blockType === 'number') editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
-      else editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
-      return;
+      if (blockType === 'number') editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined)
+      else editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
+      return
     }
     editor.update(() => {
-      const selection = $getSelection();
-      if (!$isRangeSelection(selection)) return;
+      const selection = $getSelection()
+      if (!$isRangeSelection(selection)) return
 
-      const anchor = selection.anchor.getNode();
+      const anchor = selection.anchor.getNode()
       const element: ElementNode =
-        anchor.getKey() === 'root'
-          ? (anchor as unknown as ElementNode)
-          : anchor.getTopLevelElementOrThrow();
+        anchor.getKey() === 'root' ? (anchor as unknown as ElementNode) : anchor.getTopLevelElementOrThrow()
 
-      let newElement: ElementNode;
+      let newElement: ElementNode
       if (type === 'paragraph') {
-        newElement = $createParagraphNode();
+        newElement = $createParagraphNode()
       } else if (type === 'quote') {
-        newElement = $createQuoteNode();
+        newElement = $createQuoteNode()
       } else {
-        newElement = $createHeadingNode(type);
+        newElement = $createHeadingNode(type)
       }
 
-      const children = element.getChildren();
+      const children = element.getChildren()
       for (const child of children) {
-        newElement.append(child);
+        newElement.append(child)
       }
-      element.replace(newElement);
-    });
-  };
+      element.replace(newElement)
+    })
+  }
 
   return (
     <div className="flex flex-wrap gap-0.5 border-b border-border bg-muted/30 p-1.5">
@@ -189,31 +181,39 @@ function ToolbarPlugin() {
 
       <div className="mx-1 w-px self-stretch bg-border" />
 
-      <ToolbarBtn active={blockType === 'bullet'} title={t.richTextEditor.bulletList} onPress={() => formatBlock('bullet')}>
+      <ToolbarBtn
+        active={blockType === 'bullet'}
+        title={t.richTextEditor.bulletList}
+        onPress={() => formatBlock('bullet')}
+      >
         <span className="text-xs font-bold leading-none">•≡</span>
       </ToolbarBtn>
-      <ToolbarBtn active={blockType === 'number'} title={t.richTextEditor.numberedList} onPress={() => formatBlock('number')}>
+      <ToolbarBtn
+        active={blockType === 'number'}
+        title={t.richTextEditor.numberedList}
+        onPress={() => formatBlock('number')}
+      >
         <span className="text-xs font-bold leading-none">1≡</span>
       </ToolbarBtn>
     </div>
-  );
+  )
 }
 
 /* ── Initial value plugin ─────────────────────────────────────────────── */
 
 function InitialValuePlugin({ value }: { value: string }) {
-  const [editor] = useLexicalComposerContext();
-  const [initialized, setInitialized] = useState(false);
+  const [editor] = useLexicalComposerContext()
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    if (initialized) return;
+    if (initialized) return
     editor.update(() => {
-      $convertFromMarkdownString(value, TRANSFORMERS);
-    });
-    setInitialized(true);
-  }, [editor, value, initialized]);
+      $convertFromMarkdownString(value, TRANSFORMERS)
+    })
+    setInitialized(true)
+  }, [editor, value, initialized])
 
-  return null;
+  return null
 }
 
 /* ── Lexical theme ────────────────────────────────────────────────────── */
@@ -239,27 +239,27 @@ const EDITOR_THEME = {
   },
   link: 'text-primary underline underline-offset-2 cursor-pointer',
   paragraph: 'mb-1',
-};
+}
 
-const EDITOR_NODES = [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode, CodeNode];
+const EDITOR_NODES = [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode, CodeNode]
 
 /* ── Main component ───────────────────────────────────────────────────── */
 
 export interface RichTextEditorProps {
   /** Markdown string used as the initial content */
-  defaultValue?: string;
+  defaultValue?: string
   /** Called with a markdown string whenever the editor content changes */
-  onChange?: (markdown: string) => void;
-  placeholder?: string;
-  className?: string;
+  onChange?: (markdown: string) => void
+  placeholder?: string
+  className?: string
   /** Disable the editor */
-  disabled?: boolean;
+  disabled?: boolean
   /** Render in read-only mode while preserving content styles */
-  readOnly?: boolean;
+  readOnly?: boolean
   /** Show formatting toolbar */
-  showToolbar?: boolean;
-  autoFocus?: boolean;
-  'aria-invalid'?: ComponentProps<'div'>['aria-invalid'];
+  showToolbar?: boolean
+  autoFocus?: boolean
+  'aria-invalid'?: ComponentProps<'div'>['aria-invalid']
 }
 
 export function RichTextEditor({
@@ -273,16 +273,16 @@ export function RichTextEditor({
   autoFocus = false,
   'aria-invalid': ariaInvalid,
 }: RichTextEditorProps) {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
   const handleChange = useCallback(
     (editorState: EditorState) => {
-      if (!onChange) return;
+      if (!onChange) return
       editorState.read(() => {
-        onChange($convertToMarkdownString(TRANSFORMERS));
-      });
+        onChange($convertToMarkdownString(TRANSFORMERS))
+      })
     },
     [onChange],
-  );
+  )
 
   return (
     <LexicalComposer
@@ -329,5 +329,5 @@ export function RichTextEditor({
         {defaultValue && <InitialValuePlugin value={defaultValue} />}
       </div>
     </LexicalComposer>
-  );
+  )
 }

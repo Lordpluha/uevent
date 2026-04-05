@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
-import {type Transporter, createTransport} from 'nodemailer'
+import { createTransport, type Transporter } from 'nodemailer'
 import { toDataURL } from 'qrcode'
 import { ApiConfigService } from '../../config/api-config.service'
 
@@ -23,6 +23,19 @@ export class EmailService implements OnModuleInit {
 
   constructor(private readonly apiConfig: ApiConfigService) {}
 
+  /**
+   * Escapes a string for safe insertion into an HTML document.
+   * Prevents stored XSS via user-controlled data (names, titles, etc.) in email templates.
+   */
+  private escHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
+  }
+
   private get paymentCurrencyCode(): string {
     return this.apiConfig.paymentCurrency.toUpperCase()
   }
@@ -40,9 +53,15 @@ export class EmailService implements OnModuleInit {
   }
 
   private async initializeTransporter() {
-    const { host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass, fromEmail: smtpFrom } = this.apiConfig.smtpConfig
+    const {
+      host: smtpHost,
+      port: smtpPort,
+      user: smtpUser,
+      pass: smtpPass,
+      fromEmail: smtpFrom,
+    } = this.apiConfig.smtpConfig
 
-    if(!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom) {
+    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom) {
       this.logger.warn('Missing SMTP configuration — email sending disabled.')
       this.logger.warn(`   SMTP_HOST: ${smtpHost ? 'Y' : 'N'}`)
       this.logger.warn(`   SMTP_PORT: ${smtpPort ? 'Y' : 'N'}`)
@@ -81,7 +100,7 @@ export class EmailService implements OnModuleInit {
       this.logger.log(`Email transporter successfully connected to Gmail!`)
       this.logger.log(`From: ${smtpFrom}`)
       this.logger.log(`Using Gmail App Password (16 characters)`)
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Failed to initialize email transporter: ${error.message}`)
       this.logger.error(`   This usually means Gmail credentials are invalid`)
       this.logger.error(`   Check SMTP_USER and SMTP_PASS in .env`)
@@ -95,22 +114,32 @@ export class EmailService implements OnModuleInit {
       return null
     }
     try {
+      // Escape all user-controlled string fields before insertion into HTML templates
+      const safeData: PaymentConfirmationData = {
+        ...data,
+        userName: this.escHtml(data.userName),
+        eventTitle: this.escHtml(data.eventTitle),
+        ticketName: this.escHtml(data.ticketName),
+        organizationName: data.organizationName ? this.escHtml(data.organizationName) : data.organizationName,
+        eventDate: this.escHtml(data.eventDate),
+        eventLocation: data.eventLocation ? this.escHtml(data.eventLocation) : data.eventLocation,
+      }
 
       // generating QR code with info
-      const qrCodeDataUrl = await this.generateQRCode(data)
+      const qrCodeDataUrl = await this.generateQRCode(safeData)
 
-      const htmlTemplate = this.generatePaymentConfirmationTemplate(data, qrCodeDataUrl)
+      const htmlTemplate = this.generatePaymentConfirmationTemplate(safeData, qrCodeDataUrl)
 
       const mailOptions = {
         from: this.apiConfig.smtpConfig.fromEmail,
-        to: data.userEmail,
-        subject: `Payment Confirmed - ${data.eventTitle} Ticket`,
+        to: safeData.userEmail,
+        subject: `Payment Confirmed - ${safeData.eventTitle} Ticket`,
         html: htmlTemplate,
-        text: this.generatePlainTextTemplate(data),
+        text: this.generatePlainTextTemplate(safeData),
       }
 
       this.logger.log(`Sending payment confirmation email...`)
-      this.logger.log(`   To: ${data.userEmail}`)
+      this.logger.log(`   To: ${safeData.userEmail}`)
       this.logger.log(`   Subject: ${mailOptions.subject}`)
 
       const result = await this.transporter.sendMail(mailOptions)
@@ -118,7 +147,7 @@ export class EmailService implements OnModuleInit {
       this.logger.log(`Email sent successfully!`)
       this.logger.log(`   Message ID: ${result.messageId}`)
       return result
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Failed to send email to ${data.userEmail}`)
       this.logger.error(`   Error: ${error.message}`)
       return null
@@ -145,7 +174,7 @@ export class EmailService implements OnModuleInit {
         '----------------------------',
         `Purchased: ${new Date().toLocaleDateString()}`,
         '----------------------------',
-        'Scan this code at event entrance'
+        'Scan this code at event entrance',
       ].join('\n')
 
       const qrCodeUrl = await toDataURL(ticketInfo, {
@@ -160,7 +189,7 @@ export class EmailService implements OnModuleInit {
       })
 
       return qrCodeUrl
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Failed to generate QR code: ${error.message}`)
       return ''
     }
@@ -488,26 +517,38 @@ export class EmailService implements OnModuleInit {
               <span class="info-value">${data.ticketName}</span>
             </div>
 
-            ${data.organizationName ? `
+            ${
+              data.organizationName
+                ? `
             <div class="info-row">
               <span class="info-label">Organizer</span>
               <span class="info-value">${data.organizationName}</span>
             </div>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${data.eventDate ? `
+            ${
+              data.eventDate
+                ? `
             <div class="info-row">
               <span class="info-label">Date & Time</span>
               <span class="info-value">${data.eventDate}</span>
             </div>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${data.eventLocation ? `
+            ${
+              data.eventLocation
+                ? `
             <div class="info-row">
               <span class="info-label">Location</span>
               <span class="info-value">${data.eventLocation}</span>
             </div>
-            ` : ''}
+            `
+                : ''
+            }
 
             <div class="info-row">
               <span class="info-label">Payment ID</span>
@@ -595,17 +636,233 @@ Event Management Platform
     `
   }
 
-  async sendPaymentFailedEmail(userEmail: string, userName: string, eventTitle: string, ticketName: string, failureReason: string, paymentIntentId: string) {
+  async sendSubscriptionNotificationEmail(
+    userEmail: string,
+    userName: string,
+    organizationName: string,
+    eventTitle: string,
+    eventId: string,
+  ) {
+    if (!this.transporter) {
+      this.logger.warn('Email transporter not configured — skipping subscription notification email.')
+      return null
+    }
+    try {
+      const safeUserName = this.escHtml(userName)
+      const safeOrgName = this.escHtml(organizationName)
+      const safeEventTitle = this.escHtml(eventTitle)
+      const eventUrl = `${this.apiConfig.clientUrl}/events/${eventId}`
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #0a0a0a; color: #f5f5f5; line-height: 1.6; }
+    .wrapper { background: #0a0a0a; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 12px; border: 1px solid #2d2d44; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #7c3aed, #6d28d9); padding: 36px 30px; text-align: center; }
+    .header h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .header-sub { color: rgba(255,255,255,0.85); font-size: 14px; }
+    .content { padding: 36px 30px; }
+    .greeting { font-size: 16px; color: #e5e5e5; margin-bottom: 20px; }
+    .greeting strong { color: #a78bfa; }
+    .event-card { background: #242835; border: 1px solid #3d3d52; border-left: 4px solid #7c3aed; border-radius: 8px; padding: 20px; margin: 24px 0; }
+    .org-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #9ca3af; margin-bottom: 6px; }
+    .event-title { font-size: 20px; font-weight: 700; color: #f5f5f5; margin-bottom: 4px; }
+    .org-name { font-size: 13px; color: #a78bfa; }
+    .cta { display: inline-block; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; }
+    .footer { background: #0f0f1a; padding: 20px 30px; text-align: center; border-top: 1px solid #2d2d44; }
+    .footer-brand { font-weight: 700; color: #7c3aed; margin-bottom: 6px; }
+    .footer-note { font-size: 11px; color: #6b7280; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper"><div class="container">
+    <div class="header">
+      <h1>New Event Published</h1>
+      <p class="header-sub">An organization you follow just posted something new</p>
+    </div>
+    <div class="content">
+      <p class="greeting">Hey <strong>${safeUserName}</strong>,</p>
+      <p style="color:#d1d5db;font-size:14px;margin-bottom:8px;">
+        <strong style="color:#a78bfa">${safeOrgName}</strong> just published a new event:
+      </p>
+      <div class="event-card">
+        <div class="org-label">New event</div>
+        <div class="event-title">${safeEventTitle}</div>
+        <div class="org-name">by ${safeOrgName}</div>
+      </div>
+      <p style="text-align:center;margin-top:28px;"><a href="${eventUrl}" class="cta">View Event →</a></p>
+    </div>
+    <div class="footer">
+      <div class="footer-brand">UEVENT</div>
+      <p style="font-size:12px;color:#9ca3af;">You receive this because you follow ${safeOrgName}.</p>
+      <p class="footer-note">This is an automated notification. Please do not reply.</p>
+    </div>
+  </div></div>
+</body>
+</html>`
+
+      const result = await this.transporter.sendMail({
+        from: this.apiConfig.smtpConfig.fromEmail,
+        to: userEmail,
+        subject: `New event from ${safeOrgName}: ${safeEventTitle}`,
+        html,
+        text: `Hey ${safeUserName},\n\n${safeOrgName} just published a new event: "${safeEventTitle}".\n\nView it here: ${eventUrl}\n\nUEVENT Team`,
+      })
+      this.logger.log(`Subscription notification email sent to ${userEmail} (${result.messageId})`)
+      return result
+    } catch (error) {
+      this.logger.error(`Failed to send subscription notification email to ${userEmail}: ${error.message}`)
+      return null
+    }
+  }
+
+  async sendNewAttendeeEmail(
+    orgEmail: string,
+    orgName: string,
+    buyerName: string,
+    eventTitle: string,
+    ticketName: string,
+    quantity: number,
+    paymentIntentId: string,
+  ) {
+    if (!this.transporter) {
+      this.logger.warn('Email transporter not configured — skipping new attendee email.')
+      return null
+    }
+    try {
+      const safeOrgName = this.escHtml(orgName)
+      const safeEventTitle = this.escHtml(eventTitle)
+      const safeTicketName = this.escHtml(ticketName)
+      const safeBuyerName = this.escHtml(buyerName)
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #0a0a0a; color: #f5f5f5; line-height: 1.6; }
+    .wrapper { background: #0a0a0a; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 12px; border: 1px solid #2d2d44; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #059669, #047857); padding: 36px 30px; text-align: center; }
+    .header h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .header-sub { color: rgba(255,255,255,0.85); font-size: 14px; }
+    .content { padding: 36px 30px; }
+    .greeting { font-size: 16px; color: #e5e5e5; margin-bottom: 20px; }
+    .greeting strong { color: #34d399; }
+    .purchase-card { background: #1c2a22; border: 1px solid #2d4438; border-left: 4px solid #059669; border-radius: 8px; padding: 20px; margin: 24px 0; }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #9ca3af; margin-bottom: 6px; }
+    .value { font-size: 18px; font-weight: 700; color: #f5f5f5; margin-bottom: 4px; }
+    .sub-value { font-size: 13px; color: #6ee7b7; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #2d4438; font-size: 14px; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: #9ca3af; }
+    .detail-value { color: #e5e5e5; font-weight: 600; }
+    .footer { background: #0f0f1a; padding: 20px 30px; text-align: center; border-top: 1px solid #2d2d44; }
+    .footer-brand { font-weight: 700; color: #059669; margin-bottom: 6px; }
+    .footer-note { font-size: 11px; color: #6b7280; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper"><div class="container">
+    <div class="header">
+      <h1>🎟 New Ticket Purchase</h1>
+      <p class="header-sub">Someone just bought tickets for your event</p>
+    </div>
+    <div class="content">
+      <p class="greeting">Hello <strong>${safeOrgName}</strong>,</p>
+      <p style="color:#d1d5db;font-size:14px;margin-bottom:8px;">
+        A new attendee has purchased tickets for your event.
+      </p>
+      <div class="purchase-card">
+        <div class="label">Event</div>
+        <div class="value">${safeEventTitle}</div>
+        <div style="height:16px;"></div>
+        <div class="detail-row">
+          <span class="detail-label">Ticket</span>
+          <span class="detail-value">${safeTicketName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Quantity</span>
+          <span class="detail-value">${quantity}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Buyer</span>
+          <span class="detail-value">${safeBuyerName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Order ID</span>
+          <span class="detail-value" style="font-size:11px;word-break:break-all;">${paymentIntentId}</span>
+        </div>
+      </div>
+      <p style="color:#9ca3af;font-size:13px;text-align:center;margin-top:16px;">
+        You can view all attendees in your organization dashboard.
+      </p>
+    </div>
+    <div class="footer">
+      <div class="footer-brand">UEVENT</div>
+      <p style="font-size:12px;color:#9ca3af;">This notification was sent because your organization has email notifications enabled.</p>
+      <p class="footer-note">This is an automated notification. Please do not reply.</p>
+    </div>
+  </div></div>
+</body>
+</html>`
+
+      const result = await this.transporter.sendMail({
+        from: this.apiConfig.smtpConfig.fromEmail,
+        to: orgEmail,
+        subject: `New ticket purchase: ${quantity}× ${safeTicketName} — ${safeEventTitle}`,
+        html,
+        text: `Hello ${safeOrgName},\n\nA new attendee (${safeBuyerName}) just purchased ${quantity}× ${safeTicketName} for "${safeEventTitle}".\n\nOrder ID: ${paymentIntentId}\n\nUEVENT Team`,
+      })
+      this.logger.log(`New attendee email sent to org ${orgEmail} (${result.messageId})`)
+      return result
+    } catch (error) {
+      this.logger.error(`Failed to send new attendee email to ${orgEmail}: ${error.message}`)
+      return null
+    }
+  }
+
+  async sendPaymentFailedEmail(
+    userEmail: string,
+    userName: string,
+    eventTitle: string,
+    ticketName: string,
+    failureReason: string,
+    paymentIntentId: string,
+  ) {
     if (!this.transporter) return null
     try {
-      const htmlTemplate = this.generatePaymentFailedTemplate({ userEmail, userName, eventTitle, ticketName, failureReason, paymentIntentId })
+      const safeUserName = this.escHtml(userName)
+      const safeEventTitle = this.escHtml(eventTitle)
+      const safeTicketName = this.escHtml(ticketName)
+      const safeReason = this.escHtml(failureReason)
+      const htmlTemplate = this.generatePaymentFailedTemplate({
+        userEmail,
+        userName: safeUserName,
+        eventTitle: safeEventTitle,
+        ticketName: safeTicketName,
+        failureReason: safeReason,
+        paymentIntentId,
+      })
 
       const mailOptions = {
         from: this.apiConfig.smtpConfig.fromEmail,
         to: userEmail,
-        subject: `Payment Failed - ${eventTitle} Ticket`,
+        subject: `Payment Failed - ${safeEventTitle} Ticket`,
         html: htmlTemplate,
-        text: this.generatePaymentFailedPlainText({ userEmail, userName, eventTitle, ticketName, failureReason, paymentIntentId }),
+        text: this.generatePaymentFailedPlainText({
+          userEmail,
+          userName: safeUserName,
+          eventTitle: safeEventTitle,
+          ticketName: safeTicketName,
+          failureReason: safeReason,
+          paymentIntentId,
+        }),
       }
 
       this.logger.log(`Sending payment failed email to ${userEmail}`)
@@ -613,23 +870,47 @@ Event Management Platform
 
       this.logger.log(`Payment failed email sent to ${userEmail}`)
       return result
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Failed to send payment failed email: ${error.message}`)
       return null
     }
   }
 
-  async sendRefundEmail(userEmail: string, userName: string, eventTitle: string, ticketName: string, amount: number, paymentIntentId: string) {
+  async sendRefundEmail(
+    userEmail: string,
+    userName: string,
+    eventTitle: string,
+    ticketName: string,
+    amount: number,
+    paymentIntentId: string,
+  ) {
     if (!this.transporter) return null
     try {
-      const htmlTemplate = this.generateRefundTemplate({ userEmail, userName, eventTitle, ticketName, amount, paymentIntentId })
+      const safeUserName = this.escHtml(userName)
+      const safeEventTitle = this.escHtml(eventTitle)
+      const safeTicketName = this.escHtml(ticketName)
+      const htmlTemplate = this.generateRefundTemplate({
+        userEmail,
+        userName: safeUserName,
+        eventTitle: safeEventTitle,
+        ticketName: safeTicketName,
+        amount,
+        paymentIntentId,
+      })
 
       const mailOptions = {
         from: this.apiConfig.smtpConfig.fromEmail,
         to: userEmail,
-        subject: `Refund Processed - ${eventTitle}`,
+        subject: `Refund Processed - ${safeEventTitle}`,
         html: htmlTemplate,
-        text: this.generateRefundPlainText({ userEmail, userName, eventTitle, ticketName, amount, paymentIntentId }),
+        text: this.generateRefundPlainText({
+          userEmail,
+          userName: safeUserName,
+          eventTitle: safeEventTitle,
+          ticketName: safeTicketName,
+          amount,
+          paymentIntentId,
+        }),
       }
 
       this.logger.log(`Sending refund email to ${userEmail}`)
@@ -637,13 +918,20 @@ Event Management Platform
 
       this.logger.log(`Refund email sent to ${userEmail}`)
       return result
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Failed to send refund email: ${error.message}`)
       return null
     }
   }
 
-  private generatePaymentFailedTemplate(data: { userEmail: string; userName: string; eventTitle: string; ticketName: string; failureReason: string; paymentIntentId: string }): string {
+  private generatePaymentFailedTemplate(data: {
+    userEmail: string
+    userName: string
+    eventTitle: string
+    ticketName: string
+    failureReason: string
+    paymentIntentId: string
+  }): string {
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -958,7 +1246,14 @@ Event Management Platform
     `
   }
 
-  private generatePaymentFailedPlainText(data: { userEmail: string; userName: string; eventTitle: string; ticketName: string; failureReason: string; paymentIntentId: string }): string {
+  private generatePaymentFailedPlainText(data: {
+    userEmail: string
+    userName: string
+    eventTitle: string
+    ticketName: string
+    failureReason: string
+    paymentIntentId: string
+  }): string {
     return `
 Payment Failed
 
@@ -998,7 +1293,14 @@ Event Management Platform
     `
   }
 
-  private generateRefundTemplate(data: { userEmail: string; userName: string; eventTitle: string; ticketName: string; amount: number; paymentIntentId: string }): string {
+  private generateRefundTemplate(data: {
+    userEmail: string
+    userName: string
+    eventTitle: string
+    ticketName: string
+    amount: number
+    paymentIntentId: string
+  }): string {
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -1307,7 +1609,14 @@ Event Management Platform
     `
   }
 
-  private generateRefundPlainText(data: { userEmail: string; userName: string; eventTitle: string; ticketName: string; amount: number; paymentIntentId: string }): string {
+  private generateRefundPlainText(data: {
+    userEmail: string
+    userName: string
+    eventTitle: string
+    ticketName: string
+    amount: number
+    paymentIntentId: string
+  }): string {
     return `
 Refund Processed
 
@@ -1347,6 +1656,9 @@ Event Management Platform
   ) {
     if (!this.transporter) return null
     try {
+      const safeUserName = this.escHtml(userName)
+      const safeIp = this.escHtml(ipAddress)
+      const safeUserAgent = this.escHtml(userAgent)
       const formattedTime = loginTime.toLocaleString('en-US', {
         dateStyle: 'medium',
         timeStyle: 'short',
@@ -1362,12 +1674,12 @@ Event Management Platform
   </div>
   <div style="padding: 30px 0;">
     <h2 style="color: #1a1a1a;">New Login Detected</h2>
-    <p>Hello ${userName},</p>
+    <p>Hello ${safeUserName},</p>
     <p>A new login to your account was detected:</p>
     <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin: 20px 0;">
       <p style="margin: 4px 0;"><strong>Time:</strong> ${formattedTime}</p>
-      <p style="margin: 4px 0;"><strong>IP Address:</strong> ${ipAddress}</p>
-      <p style="margin: 4px 0;"><strong>Device:</strong> ${userAgent}</p>
+      <p style="margin: 4px 0;"><strong>IP Address:</strong> ${safeIp}</p>
+      <p style="margin: 4px 0;"><strong>Device:</strong> ${safeUserAgent}</p>
     </div>
     <p>If this was you, no action is needed. If you don't recognize this login, please change your password immediately.</p>
   </div>
@@ -1382,14 +1694,14 @@ Event Management Platform
         to: userEmail,
         subject: 'New Login to Your UEVENT Account',
         html: htmlTemplate,
-        text: `Hello ${userName},\n\nA new login to your account was detected:\n\nTime: ${formattedTime}\nIP Address: ${ipAddress}\nDevice: ${userAgent}\n\nIf this was you, no action is needed. If you don't recognize this login, please change your password immediately.\n\nUEVENT Team`,
+        text: `Hello ${safeUserName},\n\nA new login to your account was detected:\n\nTime: ${formattedTime}\nIP Address: ${safeIp}\nDevice: ${safeUserAgent}\n\nIf this was you, no action is needed. If you don't recognize this login, please change your password immediately.\n\nUEVENT Team`,
       }
 
       this.logger.log(`Sending login notification email to ${userEmail}`)
       const result = await this.transporter.sendMail(mailOptions)
       this.logger.log(`Login notification email sent to ${userEmail}`)
       return result
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Failed to send login notification email: ${error.message}`)
     }
   }
@@ -1400,6 +1712,7 @@ Event Management Platform
       return null
     }
     try {
+      const safeUserName = this.escHtml(userName)
       const htmlTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -1409,7 +1722,7 @@ Event Management Platform
       <h1 style="color: white; margin: 0; font-size: 24px;">Password Reset</h1>
     </div>
     <div style="padding: 32px;">
-      <p style="color: #374151; margin-bottom: 16px;">Hello ${userName},</p>
+      <p style="color: #374151; margin-bottom: 16px;">Hello ${safeUserName},</p>
       <p style="color: #374151; margin-bottom: 24px;">Use the code below to reset your password. This code expires in 15 minutes.</p>
       <div style="background: #f3f0ff; border: 2px dashed #7c3aed; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
         <p style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #7c3aed; margin: 0;">${code}</p>
@@ -1428,14 +1741,14 @@ Event Management Platform
         to: userEmail,
         subject: 'Password Reset Code — UEVENT',
         html: htmlTemplate,
-        text: `Hello ${userName},\n\nYour password reset code is: ${code}\n\nThis code expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\nUEVENT Team`,
+        text: `Hello ${safeUserName},\n\nYour password reset code is: ${code}\n\nThis code expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\nUEVENT Team`,
       }
 
       this.logger.log(`Sending password reset email to ${userEmail}`)
       const result = await this.transporter.sendMail(mailOptions)
       this.logger.log(`Password reset email sent to ${userEmail}`)
       return result
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Failed to send password reset email: ${error.message}`)
       return null
     }

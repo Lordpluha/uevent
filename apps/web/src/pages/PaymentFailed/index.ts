@@ -1,1 +1,1 @@
-export { PaymentFailedPage } from './PaymentFailedPage';
+export { PaymentFailedPage } from './PaymentFailedPage'

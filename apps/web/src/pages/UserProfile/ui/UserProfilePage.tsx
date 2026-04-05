@@ -1,25 +1,37 @@
-import { Link, useParams } from 'react-router';
-import { CalendarDays, ChevronLeft, Globe, MapPin, Star, UserRoundX } from 'lucide-react';
-import { EventCard, useEvents } from '@entities/Event';
-import { useUser } from '@entities/User';
-import { Avatar, AvatarFallback, AvatarImage, Badge, Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, JsonLd, Separator } from '@shared/components';
-import { ShareButton } from '@shared/components/ShareButton/ShareButton';
-import { SITE_URL } from '@shared/config/app';
-import { useAppContext } from '@shared/lib';
+import { EventCard, useEvents } from '@entities/Event'
+import { useUser } from '@entities/User'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  JsonLd,
+  Separator,
+} from '@shared/components'
+import { ShareButton } from '@shared/components/ShareButton/ShareButton'
+import { SITE_URL } from '@shared/config/app'
+import { useAppContext } from '@shared/lib'
+import { CalendarDays, ChevronLeft, Globe, MapPin, Star, UserRoundX } from 'lucide-react'
+import { Link, useParams } from 'react-router'
 
 export function UserProfilePage() {
-  const { t } = useAppContext();
-  const { id } = useParams();
-  const { data: user, isLoading, isError } = useUser(id ?? '');
-  const { data: userEventsResult } = useEvents({ page: 1, limit: 3 });
-  const userEvents = userEventsResult?.data ?? [];
+  const { t } = useAppContext()
+  const { id } = useParams()
+  const { data: user, isLoading, isError } = useUser(id ?? '')
+  const { data: userEventsResult } = useEvents({ page: 1, limit: 3 })
+  const userEvents = userEventsResult?.data ?? []
 
   if (isLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <p className="text-sm text-muted-foreground">{t.userProfile.loading}</p>
       </main>
-    );
+    )
   }
 
   if (!user || isError) {
@@ -39,7 +51,7 @@ export function UserProfilePage() {
           </EmptyContent>
         </Empty>
       </main>
-    );
+    )
   }
 
   return (
@@ -74,7 +86,11 @@ export function UserProfilePage() {
         <div className="flex-1">
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{user.name}</h1>
           <p className="text-sm text-muted-foreground">@{user.username}</p>
-          <ShareButton title={t.userProfile.onUevent.replace('{{name}}', user.name)} variant="default" className="mt-2" />
+          <ShareButton
+            title={t.userProfile.onUevent.replace('{{name}}', user.name)}
+            variant="default"
+            className="mt-2"
+          />
           {user.bio && <p className="mt-2 max-w-md text-sm text-muted-foreground">{user.bio}</p>}
           <div className="mt-3 flex flex-wrap justify-center gap-3 text-xs text-muted-foreground sm:justify-start">
             {user.location && (
@@ -145,5 +161,5 @@ export function UserProfilePage() {
         </div>
       </section>
     </main>
-  );
+  )
 }

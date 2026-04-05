@@ -1,6 +1,5 @@
-import type { ComponentProps } from 'react';
-
-import { cn } from '@shared/lib/utils';
+import { cn } from '@shared/lib/utils'
+import type { ComponentProps } from 'react'
 
 function Label({ className, ...props }: ComponentProps<'label'>) {
   return (
@@ -13,7 +12,7 @@ function Label({ className, ...props }: ComponentProps<'label'>) {
       )}
       {...props}
     />
-  );
+  )
 }
 
-export { Label };
+export { Label }

@@ -1,1 +1,1 @@
-export { PromoCodesPage } from './ui/PromoCodesPage';
+export { PromoCodesPage } from './ui/PromoCodesPage'

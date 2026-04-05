@@ -1,20 +1,20 @@
-import { Link, Navigate, useNavigate } from 'react-router';
-import { ChevronLeft } from 'lucide-react';
-import { toast } from 'sonner';
-import { EventCreate } from '@features/EventCreate';
-import { useAppContext } from '@shared/lib';
-import { useAuth } from '@shared/lib/auth-context';
-import { useMyOrg } from '@entities/Organization';
+import { useMyOrg } from '@entities/Organization'
+import { EventCreate } from '@features/EventCreate'
+import { useAppContext } from '@shared/lib'
+import { useAuth } from '@shared/lib/auth-context'
+import { ChevronLeft } from 'lucide-react'
+import { Link, Navigate, useNavigate } from 'react-router'
+import { toast } from 'sonner'
 
 export function EventCreatePage() {
-  const { t } = useAppContext();
-  const { isAuthenticated, accountType, isReady } = useAuth();
-  const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
-  const navigate = useNavigate();
+  const { t } = useAppContext()
+  const { isAuthenticated, accountType, isReady } = useAuth()
+  const { data: myOrg, isLoading: myOrgLoading } = useMyOrg()
+  const navigate = useNavigate()
 
-  if (!isReady) return null;
+  if (!isReady) return null
   if (!isAuthenticated || accountType !== 'organization') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/" replace />
   }
 
   if (myOrgLoading) {
@@ -22,10 +22,10 @@ export function EventCreatePage() {
       <main className="flex min-h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </main>
-    );
+    )
   }
 
-  const defaultOrganizationId = myOrg?.id;
+  const defaultOrganizationId = myOrg?.id
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
@@ -38,18 +38,16 @@ export function EventCreatePage() {
       </Link>
 
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">{t.eventCreate.title}</h1>
-      <p className="mb-6 text-sm text-muted-foreground">
-        {t.eventCreate.subtitle}
-      </p>
+      <p className="mb-6 text-sm text-muted-foreground">{t.eventCreate.subtitle}</p>
 
       <EventCreate
         defaultOrganizationId={defaultOrganizationId}
         lockOrganization
         onSuccess={(eventId) => {
-          toast.success(t.eventCreate.created);
-          navigate(`/events/${eventId}`);
+          toast.success(t.eventCreate.created)
+          navigate(`/events/${eventId}`)
         }}
       />
     </main>
-  );
+  )
 }

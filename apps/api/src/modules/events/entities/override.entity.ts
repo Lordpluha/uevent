@@ -1,11 +1,10 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
-import { Recurrence } from './recurrence.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiProperty } from '@nestjs/swagger'
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
+import { Recurrence } from './recurrence.entity'
 
 @Entity('overrides')
 export class Override extends UuidEntity {
-
   @Column({ type: 'timestamptz', nullable: true })
   @ApiProperty({ format: 'date-time', description: 'The original start date this override replaces' })
   original_start: Date | null

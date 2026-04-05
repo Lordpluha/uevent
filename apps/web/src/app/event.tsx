@@ -1,34 +1,30 @@
-import type { Route } from './+types/event';
-import { eventsApi } from '@entities/Event';
-import { mapApiEvent } from '@entities/Event';
-import { EventPage } from '@pages/Event';
-import { SITE_NAME, SITE_URL } from '@shared/config/app';
+import { eventsApi, mapApiEvent } from '@entities/Event'
+import { EventPage } from '@pages/Event'
+import { SITE_NAME, SITE_URL } from '@shared/config/app'
+import type { Route } from './+types/event'
 
 export async function loader({ params }: Route.LoaderArgs) {
   try {
-    const raw = await eventsApi.getOne(params.id ?? '');
-    const event = mapApiEvent(raw);
-    return { event };
+    const raw = await eventsApi.getOne(params.id ?? '')
+    const event = mapApiEvent(raw)
+    return { event }
   } catch {
-    return { event: null };
+    return { event: null }
   }
 }
 
 export function meta({ data }: Route.MetaArgs) {
-  const event = data?.event;
+  const event = data?.event
   if (!event) {
-    return [
-      { title: `Event — ${SITE_NAME}` },
-      { name: 'description', content: '' },
-    ];
+    return [{ title: `Event — ${SITE_NAME}` }, { name: 'description', content: '' }]
   }
 
-  const title = `${event.title} — ${SITE_NAME}`;
+  const title = `${event.title} — ${SITE_NAME}`
   const description = event.description
     ? event.description.replace(/<[^>]+>/g, '').slice(0, 160)
-    : `${event.date} · ${event.format === 'online' ? 'Online' : event.location ?? 'Offline'}`;
-  const image = event.imageUrl;
-  const url = `${SITE_URL}/events/${event.id}`;
+    : `${event.date} · ${event.format === 'online' ? 'Online' : (event.location ?? 'Offline')}`
+  const image = event.imageUrl
+  const url = `${SITE_URL}/events/${event.id}`
 
   return [
     { title },
@@ -43,7 +39,7 @@ export function meta({ data }: Route.MetaArgs) {
     { name: 'twitter:description', content: description },
     ...(image ? [{ name: 'twitter:image', content: image }] : []),
     { tagName: 'link', rel: 'canonical', href: url },
-  ];
+  ]
 }
 
-export default EventPage;
+export default EventPage

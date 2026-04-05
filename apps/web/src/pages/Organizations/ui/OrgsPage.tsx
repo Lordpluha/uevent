@@ -1,7 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
-import { BadgeCheck, Building2, Search } from 'lucide-react';
-import { OrgCard, useOrgs } from '@entities/Organization';
+import { OrgCard, useOrgs } from '@entities/Organization'
 import {
   Empty,
   EmptyDescription,
@@ -17,26 +14,29 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@shared/components';
-import { SITE_URL } from '@shared/config/app';
-import { useAppContext } from '@shared/lib';
+} from '@shared/components'
+import { SITE_URL } from '@shared/config/app'
+import { useAppContext } from '@shared/lib'
+import { BadgeCheck, Building2, Search } from 'lucide-react'
+import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs'
+import { useEffect, useMemo, useRef } from 'react'
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 12
 
 function getPaginationItems(current: number, total: number): Array<number | 'ellipsis'> {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  if (current <= 4) return [1, 2, 3, 4, 5, 'ellipsis', total];
-  if (current >= total - 3) return [1, 'ellipsis', total - 4, total - 3, total - 2, total - 1, total];
-  return [1, 'ellipsis', current - 1, current, current + 1, 'ellipsis', total];
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  if (current <= 4) return [1, 2, 3, 4, 5, 'ellipsis', total]
+  if (current >= total - 3) return [1, 'ellipsis', total - 4, total - 3, total - 2, total - 1, total]
+  return [1, 'ellipsis', current - 1, current, current + 1, 'ellipsis', total]
 }
 
 export function OrgsPage() {
-  const { t } = useAppContext();
-  const [query, setQuery] = useQueryState('q', parseAsString.withDefault(''));
-  const [category, setCategory] = useQueryState('category', parseAsString.withDefault('all'));
-  const [verifiedOnly, setVerifiedOnly] = useQueryState('verified', parseAsBoolean.withDefault(false));
-  const [pageParam, setPageParam] = useQueryState('page', parseAsString.withDefault('1'));
-  const page = Math.max(1, Number.parseInt(pageParam, 10) || 1);
+  const { t } = useAppContext()
+  const [query, setQuery] = useQueryState('q', parseAsString.withDefault(''))
+  const [category, setCategory] = useQueryState('category', parseAsString.withDefault('all'))
+  const [verifiedOnly, setVerifiedOnly] = useQueryState('verified', parseAsBoolean.withDefault(false))
+  const [pageParam, setPageParam] = useQueryState('page', parseAsString.withDefault('1'))
+  const page = Math.max(1, Number.parseInt(pageParam, 10) || 1)
 
   const { data: orgsResult } = useOrgs({
     ...(query ? { search: query } : {}),
@@ -44,26 +44,26 @@ export function OrgsPage() {
     ...(verifiedOnly ? { verified: true } : {}),
     page,
     limit: PAGE_SIZE,
-  });
-  const allOrgs = orgsResult?.data ?? [];
-  const total = orgsResult?.total ?? allOrgs.length;
-  const totalPages = Math.max(1, orgsResult?.totalPages ?? 1);
-  const hasMeta = typeof orgsResult?.totalPages === 'number';
+  })
+  const allOrgs = orgsResult?.data ?? []
+  const total = orgsResult?.total ?? allOrgs.length
+  const totalPages = Math.max(1, orgsResult?.totalPages ?? 1)
+  const hasMeta = typeof orgsResult?.totalPages === 'number'
 
-  const filtersSignature = `${query}::${category}::${verifiedOnly ? '1' : '0'}`;
-  const previousFiltersSignature = useRef(filtersSignature);
+  const filtersSignature = `${query}::${category}::${verifiedOnly ? '1' : '0'}`
+  const previousFiltersSignature = useRef(filtersSignature)
 
   useEffect(() => {
     if (hasMeta && page > totalPages) {
-      setPageParam(String(totalPages));
+      setPageParam(String(totalPages))
     }
-  }, [hasMeta, page, setPageParam, totalPages]);
+  }, [hasMeta, page, setPageParam, totalPages])
 
   useEffect(() => {
-    if (previousFiltersSignature.current === filtersSignature) return;
-    previousFiltersSignature.current = filtersSignature;
-    if (page !== 1) setPageParam('1');
-  }, [filtersSignature, page, setPageParam]);
+    if (previousFiltersSignature.current === filtersSignature) return
+    previousFiltersSignature.current = filtersSignature
+    if (page !== 1) setPageParam('1')
+  }, [filtersSignature, page, setPageParam])
 
   const allCategories = useMemo(
     () => [
@@ -73,9 +73,9 @@ export function OrgsPage() {
         .map((item) => ({ value: item, label: item })),
     ],
     [allOrgs, t.filters.all],
-  );
+  )
 
-  const filtered = allOrgs;
+  const filtered = allOrgs
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -97,9 +97,7 @@ export function OrgsPage() {
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">{t.organizations.title}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {t.organizations.subtitle}
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">{t.organizations.subtitle}</p>
       </div>
 
       {/* Filters */}
@@ -180,8 +178,8 @@ export function OrgsPage() {
                   <PaginationPrevious
                     href="#"
                     onClick={(e) => {
-                      e.preventDefault();
-                      if (page > 1) setPageParam(String(page - 1));
+                      e.preventDefault()
+                      if (page > 1) setPageParam(String(page - 1))
                     }}
                     aria-disabled={page <= 1}
                     className={page <= 1 ? 'pointer-events-none opacity-50' : undefined}
@@ -197,8 +195,8 @@ export function OrgsPage() {
                         href="#"
                         isActive={item === page}
                         onClick={(e) => {
-                          e.preventDefault();
-                          setPageParam(String(item));
+                          e.preventDefault()
+                          setPageParam(String(item))
                         }}
                       >
                         {item}
@@ -211,8 +209,8 @@ export function OrgsPage() {
                   <PaginationNext
                     href="#"
                     onClick={(e) => {
-                      e.preventDefault();
-                      if (page < totalPages) setPageParam(String(page + 1));
+                      e.preventDefault()
+                      if (page < totalPages) setPageParam(String(page + 1))
                     }}
                     aria-disabled={page >= totalPages}
                     className={page >= totalPages ? 'pointer-events-none opacity-50' : undefined}
@@ -224,5 +222,5 @@ export function OrgsPage() {
         </>
       )}
     </main>
-  );
+  )
 }

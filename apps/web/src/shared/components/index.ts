@@ -1,5 +1,5 @@
-export * from './ui';
-export { EventLocationMap } from './EventLocationMap';
-export { JsonLd } from './JsonLd';
-export { PromoCodeSection } from './PromoCodeSection';
-export { ShareButton } from './ShareButton/ShareButton';
+export { EventLocationMap } from './EventLocationMap'
+export { JsonLd } from './JsonLd'
+export { PromoCodeSection } from './PromoCodeSection'
+export { ShareButton } from './ShareButton/ShareButton'
+export * from './ui'

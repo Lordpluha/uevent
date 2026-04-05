@@ -1,26 +1,15 @@
-import { Link } from 'react-router';
-import {
-  BadgeCheck,
-  CalendarDays,
-  ChevronLeft,
-  Globe,
-  MapPin,
-} from 'lucide-react';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  Badge,
-  Button,
-} from '@shared/components';
-import { ShareButton } from '@shared/components/ShareButton/ShareButton';
-import { useAppContext } from '@shared/lib';
-import { AuthModal } from '@features/AuthModal';
-import { useRequiredOrgProfileData } from './useOrgProfileData';
+import { AuthModal } from '@features/AuthModal'
+import { Avatar, AvatarFallback, AvatarImage, Badge, Button } from '@shared/components'
+import { ShareButton } from '@shared/components/ShareButton/ShareButton'
+import { useAppContext } from '@shared/lib'
+import { BadgeCheck, CalendarDays, ChevronLeft, Globe, MapPin } from 'lucide-react'
+import { Link } from 'react-router'
+import { useRequiredOrgProfileData } from './useOrgProfileData'
 
 export function OrgProfileHero({ overrideId }: { overrideId?: string } = {}) {
-  const { t } = useAppContext();
-  const { org, isOwner, isUserViewer, isFollowed, isFollowPending, toggleFollow } = useRequiredOrgProfileData(overrideId);
+  const { t } = useAppContext()
+  const { org, isOwner, isUserViewer, isFollowed, isFollowPending, toggleFollow } =
+    useRequiredOrgProfileData(overrideId)
 
   return (
     <>
@@ -46,9 +35,7 @@ export function OrgProfileHero({ overrideId }: { overrideId?: string } = {}) {
         <div className="flex items-end gap-4">
           <Avatar className="h-24 w-24 shrink-0 rounded-full shadow-lg">
             <AvatarImage src={org.avatarUrl} alt={org.title} />
-            <AvatarFallback className="rounded-full text-2xl font-bold">
-              {org.title[0]}
-            </AvatarFallback>
+            <AvatarFallback className="rounded-full text-2xl font-bold">{org.title[0]}</AvatarFallback>
           </Avatar>
           <div className="pb-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -112,11 +99,9 @@ export function OrgProfileHero({ overrideId }: { overrideId?: string } = {}) {
 
         {/* ── Description ──────────────────── */}
         {org.description && (
-          <p className="mt-5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            {org.description}
-          </p>
+          <p className="mt-5 max-w-2xl text-sm leading-relaxed text-muted-foreground">{org.description}</p>
         )}
       </div>
     </>
-  );
+  )
 }

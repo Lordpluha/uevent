@@ -1,68 +1,68 @@
-import { useMemo, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { api } from '@shared/api';
-import { Button, Field, FieldDescription, FieldLabel, Input, Textarea } from '@shared/components';
+import { api } from '@shared/api'
+import { Button, Field, FieldDescription, FieldLabel, Input, Textarea } from '@shared/components'
+import { useMutation } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
-type VerificationStatus = 'not_submitted' | 'submitted' | 'approved' | 'rejected';
+type VerificationStatus = 'not_submitted' | 'submitted' | 'approved' | 'rejected'
 
 type OrganizationVerification = {
-  id: string;
-  status: VerificationStatus;
-  additionalInformation: string | null;
-  documentUrls: string[] | null;
-  submittedAt: string | null;
-  reviewedAt: string | null;
-  reviewerComment: string | null;
-};
+  id: string
+  status: VerificationStatus
+  additionalInformation: string | null
+  documentUrls: string[] | null
+  submittedAt: string | null
+  reviewedAt: string | null
+  reviewerComment: string | null
+}
 
 const statusText: Record<VerificationStatus, string> = {
   not_submitted: 'Not submitted',
   submitted: 'Submitted',
   approved: 'Approved',
   rejected: 'Rejected',
-};
+}
 
 export function OrgVerificationSection({
   verification,
   onRefresh,
 }: {
-  verification: OrganizationVerification | undefined;
-  onRefresh: () => Promise<void>;
+  verification: OrganizationVerification | undefined
+  onRefresh: () => Promise<void>
 }) {
-  const [additionalInformation, setAdditionalInformation] = useState(verification?.additionalInformation ?? '');
-  const [files, setFiles] = useState<File[]>([]);
+  const [additionalInformation, setAdditionalInformation] = useState(verification?.additionalInformation ?? '')
+  const [files, setFiles] = useState<File[]>([])
 
-  const accepted = useMemo(() => '.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx', []);
+  const accepted = useMemo(() => '.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx', [])
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      if (!files.length) throw new Error('Please upload at least one document.');
+      if (!files.length) throw new Error('Please upload at least one document.')
 
-      const formData = new FormData();
+      const formData = new FormData()
       for (const file of files) {
-        formData.append('documents', file);
+        formData.append('documents', file)
       }
       if (additionalInformation.trim()) {
-        formData.append('additionalInformation', additionalInformation.trim());
+        formData.append('additionalInformation', additionalInformation.trim())
       }
 
       return api.post('/payments/organization/verification', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      });
+      })
     },
     onSuccess: async () => {
-      toast.success('Verification submitted successfully.');
-      setFiles([]);
-      await onRefresh();
+      toast.success('Verification submitted successfully.')
+      setFiles([])
+      await onRefresh()
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Failed to submit verification.';
-      toast.error(message);
+      const message = error instanceof Error ? error.message : 'Failed to submit verification.'
+      toast.error(message)
     },
-  });
+  })
 
   return (
     <section className="mt-5 rounded-xl border border-border/60 bg-card p-5">
@@ -75,7 +75,9 @@ export function OrgVerificationSection({
         <p className="text-xs uppercase tracking-wide text-muted-foreground">Current status</p>
         <p className="mt-1 font-semibold">{verification ? statusText[verification.status] : 'Not submitted'}</p>
         {verification?.submittedAt && (
-          <p className="mt-1 text-xs text-muted-foreground">Submitted: {new Date(verification.submittedAt).toLocaleString()}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Submitted: {new Date(verification.submittedAt).toLocaleString()}
+          </p>
         )}
         {verification?.reviewerComment && (
           <p className="mt-2 text-xs text-muted-foreground">Reviewer comment: {verification.reviewerComment}</p>
@@ -100,8 +102,8 @@ export function OrgVerificationSection({
       <form
         className="mt-4 grid gap-4 rounded-lg border border-border/60 bg-background/40 p-4"
         onSubmit={(e) => {
-          e.preventDefault();
-          submitMutation.mutate();
+          e.preventDefault()
+          submitMutation.mutate()
         }}
       >
         <Field>
@@ -113,9 +115,7 @@ export function OrgVerificationSection({
             accept={accepted}
             onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
           />
-          <FieldDescription>
-            Supported: images, PDF, DOC, DOCX. Up to 10 files.
-          </FieldDescription>
+          <FieldDescription>Supported: images, PDF, DOC, DOCX. Up to 10 files.</FieldDescription>
         </Field>
 
         <Field>
@@ -147,5 +147,5 @@ export function OrgVerificationSection({
         </div>
       </form>
     </section>
-  );
+  )
 }

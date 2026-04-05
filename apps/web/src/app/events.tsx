@@ -1,11 +1,11 @@
-import type { Route } from './+types/events';
-import { EventsPage } from '@pages/Events';
-import { SITE_NAME, SITE_URL } from '@shared/config/app';
+import { EventsPage } from '@pages/Events'
+import { SITE_NAME, SITE_URL } from '@shared/config/app'
+import type { Route } from './+types/events'
 
 export function meta(_: Route.MetaArgs) {
-  const title = `Events — ${SITE_NAME}`;
-  const description = 'Discover and book upcoming events near you.';
-  const url = `${SITE_URL}/events`;
+  const title = `Events — ${SITE_NAME}`
+  const description = 'Discover and book upcoming events near you.'
+  const url = `${SITE_URL}/events`
   return [
     { title },
     { name: 'description', content: description },
@@ -17,7 +17,7 @@ export function meta(_: Route.MetaArgs) {
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
     { tagName: 'link', rel: 'canonical', href: url },
-  ];
+  ]
 }
 
-export default EventsPage;
+export default EventsPage

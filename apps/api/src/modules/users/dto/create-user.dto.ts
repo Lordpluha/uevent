@@ -18,6 +18,7 @@ export const CreateUserDtoSchema = z.object({
   payment_email_enabled: z.boolean().optional(),
   subscription_notifications_enabled: z.boolean().optional(),
   login_notifications_enabled: z.boolean().optional(),
+  hidden_from_attendees: z.boolean().optional(),
   two_fa: z.boolean().optional(),
 })
 

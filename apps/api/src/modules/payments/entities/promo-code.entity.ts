@@ -1,5 +1,5 @@
-import { Entity, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, CreateDateColumn, Entity, Index, UpdateDateColumn } from 'typeorm'
 import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('promo_codes')

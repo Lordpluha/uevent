@@ -1,13 +1,13 @@
-import { Controller, Post, Get, UseGuards, Res, Req, Param, Query } from '@nestjs/common'
+import { Controller, Get, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common'
+import { ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { Request, Response } from 'express'
+import { setAuthCookies } from '../../common/auth-cookie.util'
+import { ApiAccessCookieAuth, calendarEventCreateResponseSchema } from '../../common/swagger/openapi.util'
+import { ApiConfigService } from '../../config/api-config.service'
+import { CurrentUser } from './decorators/current-user.decorator'
 import { GoogleAuthService } from './google-auth.service'
 import { JwtGuard } from './guards/jwt.guard'
-import { CurrentUser } from './decorators/current-user.decorator'
 import { JwtPayload } from './types/jwt-payload.interface'
-import { setAuthCookies } from '../../common/auth-cookie.util'
-import { ApiConfigService } from '../../config/api-config.service'
-import { ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger'
-import { ApiAccessCookieAuth, calendarEventCreateResponseSchema } from '../../common/swagger/openapi.util'
 
 @Controller('auth/google')
 @ApiTags('Auth: Google')
@@ -19,11 +19,10 @@ export class GoogleAuthController {
 
   @Get()
   @ApiOperation({ summary: 'Start Google OAuth flow' })
-  @ApiOkResponse({ description: 'Redirects to Google consent screen. May use existing HTTP-only auth cookies to link an account.' })
-  async googleRedirect(
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
+  @ApiOkResponse({
+    description: 'Redirects to Google consent screen. May use existing HTTP-only auth cookies to link an account.',
+  })
+  async googleRedirect(@Req() req: Request, @Res() res: Response) {
     const accessToken = (req.cookies as Record<string, string>)?.access_token
     const refreshToken = (req.cookies as Record<string, string>)?.refresh_token
     const state = await this.googleAuthService.getLinkState(accessToken, refreshToken)
@@ -36,11 +35,7 @@ export class GoogleAuthController {
   @ApiQuery({ name: 'code', required: true, schema: { type: 'string' } })
   @ApiQuery({ name: 'state', required: false, schema: { type: 'string' } })
   @ApiOkResponse({ description: 'Processes Google callback and redirects back to the client application.' })
-  async googleCallback(
-    @Query('code') code: string,
-    @Res() res: Response,
-    @Query('state') state?: string,
-  ) {
+  async googleCallback(@Query('code') code: string, @Res() res: Response, @Query('state') state?: string) {
     if (!code) {
       const clientUrl = this.apiConfig.clientUrl
       res.redirect(`${clientUrl}?auth_error=no_code`)
@@ -67,10 +62,7 @@ export class GoogleAuthController {
   @ApiAccessCookieAuth()
   @ApiParam({ name: 'eventId', description: 'Event id', schema: { type: 'string', format: 'uuid' } })
   @ApiOkResponse({ description: 'Calendar event creation result.', schema: calendarEventCreateResponseSchema })
-  addToCalendar(
-    @CurrentUser() user: JwtPayload,
-    @Param('eventId') eventId: string,
-  ) {
+  addToCalendar(@CurrentUser() user: JwtPayload, @Param('eventId') eventId: string) {
     return this.googleAuthService.addEventToCalendar(user.sub, eventId)
   }
 
@@ -80,10 +72,7 @@ export class GoogleAuthController {
   @ApiAccessCookieAuth()
   @ApiParam({ name: 'ticketId', description: 'Ticket id', schema: { type: 'string', format: 'uuid' } })
   @ApiOkResponse({ description: 'Calendar event creation result.', schema: calendarEventCreateResponseSchema })
-  addTicketToCalendar(
-    @CurrentUser() user: JwtPayload,
-    @Param('ticketId') ticketId: string,
-  ) {
+  addTicketToCalendar(@CurrentUser() user: JwtPayload, @Param('ticketId') ticketId: string) {
     return this.googleAuthService.addTicketToCalendar(user.sub, ticketId)
   }
 }

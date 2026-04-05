@@ -1,14 +1,10 @@
-import type { ChangeEvent, FormEvent } from 'react';
-import { useRef, useState } from 'react';
-import { Link } from 'react-router';
-import { Camera, Save } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { usersApi } from '@entities/User'
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
   Button,
+  buttonVariants,
   Field,
   FieldDescription,
   FieldGroup,
@@ -16,20 +12,24 @@ import {
   Input,
   Separator,
   Textarea,
-  buttonVariants,
-} from '@shared/components';
-import { cn } from '@shared/lib/utils';
-import { useAppContext } from '@shared/lib';
-import { usersApi } from '@entities/User';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { cn } from '@shared/lib/utils'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Camera, Save } from 'lucide-react'
+import type { ChangeEvent, FormEvent } from 'react'
+import { useRef, useState } from 'react'
+import { Link } from 'react-router'
+import { toast } from 'sonner'
 
 interface Props {
-  user: { name: string; username: string; bio?: string; location?: string; website?: string; avatarUrl?: string };
+  user: { name: string; username: string; bio?: string; location?: string; website?: string; avatarUrl?: string }
 }
 
 export function ProfileEditForm({ user }: Props) {
-  const { t } = useAppContext();
-  const queryClient = useQueryClient();
-  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useAppContext()
+  const queryClient = useQueryClient()
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState({
     name: user.name,
@@ -37,46 +37,53 @@ export function ProfileEditForm({ user }: Props) {
     bio: user.bio ?? '',
     location: user.location ?? '',
     website: user.website ?? '',
-  });
+  })
 
   const invalidate = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['me'] }),
       queryClient.invalidateQueries({ queryKey: ['users'] }),
-    ]);
-  };
+    ])
+  }
 
   const uploadAvatarMutation = useMutation({
     mutationFn: (file: File) => usersApi.uploadAvatar(file),
-    onSuccess: async () => { await invalidate(); toast.success(t.profileEdit.photoUpdated); },
+    onSuccess: async () => {
+      await invalidate()
+      toast.success(t.profileEdit.photoUpdated)
+    },
     onError: () => toast.error(t.profileEdit.photoFailed),
-  });
+  })
 
   const saveProfileMutation = useMutation({
-    mutationFn: () => usersApi.updateMe({
-      name: form.name.trim() || undefined,
-      username: form.username.trim() || undefined,
-      bio: form.bio.trim() || undefined,
-      location: form.location.trim() || undefined,
-      website: form.website.trim() || undefined,
-    }),
-    onSuccess: async () => { await invalidate(); toast.success(t.profileEdit.profileUpdated); },
+    mutationFn: () =>
+      usersApi.updateMe({
+        name: form.name.trim() || undefined,
+        username: form.username.trim() || undefined,
+        bio: form.bio.trim() || undefined,
+        location: form.location.trim() || undefined,
+        website: form.website.trim() || undefined,
+      }),
+    onSuccess: async () => {
+      await invalidate()
+      toast.success(t.profileEdit.profileUpdated)
+    },
     onError: () => toast.error(t.profileEdit.saveFailed),
-  });
+  })
 
   const set = (field: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    setForm((prev) => ({ ...prev, [field]: e.target.value }))
 
   const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) uploadAvatarMutation.mutate(file);
-    e.target.value = '';
-  };
+    const file = e.target.files?.[0]
+    if (file) uploadAvatarMutation.mutate(file)
+    e.target.value = ''
+  }
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    saveProfileMutation.mutate();
-  };
+    e.preventDefault()
+    saveProfileMutation.mutate()
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -112,36 +119,59 @@ export function ProfileEditForm({ user }: Props) {
           </Field>
           <Field>
             <FieldLabel htmlFor="username">{t.profileEdit.username}</FieldLabel>
-            <Input id="username" value={form.username} onChange={set('username')} placeholder={t.profileEdit.usernamePlaceholder} />
+            <Input
+              id="username"
+              value={form.username}
+              onChange={set('username')}
+              placeholder={t.profileEdit.usernamePlaceholder}
+            />
             <FieldDescription>{t.profileEdit.usernameHint}</FieldDescription>
           </Field>
         </div>
 
         <Field>
           <FieldLabel htmlFor="bio">{t.profileEdit.bio}</FieldLabel>
-          <Textarea id="bio" value={form.bio} onChange={set('bio')} placeholder={t.profileEdit.bioPlaceholder} className="min-h-24" />
+          <Textarea
+            id="bio"
+            value={form.bio}
+            onChange={set('bio')}
+            placeholder={t.profileEdit.bioPlaceholder}
+            className="min-h-24"
+          />
           <FieldDescription>{t.profileEdit.bioMaxChars}</FieldDescription>
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="location">{t.profileEdit.location}</FieldLabel>
-            <Input id="location" value={form.location} onChange={set('location')} placeholder={t.profileEdit.locationPlaceholder} />
+            <Input
+              id="location"
+              value={form.location}
+              onChange={set('location')}
+              placeholder={t.profileEdit.locationPlaceholder}
+            />
           </Field>
           <Field>
             <FieldLabel htmlFor="website">{t.profileEdit.website}</FieldLabel>
-            <Input id="website" value={form.website} onChange={set('website')} placeholder={t.profileEdit.websitePlaceholder} />
+            <Input
+              id="website"
+              value={form.website}
+              onChange={set('website')}
+              placeholder={t.profileEdit.websitePlaceholder}
+            />
           </Field>
         </div>
       </FieldGroup>
 
       <div className="flex justify-end gap-3">
-        <Link to="/profile" className={cn(buttonVariants({ variant: 'ghost' }))}>{t.common.cancel}</Link>
+        <Link to="/profile" className={cn(buttonVariants({ variant: 'ghost' }))}>
+          {t.common.cancel}
+        </Link>
         <Button type="submit" className="gap-1.5" disabled={saveProfileMutation.isPending}>
           <Save className="h-3.5 w-3.5" />
           {saveProfileMutation.isPending ? t.common.saving : t.common.saveChanges}
         </Button>
       </div>
     </form>
-  );
+  )
 }

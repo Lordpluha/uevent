@@ -9,9 +9,9 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger'
 import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
+import { z } from 'zod'
 import type { OpenApiSchema } from './openapi.components'
 import { schemaRef, schemaRefWith } from './openapi.components'
-import { z } from 'zod'
 
 export const genericObjectSchema: SchemaObject = {
   type: 'object',

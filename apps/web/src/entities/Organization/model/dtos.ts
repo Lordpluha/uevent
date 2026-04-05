@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export const createOrganizationSchema = z.object({
   title: z.string().min(1),
@@ -6,7 +6,7 @@ export const createOrganizationSchema = z.object({
   category: z.string().min(1),
   location: z.string().optional(),
   website: z.string().url().optional(),
-});
+})
 
 export const updateOrganizationSchema = z.object({
   title: z.string().min(1).optional(),
@@ -18,20 +18,25 @@ export const updateOrganizationSchema = z.object({
   website: z.string().url().optional(),
   avatarUrl: z.string().url().optional(),
   coverUrl: z.string().url().optional(),
-});
+})
 
 export const updateOrganizationEmailSchema = z.object({
   email: z.email(),
-});
+})
 
 export const changeOrganizationPasswordSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(8),
-});
+})
 
 export const updateOrganizationSecuritySchema = z.object({
   twoFactorEnabled: z.boolean(),
-});
+})
+
+export const updateOrganizationNotificationsSchema = z.object({
+  notificationsEnabled: z.boolean().optional(),
+  pushNotificationsEnabled: z.boolean().optional(),
+})
 
 export const organizationListParamsSchema = z.object({
   search: z.string().optional(),
@@ -39,11 +44,12 @@ export const organizationListParamsSchema = z.object({
   verified: z.boolean().optional(),
   page: z.number().int().positive().optional(),
   limit: z.number().int().positive().optional(),
-});
+})
 
-export type CreateOrganizationDto = z.infer<typeof createOrganizationSchema>;
-export type UpdateOrganizationDto = z.infer<typeof updateOrganizationSchema>;
-export type OrganizationListParams = z.infer<typeof organizationListParamsSchema>;
-export type UpdateOrganizationEmailDto = z.infer<typeof updateOrganizationEmailSchema>;
-export type ChangeOrganizationPasswordDto = z.infer<typeof changeOrganizationPasswordSchema>;
-export type UpdateOrganizationSecurityDto = z.infer<typeof updateOrganizationSecuritySchema>;
+export type CreateOrganizationDto = z.infer<typeof createOrganizationSchema>
+export type UpdateOrganizationDto = z.infer<typeof updateOrganizationSchema>
+export type OrganizationListParams = z.infer<typeof organizationListParamsSchema>
+export type UpdateOrganizationEmailDto = z.infer<typeof updateOrganizationEmailSchema>
+export type ChangeOrganizationPasswordDto = z.infer<typeof changeOrganizationPasswordSchema>
+export type UpdateOrganizationSecurityDto = z.infer<typeof updateOrganizationSecuritySchema>
+export type UpdateOrganizationNotificationsDto = z.infer<typeof updateOrganizationNotificationsSchema>

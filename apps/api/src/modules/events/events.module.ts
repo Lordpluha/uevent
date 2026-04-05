@@ -1,19 +1,35 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { EventsService } from './events.service'
-import { EventsController } from './events.controller'
-import { Event } from './entities/event.entity'
-import { EventSubscription } from './entities/event-subscription.entity'
-import { Recurrence } from './entities/recurrence.entity'
-import { Override } from './entities/override.entity'
+import { Notification } from '../notifications/entities/notification.entity'
+import { NotificationsModule } from '../notifications/notifications.module'
+import { Organization } from '../organizations/entities/organization.entity'
 import { Tag } from '../tags/entities/tag.entity'
 import { Ticket } from '../tickets/entities/ticket.entity'
-import { Organization } from '../organizations/entities/organization.entity'
-import { Notification } from '../notifications/entities/notification.entity'
 import { User } from '../users/entities/user.entity'
+import { Event } from './entities/event.entity'
+import { EventComment } from './entities/event-comment.entity'
+import { EventSubscription } from './entities/event-subscription.entity'
+import { Override } from './entities/override.entity'
+import { Recurrence } from './entities/recurrence.entity'
+import { EventsController } from './events.controller'
+import { EventsService } from './events.service'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Event, EventSubscription, Recurrence, Override, Tag, Ticket, Organization, Notification, User])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Event,
+      EventSubscription,
+      EventComment,
+      Recurrence,
+      Override,
+      Tag,
+      Ticket,
+      Organization,
+      Notification,
+      User,
+    ]),
+    NotificationsModule,
+  ],
   controllers: [EventsController],
   providers: [EventsService],
   exports: [EventsService, TypeOrmModule],

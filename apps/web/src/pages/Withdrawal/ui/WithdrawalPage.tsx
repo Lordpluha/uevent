@@ -1,107 +1,100 @@
-import { useMemo, useState } from 'react';
-import { Link, Navigate } from 'react-router';
-import { ChevronLeft, Clock, ShieldCheck, ShieldX, XCircle } from 'lucide-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { api } from '@shared/api';
-import { useAuth } from '@shared/lib/auth-context';
-import {
-  Button,
-  Field,
-  FieldDescription,
-  FieldLabel,
-  Input,
-  Textarea,
-} from '@shared/components';
-import type { OrgWalletPayload } from '@pages/OrgAccount/ui/OrgWalletSection';
-import { OrgVerificationSection } from '@pages/OrgAccount/ui/OrgVerificationSection';
+import { OrgVerificationSection } from '@pages/OrgAccount/ui/OrgVerificationSection'
+import type { OrgWalletPayload } from '@pages/OrgAccount/ui/OrgWalletSection'
+import { api } from '@shared/api'
+import { Button, Field, FieldDescription, FieldLabel, Input, Textarea } from '@shared/components'
+import { useAuth } from '@shared/lib/auth-context'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ChevronLeft, Clock, ShieldCheck, ShieldX, XCircle } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Link, Navigate } from 'react-router'
+import { toast } from 'sonner'
 
-type VerificationStatus = 'not_submitted' | 'submitted' | 'approved' | 'rejected';
+type VerificationStatus = 'not_submitted' | 'submitted' | 'approved' | 'rejected'
 type OrganizationVerification = {
-  id: string;
-  status: VerificationStatus;
-  additionalInformation: string | null;
-  documentUrls: string[] | null;
-  reviewerComment: string | null;
-  submittedAt: string | null;
-  reviewedAt: string | null;
-};
+  id: string
+  status: VerificationStatus
+  additionalInformation: string | null
+  documentUrls: string[] | null
+  reviewerComment: string | null
+  submittedAt: string | null
+  reviewedAt: string | null
+}
 
 const money = (value: number, currency: string) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
+  new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value)
 
 export function WithdrawalPage() {
-  const { isAuthenticated, accountType, isReady } = useAuth();
-  const queryClient = useQueryClient();
+  const { isAuthenticated, accountType, isReady } = useAuth()
+  const queryClient = useQueryClient()
 
   const { data: wallet, isLoading: walletLoading } = useQuery<OrgWalletPayload>({
     queryKey: ['organization-wallet'],
     queryFn: async () => (await api.get('/payments/organization/wallet')).data,
     enabled: isAuthenticated && accountType === 'organization',
-  });
+  })
 
   const { data: verification, isLoading: verificationLoading } = useQuery<OrganizationVerification>({
     queryKey: ['organization-verification'],
     queryFn: async () => (await api.get('/payments/organization/verification')).data,
     enabled: isAuthenticated && accountType === 'organization',
-  });
+  })
 
-  const [form, setForm] = useState({ amount: '', destination: '', comment: '' });
+  const [form, setForm] = useState({ amount: '', destination: '', comment: '' })
 
-  const currency = wallet?.balance.currency ?? 'USD';
-  const amountValue = useMemo(() => Number.parseFloat(form.amount || '0'), [form.amount]);
+  const currency = wallet?.balance.currency ?? 'USD'
+  const amountValue = useMemo(() => Number.parseFloat(form.amount || '0'), [form.amount])
 
-  const isVerified = verification?.status === 'approved';
-  const isSubmitted = verification?.status === 'submitted';
-  const isRejected = verification?.status === 'rejected';
+  const isVerified = verification?.status === 'approved'
+  const isSubmitted = verification?.status === 'submitted'
+  const isRejected = verification?.status === 'rejected'
 
   const invalidateVerification = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['organization-verification'] });
-  };
+    await queryClient.invalidateQueries({ queryKey: ['organization-verification'] })
+  }
 
   const cancelVerificationMutation = useMutation({
     mutationFn: () => api.delete('/payments/organization/verification'),
     onSuccess: async () => {
-      toast.success('Verification request cancelled.');
-      await invalidateVerification();
+      toast.success('Verification request cancelled.')
+      await invalidateVerification()
     },
     onError: () => {
-      toast.error('Failed to cancel verification request.');
+      toast.error('Failed to cancel verification request.')
     },
-  });
+  })
 
   const createWithdrawalMutation = useMutation({
     mutationFn: async () => {
-      const amount = Number.parseFloat(form.amount);
-      if (!Number.isFinite(amount) || amount <= 0) throw new Error('Enter a valid positive amount.');
-      if (!form.destination.trim()) throw new Error('Destination is required.');
+      const amount = Number.parseFloat(form.amount)
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error('Enter a valid positive amount.')
+      if (!form.destination.trim()) throw new Error('Destination is required.')
       return api.post('/payments/organization/withdrawals', {
         amount,
         destination: form.destination.trim(),
         comment: form.comment.trim() || undefined,
         currency,
-      });
+      })
     },
     onSuccess: async () => {
-      toast.success('Withdrawal request created.');
-      setForm({ amount: '', destination: '', comment: '' });
-      await queryClient.invalidateQueries({ queryKey: ['organization-wallet'] });
+      toast.success('Withdrawal request created.')
+      setForm({ amount: '', destination: '', comment: '' })
+      await queryClient.invalidateQueries({ queryKey: ['organization-wallet'] })
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Failed to create withdrawal request.';
-      toast.error(message);
+      const message = error instanceof Error ? error.message : 'Failed to create withdrawal request.'
+      toast.error(message)
     },
-  });
+  })
 
-  if (!isReady) return null;
-  if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />;
+  if (!isReady) return null
+  if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />
 
   if (walletLoading || verificationLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </main>
-    );
+    )
   }
 
   return (
@@ -115,9 +108,7 @@ export function WithdrawalPage() {
       </Link>
 
       <h1 className="text-2xl font-extrabold tracking-tight">Request withdrawal</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Withdraw from your internal balance to an external account.
-      </p>
+      <p className="mt-2 text-sm text-muted-foreground">Withdraw from your internal balance to an external account.</p>
 
       {isVerified && (
         <div className="mt-6 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
@@ -136,7 +127,8 @@ export function WithdrawalPage() {
             <div className="flex-1">
               <p className="text-sm font-semibold">Verification under review</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Your documents have been submitted and are being reviewed by our team. This usually takes 1–3 business days.
+                Your documents have been submitted and are being reviewed by our team. This usually takes 1–3 business
+                days.
               </p>
               {verification?.submittedAt && (
                 <p className="mt-2 text-xs text-muted-foreground">
@@ -168,9 +160,7 @@ export function WithdrawalPage() {
             <div>
               <p className="text-sm font-semibold">Verification rejected</p>
               {verification?.reviewerComment && (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Reason: {verification.reviewerComment}
-                </p>
+                <p className="mt-1 text-sm text-muted-foreground">Reason: {verification.reviewerComment}</p>
               )}
             </div>
           </div>
@@ -198,8 +188,8 @@ export function WithdrawalPage() {
           <form
             className="mt-6 grid gap-4 rounded-xl border border-border/60 bg-card p-5"
             onSubmit={(e) => {
-              e.preventDefault();
-              createWithdrawalMutation.mutate();
+              e.preventDefault()
+              createWithdrawalMutation.mutate()
             }}
           >
             <h2 className="text-base font-semibold">New withdrawal request</h2>
@@ -215,9 +205,7 @@ export function WithdrawalPage() {
                   onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
                   placeholder="0.00"
                 />
-                <FieldDescription>
-                  Available: {money(wallet?.balance.available ?? 0, currency)}
-                </FieldDescription>
+                <FieldDescription>Available: {money(wallet?.balance.available ?? 0, currency)}</FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="withdraw-destination">Destination</FieldLabel>
@@ -295,6 +283,5 @@ export function WithdrawalPage() {
         </div>
       </section>
     </main>
-  );
+  )
 }
-

@@ -1,11 +1,10 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
-import { User } from './user.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiProperty } from '@nestjs/swagger'
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
+import { User } from './user.entity'
 
 @Entity('user_otps')
 export class UserOtp extends UuidEntity {
-
   @Column()
   @ApiProperty()
   code: string

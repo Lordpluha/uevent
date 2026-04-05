@@ -1,21 +1,21 @@
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { api } from '@shared/api';
-import { Button, Field, FieldDescription, FieldLabel, Input } from '@shared/components';
+import { api } from '@shared/api'
+import { Button, Field, FieldDescription, FieldLabel, Input } from '@shared/components'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 type PromoCodeModel = {
-  id: string;
-  code: string;
-  discountPercent: number;
-  isActive: boolean;
-  eventId: string | null;
-  maxUses: number | null;
-  usedCount: number;
-  startsAt: string | null;
-  endsAt: string | null;
-  createdAt: string;
-};
+  id: string
+  code: string
+  discountPercent: number
+  isActive: boolean
+  eventId: string | null
+  maxUses: number | null
+  usedCount: number
+  startsAt: string | null
+  endsAt: string | null
+  createdAt: string
+}
 
 export function OrgPromoCodesSection({ onChanged }: { onChanged: () => Promise<void> }) {
   const [form, setForm] = useState({
@@ -23,19 +23,23 @@ export function OrgPromoCodesSection({ onChanged }: { onChanged: () => Promise<v
     discountPercent: '10',
     eventId: '',
     maxUses: '',
-  });
+  })
 
-  const { data: promoCodes, isLoading, refetch } = useQuery({
+  const {
+    data: promoCodes,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['organization-promo-codes'],
     queryFn: async () => (await api.get<PromoCodeModel[]>('/payments/promo-codes/my')).data,
-  });
+  })
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const discountPercent = Number.parseInt(form.discountPercent, 10);
-      if (!form.code.trim()) throw new Error('Code is required.');
+      const discountPercent = Number.parseInt(form.discountPercent, 10)
+      if (!form.code.trim()) throw new Error('Code is required.')
       if (!Number.isFinite(discountPercent) || discountPercent <= 0 || discountPercent > 100) {
-        throw new Error('Discount must be from 1 to 100.');
+        throw new Error('Discount must be from 1 to 100.')
       }
 
       return api.post('/payments/promo-codes', {
@@ -43,38 +47,38 @@ export function OrgPromoCodesSection({ onChanged }: { onChanged: () => Promise<v
         discountPercent,
         eventId: form.eventId.trim() || undefined,
         maxUses: form.maxUses.trim() ? Number.parseInt(form.maxUses, 10) : undefined,
-      });
+      })
     },
     onSuccess: async () => {
-      toast.success('Promo code created.');
-      setForm({ code: '', discountPercent: '10', eventId: '', maxUses: '' });
-      await Promise.all([refetch(), onChanged()]);
+      toast.success('Promo code created.')
+      setForm({ code: '', discountPercent: '10', eventId: '', maxUses: '' })
+      await Promise.all([refetch(), onChanged()])
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Failed to create promo code.';
-      toast.error(message);
+      const message = error instanceof Error ? error.message : 'Failed to create promo code.'
+      toast.error(message)
     },
-  });
+  })
 
   const toggleMutation = useMutation({
     mutationFn: async (promo: PromoCodeModel) => {
       return api.post(`/payments/promo-codes/${promo.id}`, {
         isActive: !promo.isActive,
-      });
+      })
     },
     onSuccess: async () => {
-      await refetch();
-      await onChanged();
+      await refetch()
+      await onChanged()
     },
     onError: () => {
-      toast.error('Failed to update promo code status.');
+      toast.error('Failed to update promo code status.')
     },
-  });
+  })
 
   const sortedPromoCodes = useMemo(
     () => [...(promoCodes ?? [])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [promoCodes],
-  );
+  )
 
   return (
     <section className="mt-5 rounded-xl border border-border/60 bg-card p-5">
@@ -86,8 +90,8 @@ export function OrgPromoCodesSection({ onChanged }: { onChanged: () => Promise<v
       <form
         className="mt-4 grid gap-4 rounded-lg border border-border/60 bg-background/40 p-4"
         onSubmit={(e) => {
-          e.preventDefault();
-          createMutation.mutate();
+          e.preventDefault()
+          createMutation.mutate()
         }}
       >
         <div className="grid gap-4 sm:grid-cols-2">
@@ -119,9 +123,7 @@ export function OrgPromoCodesSection({ onChanged }: { onChanged: () => Promise<v
               onChange={(e) => setForm((prev) => ({ ...prev, eventId: e.target.value }))}
               placeholder="UUID of your event"
             />
-            <FieldDescription>
-              Leave empty to make it organization-wide.
-            </FieldDescription>
+            <FieldDescription>Leave empty to make it organization-wide.</FieldDescription>
           </Field>
           <Field>
             <FieldLabel htmlFor="promo-max-uses">Max uses (optional)</FieldLabel>
@@ -160,8 +162,13 @@ export function OrgPromoCodesSection({ onChanged }: { onChanged: () => Promise<v
               <tr key={promo.id} className="border-t border-border/60">
                 <td className="px-3 py-2 font-medium">{promo.code}</td>
                 <td className="px-3 py-2">{promo.discountPercent}%</td>
-                <td className="px-3 py-2">{promo.usedCount}{promo.maxUses ? ` / ${promo.maxUses}` : ''}</td>
-                <td className="px-3 py-2 text-muted-foreground">{promo.eventId ? 'Event-specific' : 'Organization-wide'}</td>
+                <td className="px-3 py-2">
+                  {promo.usedCount}
+                  {promo.maxUses ? ` / ${promo.maxUses}` : ''}
+                </td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {promo.eventId ? 'Event-specific' : 'Organization-wide'}
+                </td>
                 <td className="px-3 py-2">{promo.isActive ? 'Active' : 'Inactive'}</td>
                 <td className="px-3 py-2 text-right">
                   <Button
@@ -187,5 +194,5 @@ export function OrgPromoCodesSection({ onChanged }: { onChanged: () => Promise<v
         </table>
       </div>
     </section>
-  );
+  )
 }

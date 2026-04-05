@@ -30,45 +30,46 @@ const toBoolean = (fallback: boolean) =>
     return value
   }, z.boolean())
 
-export const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+export const envSchema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
-  PORT: toNumber(DEFAULT_API_PORT),
-  CLIENT_URL: z.url(),
-  API_URL: z.url(),
+    PORT: toNumber(DEFAULT_API_PORT),
+    CLIENT_URL: z.url(),
+    API_URL: z.url(),
 
-  // Either DATABASE_URL (e.g. Neon/Vercel) or individual POSTGRES_* vars must be provided.
-  DATABASE_URL: z.string().url().optional(),
-  POSTGRES_HOST: z.string().min(1).optional(),
-  POSTGRES_PORT: toNumber(5432).optional(),
-  POSTGRES_USER: z.string().min(1).optional(),
-  POSTGRES_PASSWORD: z.string().min(1).optional(),
-  POSTGRES_DB: z.string().min(1).optional(),
-  DB_SYNCHRONIZE: toBoolean(false),
+    // Either DATABASE_URL (e.g. Neon/Vercel) or individual POSTGRES_* vars must be provided.
+    DATABASE_URL: z.string().url().optional(),
+    POSTGRES_HOST: z.string().min(1).optional(),
+    POSTGRES_PORT: toNumber(5432).optional(),
+    POSTGRES_USER: z.string().min(1).optional(),
+    POSTGRES_PASSWORD: z.string().min(1).optional(),
+    POSTGRES_DB: z.string().min(1).optional(),
+    DB_SYNCHRONIZE: toBoolean(false),
 
-  JWT_SECRET: z.string().min(32),
+    JWT_SECRET: z.string().min(64, 'JWT_SECRET must be at least 64 characters for HS256 security'),
 
-  GOOGLE_CLIENT_ID: z.string().optional(),
-  GOOGLE_CLIENT_SECRET: z.string().optional(),
-  GOOGLE_CALLBACK_URL: z.string().url(),
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    GOOGLE_CALLBACK_URL: z.string().url(),
 
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  STRIPE_PLATFORM_ACCOUNT_ID: z.string().optional(),
-  STRIPE_PLATFORM_COMMISSION_ACCOUNT: z.string().optional(),
-  PAYMENT_CURRENCY: z.string().min(1).default(DEFAULT_PAYMENT_CURRENCY),
-  STRIPE_PLATFORM_FEE_CENTS: toNumber(DEFAULT_STRIPE_PLATFORM_FEE_CENTS),
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    STRIPE_PLATFORM_ACCOUNT_ID: z.string().optional(),
+    STRIPE_PLATFORM_COMMISSION_ACCOUNT: z.string().optional(),
+    PAYMENT_CURRENCY: z.string().min(1).default(DEFAULT_PAYMENT_CURRENCY),
+    STRIPE_PLATFORM_FEE_CENTS: toNumber(DEFAULT_STRIPE_PLATFORM_FEE_CENTS),
 
-  SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.string().optional(),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASS: z.string().optional(),
-  SMTP_FROM_EMAIL: z.string().email().default(DEFAULT_SMTP_FROM_EMAIL),
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.string().optional(),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASS: z.string().optional(),
+    SMTP_FROM_EMAIL: z.string().email().default(DEFAULT_SMTP_FROM_EMAIL),
 
-  VAPID_PUBLIC_KEY: z.string().optional(),
-  VAPID_PRIVATE_KEY: z.string().optional(),
-  VAPID_SUBJECT: z.string().optional(),
-})
+    VAPID_PUBLIC_KEY: z.string().optional(),
+    VAPID_PRIVATE_KEY: z.string().optional(),
+    VAPID_SUBJECT: z.string().optional(),
+  })
   .superRefine((env, ctx) => {
     if (!env.DATABASE_URL) {
       const required: Array<keyof typeof env> = ['POSTGRES_HOST', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB']

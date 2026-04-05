@@ -1,63 +1,57 @@
-import type { ChangeEvent } from 'react';
-import { useRef } from 'react';
-import { Camera, ImagePlus } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@shared/components';
-import { organizationsApi } from '@entities/Organization';
-import { useAppContext } from '@shared/lib';
+import { organizationsApi } from '@entities/Organization'
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Camera, ImagePlus } from 'lucide-react'
+import type { ChangeEvent } from 'react'
+import { useRef } from 'react'
+import { toast } from 'sonner'
 
 interface OrgEditBrandingProps {
-  orgId: string;
-  orgTitle: string;
-  avatarUrl?: string;
-  coverUrl?: string;
+  orgId: string
+  orgTitle: string
+  avatarUrl?: string
+  coverUrl?: string
 }
 
 export function OrgEditBranding({ orgId, orgTitle, avatarUrl, coverUrl }: OrgEditBrandingProps) {
-  const { t } = useAppContext();
-  const queryClient = useQueryClient();
-  const logoInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useAppContext()
+  const queryClient = useQueryClient()
+  const logoInputRef = useRef<HTMLInputElement>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
 
   const uploadLogoMutation = useMutation({
     mutationFn: (file: File) => organizationsApi.uploadLogo(orgId, file),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['organizations', orgId] });
-      toast.success(t.orgEdit.logoUpdated);
+      await queryClient.invalidateQueries({ queryKey: ['organizations', orgId] })
+      toast.success(t.orgEdit.logoUpdated)
     },
     onError: () => toast.error(t.orgEdit.logoFailed),
-  });
+  })
 
   const uploadCoverMutation = useMutation({
     mutationFn: (file: File) => organizationsApi.uploadCover(orgId, file),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['organizations', orgId] });
-      toast.success(t.orgEdit.coverUpdated);
+      await queryClient.invalidateQueries({ queryKey: ['organizations', orgId] })
+      toast.success(t.orgEdit.coverUpdated)
     },
     onError: () => toast.error(t.orgEdit.coverFailed),
-  });
+  })
 
   const handleFileChange = (label: 'Logo' | 'Cover') => (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      if (label === 'Logo') uploadLogoMutation.mutate(file);
-      else uploadCoverMutation.mutate(file);
+      if (label === 'Logo') uploadLogoMutation.mutate(file)
+      else uploadCoverMutation.mutate(file)
     }
-    e.target.value = '';
-  };
+    e.target.value = ''
+  }
 
   return (
     <>
       {/* Cover image */}
       <div className="relative h-32 w-full overflow-hidden rounded-xl border border-border/60 bg-muted">
-        {coverUrl && (
-          <img src={coverUrl} alt={t.orgEdit.coverAlt} className="h-full w-full object-cover" />
-        )}
+        {coverUrl && <img src={coverUrl} alt={t.orgEdit.coverAlt} className="h-full w-full object-cover" />}
         <button
           type="button"
           onClick={() => coverInputRef.current?.click()}
@@ -99,10 +93,10 @@ export function OrgEditBranding({ orgId, orgTitle, avatarUrl, coverUrl }: OrgEdi
           />
         </div>
         <div>
-            <p className="text-sm font-medium">{t.orgEdit.logoLabel}</p>
+          <p className="text-sm font-medium">{t.orgEdit.logoLabel}</p>
           <p className="text-xs text-muted-foreground">{t.orgEdit.logoHint}</p>
         </div>
       </div>
     </>
-  );
+  )
 }

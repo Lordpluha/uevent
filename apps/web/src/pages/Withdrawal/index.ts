@@ -1,1 +1,1 @@
-export { WithdrawalPage } from './ui/WithdrawalPage';
+export { WithdrawalPage } from './ui/WithdrawalPage'

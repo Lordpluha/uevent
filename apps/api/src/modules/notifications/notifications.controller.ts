@@ -1,20 +1,38 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, UseGuards, ForbiddenException } from '@nestjs/common'
-import { NotificationsService } from './notifications.service'
-import { PushNotificationService } from './push-notification.service'
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
+import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
+import { ZodValidationPipe } from 'nestjs-zod'
+import {
+  ApiAccessCookieAuth,
+  ApiUuidParam,
+  ApiZodBody,
+  messageSchema,
+  notificationResponseSchema,
+} from '../../common/swagger/openapi.util'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
+import { JwtGuard } from '../auth/guards/jwt.guard'
+import { JwtPayload } from '../auth/types/jwt-payload.interface'
 import {
   CreateNotificationDto,
   CreateNotificationDtoSchema,
   UpdateNotificationDto,
   UpdateNotificationDtoSchema,
 } from './dto'
-import { ZodValidationPipe } from 'nestjs-zod'
-import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
-import { GetNotificationsParamsDto, GetNotificationsParamsSchema } from './params'
-import { JwtGuard } from '../auth/guards/jwt.guard'
-import { CurrentUser } from '../auth/decorators/current-user.decorator'
-import { JwtPayload } from '../auth/types/jwt-payload.interface'
-import { ApiAccessCookieAuth, ApiUuidParam, ApiZodBody, messageSchema, notificationResponseSchema } from '../../common/swagger/openapi.util'
 import { Notification } from './entities/notification.entity'
+import { NotificationsService } from './notifications.service'
+import { GetNotificationsParamsDto, GetNotificationsParamsSchema } from './params'
+import { PushNotificationService } from './push-notification.service'
 
 @Controller('notifications')
 @ApiTags('Notifications')
@@ -76,7 +94,24 @@ export class NotificationsController {
   @ApiAccessCookieAuth()
   @ApiQuery({ name: 'page', required: false, schema: { type: 'integer', default: 1, minimum: 1 } })
   @ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', default: 20, minimum: 1, maximum: 100 } })
-  @ApiOkResponse({ description: 'Notifications for current account.', schema: { type: 'object', properties: { data: { type: 'array', items: notificationResponseSchema }, meta: { type: 'object', properties: { total: { type: 'integer' }, page: { type: 'integer' }, limit: { type: 'integer' }, total_pages: { type: 'integer' } } } } } })
+  @ApiOkResponse({
+    description: 'Notifications for current account.',
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: notificationResponseSchema },
+        meta: {
+          type: 'object',
+          properties: {
+            total: { type: 'integer' },
+            page: { type: 'integer' },
+            limit: { type: 'integer' },
+            total_pages: { type: 'integer' },
+          },
+        },
+      },
+    },
+  })
   findAll(
     @CurrentUser() user: JwtPayload,
     @Query(new ZodValidationPipe(GetNotificationsParamsSchema)) query: GetNotificationsParamsDto,
@@ -103,7 +138,24 @@ export class NotificationsController {
   @ApiUuidParam('id', 'User id')
   @ApiQuery({ name: 'page', required: false, schema: { type: 'integer', default: 1, minimum: 1 } })
   @ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', default: 20, minimum: 1, maximum: 100 } })
-  @ApiOkResponse({ description: 'Notifications for the user.', schema: { type: 'object', properties: { data: { type: 'array', items: notificationResponseSchema }, meta: { type: 'object', properties: { total: { type: 'integer' }, page: { type: 'integer' }, limit: { type: 'integer' }, total_pages: { type: 'integer' } } } } } })
+  @ApiOkResponse({
+    description: 'Notifications for the user.',
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: notificationResponseSchema },
+        meta: {
+          type: 'object',
+          properties: {
+            total: { type: 'integer' },
+            page: { type: 'integer' },
+            limit: { type: 'integer' },
+            total_pages: { type: 'integer' },
+          },
+        },
+      },
+    },
+  })
   findByUser(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
@@ -126,10 +178,7 @@ export class NotificationsController {
   @ApiAccessCookieAuth()
   @ApiUuidParam('id', 'Notification id')
   @ApiOkResponse({ description: 'Notification details.', schema: notificationResponseSchema })
-  findOne(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
     if (user.type === 'user') {
       return this.notificationsService.findOneForUser(id, user.sub)
     }
@@ -170,10 +219,7 @@ export class NotificationsController {
   @ApiAccessCookieAuth()
   @ApiUuidParam('id', 'Notification id')
   @ApiOkResponse({ description: 'Updated notification.', schema: notificationResponseSchema })
-  markAsRead(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  markAsRead(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
     if (user.type === 'user') {
       return this.notificationsService.markAsReadForUser(id, user.sub)
     }
@@ -191,10 +237,7 @@ export class NotificationsController {
   @ApiAccessCookieAuth()
   @ApiUuidParam('id', 'Notification id')
   @ApiOkResponse({ description: 'Notification removed.', schema: messageSchema('Notification removed') })
-  remove(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
     if (user.type === 'user') {
       return this.notificationsService.removeForUser(id, user.sub)
     }
@@ -210,7 +253,10 @@ export class NotificationsController {
 
   @Get('push/vapid-key')
   @ApiOperation({ summary: 'Get VAPID public key for push subscription' })
-  @ApiOkResponse({ description: 'VAPID public key.', schema: { type: 'object', properties: { publicKey: { type: 'string', nullable: true } } } })
+  @ApiOkResponse({
+    description: 'VAPID public key.',
+    schema: { type: 'object', properties: { publicKey: { type: 'string', nullable: true } } },
+  })
   getVapidPublicKey() {
     return { publicKey: this.pushService.vapidPublicKey }
   }
@@ -219,13 +265,21 @@ export class NotificationsController {
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Register a browser push subscription' })
   @ApiAccessCookieAuth()
-  @ApiOkResponse({ description: 'Subscription saved.', schema: { type: 'object', properties: { success: { type: 'boolean' } } } })
+  @ApiOkResponse({
+    description: 'Subscription saved.',
+    schema: { type: 'object', properties: { success: { type: 'boolean' } } },
+  })
   async savePushSubscription(
     @Body() body: { endpoint: string; p256dh: string; auth: string },
     @CurrentUser() user: JwtPayload,
   ) {
-    if (user.type !== 'user') throw new ForbiddenException('Only user accounts can register push subscriptions')
-    await this.pushService.saveSubscription(user.sub, body.endpoint, body.p256dh, body.auth)
+    if (user.type === 'user') {
+      await this.pushService.saveSubscription(user.sub, body.endpoint, body.p256dh, body.auth)
+    } else if (user.type === 'organization') {
+      await this.pushService.saveSubscriptionForOrganization(user.sub, body.endpoint, body.p256dh, body.auth)
+    } else {
+      throw new ForbiddenException('Unsupported account type')
+    }
     return { success: true }
   }
 
@@ -233,11 +287,11 @@ export class NotificationsController {
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Unregister a browser push subscription' })
   @ApiAccessCookieAuth()
-  @ApiOkResponse({ description: 'Subscription removed.', schema: { type: 'object', properties: { success: { type: 'boolean' } } } })
-  async deletePushSubscription(
-    @Body() body: { endpoint: string },
-    @CurrentUser() user: JwtPayload,
-  ) {
+  @ApiOkResponse({
+    description: 'Subscription removed.',
+    schema: { type: 'object', properties: { success: { type: 'boolean' } } },
+  })
+  async deletePushSubscription(@Body() body: { endpoint: string }, @CurrentUser() user: JwtPayload) {
     if (user.type !== 'user') throw new ForbiddenException('Only user accounts can unregister push subscriptions')
     await this.pushService.deleteSubscription(user.sub, body.endpoint)
     return { success: true }

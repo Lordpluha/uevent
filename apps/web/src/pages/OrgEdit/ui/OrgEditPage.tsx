@@ -1,28 +1,29 @@
-import { Link, Navigate } from 'react-router';
-import { Building2, ChevronLeft } from 'lucide-react';
-import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@shared/components';
-import { useMyOrg } from '@entities/Organization';
-import { useAuth } from '@shared/lib/auth-context';
-import { useAppContext } from '@shared/lib';
-import { OrgBrandingSection } from '@pages/OrgAccount/ui/OrgBrandingSection';
-import { OrgProfileSection } from '@pages/OrgAccount/ui/OrgProfileSection';
-import { OrgAccountSettings } from '@pages/OrgAccount/ui/OrgAccountSettings';
-import { OrgSecuritySection } from '@pages/OrgAccount/ui/OrgSecuritySection';
+import { useMyOrg } from '@entities/Organization'
+import { OrgAccountSettings } from '@pages/OrgAccount/ui/OrgAccountSettings'
+import { OrgBrandingSection } from '@pages/OrgAccount/ui/OrgBrandingSection'
+import { OrgNotificationsSection } from '@pages/OrgAccount/ui/OrgNotificationsSection'
+import { OrgProfileSection } from '@pages/OrgAccount/ui/OrgProfileSection'
+import { OrgSecuritySection } from '@pages/OrgAccount/ui/OrgSecuritySection'
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useAuth } from '@shared/lib/auth-context'
+import { Building2, ChevronLeft } from 'lucide-react'
+import { Link, Navigate } from 'react-router'
 
 export function OrgEditPage() {
-  const { t } = useAppContext();
-  const { isAuthenticated, accountType, isReady } = useAuth();
-  const { data: myOrg, isLoading } = useMyOrg();
+  const { t } = useAppContext()
+  const { isAuthenticated, accountType, isReady } = useAuth()
+  const { data: myOrg, isLoading } = useMyOrg()
 
-  if (!isReady) return null;
-  if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />;
+  if (!isReady) return null
+  if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />
 
   if (isLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </main>
-    );
+    )
   }
 
   if (!myOrg) {
@@ -42,7 +43,7 @@ export function OrgEditPage() {
           </EmptyContent>
         </Empty>
       </main>
-    );
+    )
   }
 
   return (
@@ -62,7 +63,7 @@ export function OrgEditPage() {
       <OrgProfileSection />
       <OrgAccountSettings />
       <OrgSecuritySection />
+      <OrgNotificationsSection />
     </main>
-  );
+  )
 }
-

@@ -1,43 +1,35 @@
-import type { FormEvent } from 'react';
-import { useState } from 'react';
-import { Eye, EyeOff, Save } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import {
-  Button,
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-  Input,
-} from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { usersApi } from '@entities/User';
+import { usersApi } from '@entities/User'
+import { Button, Field, FieldError, FieldGroup, FieldLabel, FieldSeparator, Input } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useMutation } from '@tanstack/react-query'
+import { Eye, EyeOff, Save } from 'lucide-react'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 export function PasswordChangeForm() {
-  const { t } = useAppContext();
-  const [passwordForm, setPasswordForm] = useState({ next: '', confirm: '' });
-  const [showPass, setShowPass] = useState({ next: false, confirm: false });
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
+  const { t } = useAppContext()
+  const [passwordForm, setPasswordForm] = useState({ next: '', confirm: '' })
+  const [showPass, setShowPass] = useState({ next: false, confirm: false })
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({})
 
   const passwordMutation = useMutation({
     mutationFn: (password: string) => usersApi.updateMe({ password }),
     onSuccess: () => {
-      setPasswordForm({ next: '', confirm: '' });
-      toast.success(t.profileSettings.password.updated);
+      setPasswordForm({ next: '', confirm: '' })
+      toast.success(t.profileSettings.password.updated)
     },
     onError: () => toast.error(t.profileSettings.password.updateFailed),
-  });
+  })
 
   const handlePasswordSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const errs: Record<string, string> = {};
-    if (passwordForm.next.length < 8) errs.next = t.profileSettings.password.minChars;
-    if (passwordForm.next !== passwordForm.confirm) errs.confirm = t.profileSettings.password.mismatch;
-    setPasswordErrors(errs);
-    if (Object.keys(errs).length === 0) passwordMutation.mutate(passwordForm.next);
-  };
+    e.preventDefault()
+    const errs: Record<string, string> = {}
+    if (passwordForm.next.length < 8) errs.next = t.profileSettings.password.minChars
+    if (passwordForm.next !== passwordForm.confirm) errs.confirm = t.profileSettings.password.mismatch
+    setPasswordErrors(errs)
+    if (Object.keys(errs).length === 0) passwordMutation.mutate(passwordForm.next)
+  }
 
   return (
     <>
@@ -94,17 +86,12 @@ export function PasswordChangeForm() {
         </FieldGroup>
 
         <div className="flex justify-end">
-          <Button
-            type="submit"
-            variant="outline"
-            className="gap-1.5"
-            disabled={passwordMutation.isPending}
-          >
+          <Button type="submit" variant="outline" className="gap-1.5" disabled={passwordMutation.isPending}>
             <Save className="h-3.5 w-3.5" />
             {passwordMutation.isPending ? t.common.updating : t.profileSettings.password.updatePassword}
           </Button>
         </div>
       </form>
     </>
-  );
+  )
 }

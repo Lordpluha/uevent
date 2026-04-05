@@ -1,31 +1,27 @@
-import { cva } from 'class-variance-authority';
-import { MapPin, Star, Video } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@shared/components';
-import { Badge } from '@shared/components';
-import { Card, CardContent } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { cn } from '@shared/lib/utils';
-import type { EventFormat } from '../model/event';
-import type { EventAttendee } from '../model/eventEntity';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Card, CardContent } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { cn } from '@shared/lib/utils'
+import { cva } from 'class-variance-authority'
+import { MapPin, Star, Video } from 'lucide-react'
+import type { EventFormat } from '../model/event'
+import type { EventAttendee } from '../model/eventEntity'
 
-type Attendee = EventAttendee;
+type Attendee = EventAttendee
 
 export type EventCardProps = {
-  title: string;
-  imageUrl?: string;
-  date: string;
-  time: string;
-  format: EventFormat;
-  location?: string;
-  organizer: string;
-  rating: number;
-  attendeeCount: number;
-  attendees?: Attendee[];
+  title: string
+  imageUrl?: string
+  date: string
+  time: string
+  format: EventFormat
+  location?: string
+  organizer: string
+  rating: number
+  attendeeCount: number
+  attendees?: Attendee[]
   /** Visual size variant */
-  size?: 'default' | 'compact';
-};
-
-
+  size?: 'default' | 'compact'
+}
 
 /* ── cva definitions ─────────────────────────────────────── */
 
@@ -37,7 +33,7 @@ const cardVariants = cva('overflow-hidden border-border/60 transition-shadow hov
     },
   },
   defaultVariants: { size: 'default' },
-});
+})
 
 const coverVariants = cva('relative bg-muted', {
   variants: {
@@ -47,7 +43,7 @@ const coverVariants = cva('relative bg-muted', {
     },
   },
   defaultVariants: { size: 'default' },
-});
+})
 
 const titleVariants = cva('font-semibold leading-snug tracking-tight text-foreground line-clamp-2', {
   variants: {
@@ -57,7 +53,7 @@ const titleVariants = cva('font-semibold leading-snug tracking-tight text-foregr
     },
   },
   defaultVariants: { size: 'default' },
-});
+})
 
 const metaTextVariants = cva('text-muted-foreground', {
   variants: {
@@ -67,7 +63,7 @@ const metaTextVariants = cva('text-muted-foreground', {
     },
   },
   defaultVariants: { size: 'default' },
-});
+})
 
 /* ──────────────────────────────────────────────────────────── */
 
@@ -84,7 +80,7 @@ export const EventCard = ({
   attendees = [],
   size = 'default',
 }: EventCardProps) => {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
   return (
     <Card className={cn(cardVariants({ size }))}>
       {/* Cover image */}
@@ -92,7 +88,9 @@ export const EventCard = ({
         {imageUrl ? (
           <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">{t.common.noImage}</div>
+          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+            {t.common.noImage}
+          </div>
         )}
       </div>
 
@@ -103,7 +101,9 @@ export const EventCard = ({
         {/* Date, time, format */}
         <div className="flex flex-wrap items-center gap-1.5">
           <span className={cn(metaTextVariants({ size }))}>{date}</span>
-          <span className="text-xs text-muted-foreground">{time} {t.common.gmt}</span>
+          <span className="text-xs text-muted-foreground">
+            {time} {t.common.gmt}
+          </span>
           <span className="text-muted-foreground">·</span>
           <Badge variant="secondary" className="flex items-center gap-1 px-1.5 py-0.5 text-xs font-semibold">
             {format === 'online' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
@@ -112,7 +112,9 @@ export const EventCard = ({
         </div>
 
         {/* Organizer */}
-        <p className="truncate text-xs text-muted-foreground">{t.entityCard.from} {organizer}</p>
+        <p className="truncate text-xs text-muted-foreground">
+          {t.entityCard.from} {organizer}
+        </p>
 
         {/* Attendees + rating */}
         <div className="flex items-center justify-between">
@@ -134,8 +136,8 @@ export const EventCard = ({
         </div>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
 export function EventCardSkeleton({ size = 'default' }: { size?: 'default' | 'compact' }) {
   return (
@@ -157,5 +159,5 @@ export function EventCardSkeleton({ size = 'default' }: { size?: 'default' | 'co
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

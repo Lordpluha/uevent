@@ -1,15 +1,14 @@
-import { Entity, Column, OneToMany, CreateDateColumn, ManyToMany } from 'typeorm'
-import { Ticket } from '../../tickets/entities/ticket.entity'
-import { UserSession } from './user-session.entity'
-import { UserOtp } from './user-otp.entity'
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
 import { Notification } from '../../notifications/entities/notification.entity'
 import { Organization } from '../../organizations/entities/organization.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
-import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Ticket } from '../../tickets/entities/ticket.entity'
+import { UserOtp } from './user-otp.entity'
+import { UserSession } from './user-session.entity'
 
 @Entity('users')
 export class User extends UuidEntity {
-
   @Column({ unique: true })
   @ApiProperty()
   username: string

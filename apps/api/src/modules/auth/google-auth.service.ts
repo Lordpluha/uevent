@@ -1,20 +1,20 @@
 import {
   Injectable,
-  UnauthorizedException,
-  NotFoundException,
   InternalServerErrorException,
+  NotFoundException,
   ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
 import { google } from 'googleapis'
-import { User } from '../users/entities/user.entity'
-import { UserSession } from '../users/entities/user-session.entity'
+import { Repository } from 'typeorm'
+import { ApiConfigService } from '../../config/api-config.service'
 import { Event } from '../events/entities/event.entity'
 import { Ticket } from '../tickets/entities/ticket.entity'
+import { User } from '../users/entities/user.entity'
+import { UserSession } from '../users/entities/user-session.entity'
 import { JwtPayload } from './types/jwt-payload.interface'
-import { ApiConfigService } from '../../config/api-config.service'
 
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 const ACCESS_EXPIRES = '15m'
@@ -194,10 +194,7 @@ export class GoogleAuthService {
 
     // If user has 2FA enabled, return a temp token for verification instead of creating a session
     if (user.two_fa && user.two_fa_secret) {
-      const tempToken = await this.jwtService.signAsync(
-        { sub: user.id, type: '2fa_pending' },
-        { expiresIn: '5m' },
-      )
+      const tempToken = await this.jwtService.signAsync({ sub: user.id, type: '2fa_pending' }, { expiresIn: '5m' })
       return { linked: false as const, requires2fa: true as const, tempToken }
     }
 
@@ -261,10 +258,12 @@ export class GoogleAuthService {
       where: { id: ticketId, user_id: userId },
       relations: ['event', 'event.tags'],
     })
-    const resolvedTicket = ticket ?? await this.ticketsRepo.findOne({
-      where: { id: ticketId },
-      relations: ['event', 'event.tags'],
-    })
+    const resolvedTicket =
+      ticket ??
+      (await this.ticketsRepo.findOne({
+        where: { id: ticketId },
+        relations: ['event', 'event.tags'],
+      }))
     if (!resolvedTicket) {
       throw new NotFoundException('Ticket not found')
     }
@@ -369,9 +368,7 @@ export class GoogleAuthService {
           )
         }
 
-        throw new UnauthorizedException(
-          'Google Calendar access denied. Please re-link your Google account.',
-        )
+        throw new UnauthorizedException('Google Calendar access denied. Please re-link your Google account.')
       }
 
       throw new InternalServerErrorException('Failed to add event to Google Calendar')

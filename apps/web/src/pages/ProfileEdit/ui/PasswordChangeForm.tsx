@@ -1,7 +1,3 @@
-import type { ChangeEvent, FormEvent } from 'react';
-import { useState } from 'react';
-import { Eye, EyeOff, Save, Shield, ShieldCheck } from 'lucide-react';
-import { toast } from 'sonner';
 import {
   Button,
   Field,
@@ -13,34 +9,38 @@ import {
   FieldTitle,
   Input,
   Switch,
-} from '@shared/components';
-import { useAppContext } from '@shared/lib';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { Eye, EyeOff, Save, Shield, ShieldCheck } from 'lucide-react'
+import type { ChangeEvent, FormEvent } from 'react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 export function PasswordChangeForm() {
-  const { t } = useAppContext();
-  const [twoFaEnabled, setTwoFaEnabled] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({ current: '', next: '', confirm: '' });
-  const [showPassword, setShowPassword] = useState({ current: false, next: false, confirm: false });
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
+  const { t } = useAppContext()
+  const [twoFaEnabled, setTwoFaEnabled] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({ current: '', next: '', confirm: '' })
+  const [showPassword, setShowPassword] = useState({ current: false, next: false, confirm: false })
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({})
 
   const setPass = (field: keyof typeof passwordForm) => (e: ChangeEvent<HTMLInputElement>) =>
-    setPasswordForm((prev) => ({ ...prev, [field]: e.target.value }));
+    setPasswordForm((prev) => ({ ...prev, [field]: e.target.value }))
 
   const toggleShow = (field: keyof typeof showPassword) =>
-    setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
+    setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }))
 
   const handlePasswordSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const errs: Record<string, string> = {};
-    if (!passwordForm.current) errs.current = t.profileEdit.currentPasswordRequired;
-    if (passwordForm.next.length < 8) errs.next = t.profileEdit.passwordMinChars;
-    if (passwordForm.next !== passwordForm.confirm) errs.confirm = t.profileEdit.passwordMismatch;
-    setPasswordErrors(errs);
+    e.preventDefault()
+    const errs: Record<string, string> = {}
+    if (!passwordForm.current) errs.current = t.profileEdit.currentPasswordRequired
+    if (passwordForm.next.length < 8) errs.next = t.profileEdit.passwordMinChars
+    if (passwordForm.next !== passwordForm.confirm) errs.confirm = t.profileEdit.passwordMismatch
+    setPasswordErrors(errs)
     if (Object.keys(errs).length === 0) {
-      toast.info(t.profileEdit.passwordNotAvailable);
-      setPasswordForm({ current: '', next: '', confirm: '' });
+      toast.info(t.profileEdit.passwordNotAvailable)
+      setPasswordForm({ current: '', next: '', confirm: '' })
     }
-  };
+  }
 
   const passwordField = (id: string, label: string, field: 'current' | 'next' | 'confirm', placeholder: string) => (
     <Field data-invalid={!!passwordErrors[field] || undefined}>
@@ -65,7 +65,7 @@ export function PasswordChangeForm() {
       </div>
       <FieldError errors={passwordErrors[field] ? [{ message: passwordErrors[field] }] : []} />
     </Field>
-  );
+  )
 
   return (
     <section id="password">
@@ -84,9 +84,7 @@ export function PasswordChangeForm() {
               {t.profileEdit.twoFa}
             </FieldTitle>
             <FieldDescription className="mt-0.5">
-              {twoFaEnabled
-                ? t.profileEdit.twoFaEnabledDesc
-                : t.profileEdit.twoFaDisabledDesc}
+              {twoFaEnabled ? t.profileEdit.twoFaEnabledDesc : t.profileEdit.twoFaDisabledDesc}
             </FieldDescription>
           </div>
           <Switch checked={twoFaEnabled} onCheckedChange={setTwoFaEnabled} aria-label={t.profileEdit.toggleTwoFa} />
@@ -95,10 +93,20 @@ export function PasswordChangeForm() {
 
       <form onSubmit={handlePasswordSubmit} className="space-y-4">
         <FieldGroup>
-          {passwordField('current-password', t.profileEdit.currentPassword, 'current', t.profileEdit.currentPasswordPlaceholder)}
+          {passwordField(
+            'current-password',
+            t.profileEdit.currentPassword,
+            'current',
+            t.profileEdit.currentPasswordPlaceholder,
+          )}
           <FieldSeparator />
           {passwordField('new-password', t.profileEdit.newPassword, 'next', t.profileEdit.newPasswordPlaceholder)}
-          {passwordField('confirm-password', t.profileEdit.confirmPassword, 'confirm', t.profileEdit.confirmPasswordPlaceholder)}
+          {passwordField(
+            'confirm-password',
+            t.profileEdit.confirmPassword,
+            'confirm',
+            t.profileEdit.confirmPasswordPlaceholder,
+          )}
         </FieldGroup>
 
         <div className="flex justify-end">
@@ -109,5 +117,5 @@ export function PasswordChangeForm() {
         </div>
       </form>
     </section>
-  );
+  )
 }

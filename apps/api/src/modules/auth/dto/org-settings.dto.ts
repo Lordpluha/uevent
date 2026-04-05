@@ -19,6 +19,12 @@ export const ChangeOrgPasswordDtoSchema = z.object({
   new_password: z.string().min(8),
 })
 
+export const UpdateOrgNotificationsDtoSchema = z.object({
+  notifications_enabled: z.boolean().optional(),
+  push_notifications_enabled: z.boolean().optional(),
+})
+
 export type UpdateOrgProfileDto = z.infer<typeof UpdateOrgProfileDtoSchema>
 export type UpdateOrgEmailDto = z.infer<typeof UpdateOrgEmailDtoSchema>
 export type ChangeOrgPasswordDto = z.infer<typeof ChangeOrgPasswordDtoSchema>
+export type UpdateOrgNotificationsDto = z.infer<typeof UpdateOrgNotificationsDtoSchema>

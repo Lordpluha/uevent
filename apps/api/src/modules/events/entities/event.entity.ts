@@ -1,24 +1,13 @@
-import {
-  Entity,
-  Column,
-  Index,
-  ManyToMany,
-  OneToMany,
-  OneToOne,
-  ManyToOne,
-  JoinColumn,
-  JoinTable,
-} from 'typeorm'
-import { Tag } from '../../tags/entities/tag.entity'
-import { Recurrence } from './recurrence.entity'
-import { Ticket } from '../../tickets/entities/ticket.entity'
-import { Organization } from '../../organizations/entities/organization.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
+import { Organization } from '../../organizations/entities/organization.entity'
+import { Tag } from '../../tags/entities/tag.entity'
+import { Ticket } from '../../tickets/entities/ticket.entity'
+import { Recurrence } from './recurrence.entity'
 
 @Entity('events')
 export class Event extends UuidEntity {
-
   @Column()
   @ApiProperty()
   name: string

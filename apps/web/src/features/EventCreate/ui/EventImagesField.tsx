@@ -1,68 +1,68 @@
-import { useRef, useState, type Dispatch, type SetStateAction, type DragEvent, type KeyboardEvent } from 'react';
-import { ImagePlus, X } from 'lucide-react';
-import { PhotoSwipe } from 'react-pswp';
-import 'react-pswp/dist/index.css';
+import { ImagePlus, X } from 'lucide-react'
+import { type Dispatch, type DragEvent, type KeyboardEvent, type SetStateAction, useRef, useState } from 'react'
+import { PhotoSwipe } from 'react-pswp'
+import 'react-pswp/dist/index.css'
 
-import { Field, FieldDescription, FieldTitle } from '@shared/components';
-import { useAppContext } from '@shared/lib';
+import { Field, FieldDescription, FieldTitle } from '@shared/components'
+import { useAppContext } from '@shared/lib'
 
-export type CoverFileEntry = { file: File; preview: string; w: number; h: number };
+export type CoverFileEntry = { file: File; preview: string; w: number; h: number }
 
 interface Props {
-  coverFiles: CoverFileEntry[];
-  setCoverFiles: Dispatch<SetStateAction<CoverFileEntry[]>>;
+  coverFiles: CoverFileEntry[]
+  setCoverFiles: Dispatch<SetStateAction<CoverFileEntry[]>>
 }
 
 export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
-  const { t } = useAppContext();
-  const [isDragging, setIsDragging] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState<number>(0);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useAppContext()
+  const [isDragging, setIsDragging] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number>(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const addCoverFiles = (incoming: FileList | File[]) => {
-    const imageFiles = Array.from(incoming).filter((f) => f.type.startsWith('image/'));
-    if (!imageFiles.length) return;
-    const existing = [...coverFiles];
+    const imageFiles = Array.from(incoming).filter((f) => f.type.startsWith('image/'))
+    if (!imageFiles.length) return
+    const existing = [...coverFiles]
     const toAdd = imageFiles
       .filter((f) => existing.length + imageFiles.indexOf(f) < 20)
-      .filter((f) => !existing.some((e) => e.file.name === f.name && e.file.size === f.size));
-    if (!toAdd.length) return;
+      .filter((f) => !existing.some((e) => e.file.name === f.name && e.file.size === f.size))
+    if (!toAdd.length) return
 
     const loadEntry = (file: File): Promise<CoverFileEntry> =>
       new Promise((resolve) => {
-        const preview = URL.createObjectURL(file);
-        const img = new Image();
-        img.onload = () => resolve({ file, preview, w: img.naturalWidth, h: img.naturalHeight });
-        img.onerror = () => resolve({ file, preview, w: 800, h: 600 });
-        img.src = preview;
-      });
+        const preview = URL.createObjectURL(file)
+        const img = new Image()
+        img.onload = () => resolve({ file, preview, w: img.naturalWidth, h: img.naturalHeight })
+        img.onerror = () => resolve({ file, preview, w: 800, h: 600 })
+        img.src = preview
+      })
 
     void Promise.all(toAdd.map(loadEntry)).then((entries) => {
-      setCoverFiles((prev) => [...prev, ...entries].slice(0, 20));
-    });
-  };
+      setCoverFiles((prev) => [...prev, ...entries].slice(0, 20))
+    })
+  }
 
   const removeCoverFile = (index: number) => {
     setCoverFiles((prev) => {
-      URL.revokeObjectURL(prev[index].preview);
-      return prev.filter((_, i) => i !== index);
-    });
-  };
+      URL.revokeObjectURL(prev[index].preview)
+      return prev.filter((_, i) => i !== index)
+    })
+  }
 
   const handleDrop = (e: DragEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-    addCoverFiles(e.dataTransfer.files);
-  };
+    e.preventDefault()
+    setIsDragging(false)
+    addCoverFiles(e.dataTransfer.files)
+  }
 
   const handlePreviewKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      setLightboxIndex(index);
-      setLightboxOpen(true);
+      event.preventDefault()
+      setLightboxIndex(index)
+      setLightboxOpen(true)
     }
-  };
+  }
 
   return (
     <Field>
@@ -76,8 +76,8 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
                   type="button"
                   className="h-full w-full cursor-zoom-in"
                   onClick={() => {
-                    setLightboxIndex(index);
-                    setLightboxOpen(true);
+                    setLightboxIndex(index)
+                    setLightboxOpen(true)
                   }}
                   onKeyDown={(event) => handlePreviewKeyDown(event, index)}
                   aria-label={t.eventCreate.images.imageAlt.replace('{{index}}', String(index + 1))}
@@ -119,9 +119,14 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
           <button
             type="button"
             className={`flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
-              isDragging ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 hover:border-primary/50 hover:bg-primary/5'
+              isDragging
+                ? 'border-primary bg-primary/5'
+                : 'border-border/60 bg-muted/20 hover:border-primary/50 hover:bg-primary/5'
             }`}
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setIsDragging(true)
+            }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
@@ -139,12 +144,13 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
           accept="image/*"
           multiple
           className="hidden"
-          onChange={(e) => { if (e.target.files) addCoverFiles(e.target.files); e.target.value = ''; }}
+          onChange={(e) => {
+            if (e.target.files) addCoverFiles(e.target.files)
+            e.target.value = ''
+          }}
         />
       </div>
-      {coverFiles.length > 0 && (
-        <FieldDescription>{t.eventCreate.images.coverHint}</FieldDescription>
-      )}
+      {coverFiles.length > 0 && <FieldDescription>{t.eventCreate.images.coverHint}</FieldDescription>}
 
       {coverFiles.length > 0 && (
         <PhotoSwipe
@@ -156,5 +162,5 @@ export function EventImagesField({ coverFiles, setCoverFiles }: Props) {
         />
       )}
     </Field>
-  );
+  )
 }

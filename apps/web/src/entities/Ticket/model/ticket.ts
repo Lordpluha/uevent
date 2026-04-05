@@ -1,1 +1,1 @@
-export * from './ticketEntity';
+export * from './ticketEntity'

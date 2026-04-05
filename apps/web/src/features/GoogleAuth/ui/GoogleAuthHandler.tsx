@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { KeyRound, Loader2 } from 'lucide-react'
-import { Dialog, DialogContent, Button, InputOTP, InputOTPGroup, InputOTPSlot } from '@shared/components'
-import { useAuth } from '@shared/lib/auth-context'
-import { authApi } from '@shared/api'
 import { usersApi } from '@entities/User'
+import { authApi } from '@shared/api'
+import { Button, Dialog, DialogContent, InputOTP, InputOTPGroup, InputOTPSlot } from '@shared/components'
 import { useAppContext } from '@shared/lib'
+import { useAuth } from '@shared/lib/auth-context'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { KeyRound, Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 export function GoogleAuthHandler() {
   const { t } = useAppContext()
@@ -47,13 +47,24 @@ export function GoogleAuthHandler() {
       setTempToken(null)
       setCode('')
     },
-    onError: () => { toast.error(t?.authExtra?.invalid2fa ?? 'Invalid 2FA code'); setCode(''); },
+    onError: () => {
+      toast.error(t?.authExtra?.invalid2fa ?? 'Invalid 2FA code')
+      setCode('')
+    },
   })
 
   if (!tempToken) return null
 
   return (
-    <Dialog open onOpenChange={(o) => { if (!o) { setTempToken(null); setCode(''); } }}>
+    <Dialog
+      open
+      onOpenChange={(o) => {
+        if (!o) {
+          setTempToken(null)
+          setCode('')
+        }
+      }}
+    >
       <DialogContent className="w-full max-w-sm rounded-2xl p-8">
         <div className="flex flex-col items-center gap-5">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
@@ -61,7 +72,9 @@ export function GoogleAuthHandler() {
           </div>
           <div className="text-center">
             <h3 className="text-lg font-semibold">{t?.authExtra?.twoFaTitle ?? 'Two-factor authentication'}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{t?.authExtra?.twoFaDesc ?? 'Enter the 6-digit code from your authenticator app.'}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t?.authExtra?.twoFaDesc ?? 'Enter the 6-digit code from your authenticator app.'}
+            </p>
           </div>
           <InputOTP maxLength={6} value={code} onChange={setCode} onComplete={() => mutate()}>
             <InputOTPGroup>

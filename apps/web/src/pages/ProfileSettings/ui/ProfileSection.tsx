@@ -1,8 +1,4 @@
-import type { ChangeEvent, FormEvent } from 'react';
-import { useRef, useState } from 'react';
-import { Camera, Globe, MapPin, Save } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { usersApi } from '@entities/User'
 import {
   Avatar,
   AvatarFallback,
@@ -18,15 +14,19 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@shared/components';
-import { usersApi } from '@entities/User';
-import { useAppContext } from '@shared/lib';
-import { useProfileSettingsData } from './useProfileSettingsData';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useMutation } from '@tanstack/react-query'
+import { Camera, Globe, MapPin, Save } from 'lucide-react'
+import type { ChangeEvent, FormEvent } from 'react'
+import { useRef, useState } from 'react'
+import { toast } from 'sonner'
+import { useProfileSettingsData } from './useProfileSettingsData'
 
 export function ProfileSection() {
-  const { t } = useAppContext();
-  const { userProfile: user, invalidateUser } = useProfileSettingsData();
-  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useAppContext()
+  const { userProfile: user, invalidateUser } = useProfileSettingsData()
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const [profile, setProfile] = useState({
     name: user.name ?? '',
@@ -34,7 +34,7 @@ export function ProfileSection() {
     bio: user.bio ?? '',
     location: user.location ?? '',
     website: user.website ?? '',
-  });
+  })
 
   const profileMutation = useMutation({
     mutationFn: () =>
@@ -45,41 +45,42 @@ export function ProfileSection() {
         location: profile.location.trim() || undefined,
         website: profile.website.trim() || undefined,
       }),
-    onSuccess: async () => { await invalidateUser(); toast.success(t.profileSettings.profileSection.profileUpdated); },
+    onSuccess: async () => {
+      await invalidateUser()
+      toast.success(t.profileSettings.profileSection.profileUpdated)
+    },
     onError: () => toast.error(t.profileSettings.profileSection.updateFailed),
-  });
+  })
 
   const uploadAvatarMutation = useMutation({
     mutationFn: (file: File) => usersApi.uploadAvatar(file),
     onSuccess: async () => {
-      await invalidateUser();
-      toast.success(t.profileSettings.profileSection.photoUpdated);
+      await invalidateUser()
+      toast.success(t.profileSettings.profileSection.photoUpdated)
     },
     onError: () => toast.error(t.profileSettings.profileSection.photoFailed),
-  });
+  })
 
-  const setProfileField =
-    (field: keyof typeof profile) =>
-    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setProfile((prev) => ({ ...prev, [field]: e.target.value }));
+  const setProfileField = (field: keyof typeof profile) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setProfile((prev) => ({ ...prev, [field]: e.target.value }))
 
   const handleProfileSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    profileMutation.mutate();
-  };
+    e.preventDefault()
+    profileMutation.mutate()
+  }
 
   const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) uploadAvatarMutation.mutate(file);
-    e.target.value = '';
-  };
+    const file = e.target.files?.[0]
+    if (file) uploadAvatarMutation.mutate(file)
+    e.target.value = ''
+  }
 
   const initials = (user.name ?? '?')
     .split(' ')
     .map((n) => n[0])
     .slice(0, 2)
     .join('')
-    .toUpperCase();
+    .toUpperCase()
 
   return (
     <form onSubmit={handleProfileSubmit} className="space-y-6">
@@ -91,14 +92,16 @@ export function ProfileSection() {
             <AvatarFallback className="text-xl font-bold">{initials}</AvatarFallback>
           </Avatar>
           <Tooltip>
-            <TooltipTrigger render={
-              <button
-                type="button"
-                onClick={() => avatarInputRef.current?.click()}
-                className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
-                aria-label={t.profileSettings.profileSection.changeAvatar}
-              />
-            }>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
+                  aria-label={t.profileSettings.profileSection.changeAvatar}
+                />
+              }
+            >
               <Camera className="h-3.5 w-3.5" />
             </TooltipTrigger>
             <TooltipContent>{t.profileSettings.profileSection.changePhoto}</TooltipContent>
@@ -153,7 +156,9 @@ export function ProfileSection() {
             className="min-h-24 resize-y"
             maxLength={300}
           />
-          <FieldDescription>{profile.bio.length}/300 {t.profileSettings.profileSection.characters}</FieldDescription>
+          <FieldDescription>
+            {profile.bio.length}/300 {t.profileSettings.profileSection.characters}
+          </FieldDescription>
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -183,15 +188,11 @@ export function ProfileSection() {
       </FieldGroup>
 
       <div className="flex justify-end gap-3">
-        <Button
-          type="submit"
-          className="gap-1.5"
-          disabled={profileMutation.isPending}
-        >
+        <Button type="submit" className="gap-1.5" disabled={profileMutation.isPending}>
           <Save className="h-3.5 w-3.5" />
           {profileMutation.isPending ? t.common.saving : t.profileSettings.profileSection.saveProfile}
         </Button>
       </div>
     </form>
-  );
+  )
 }

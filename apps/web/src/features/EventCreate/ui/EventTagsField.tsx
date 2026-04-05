@@ -1,30 +1,30 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { Field, FieldDescription, FieldTitle } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { tagsApi } from '@shared/api';
+import { tagsApi } from '@shared/api'
+import { Field, FieldDescription, FieldTitle } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useQuery } from '@tanstack/react-query'
+import { X } from 'lucide-react'
+import { useState } from 'react'
 
 interface Props {
-  tags: string[];
-  onAddTag: (tag: string) => void;
-  onRemoveTag: (tag: string) => void;
+  tags: string[]
+  onAddTag: (tag: string) => void
+  onRemoveTag: (tag: string) => void
 }
 
 export function EventTagsField({ tags, onAddTag, onRemoveTag }: Props) {
-  const { t } = useAppContext();
-  const [tagInput, setTagInput] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const { data: tagsResult } = useQuery({ queryKey: ['tags'], queryFn: () => tagsApi.getAll({ limit: 100 }) });
-  const allTags = tagsResult?.data ?? [];
+  const { t } = useAppContext()
+  const [tagInput, setTagInput] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const { data: tagsResult } = useQuery({ queryKey: ['tags'], queryFn: () => tagsApi.getAll({ limit: 100 }) })
+  const allTags = tagsResult?.data ?? []
 
   const addTag = (value: string) => {
-    const trimmed = value.trim().replace(/,$/, '').trim();
+    const trimmed = value.trim().replace(/,$/, '').trim()
     if (trimmed && !tags.includes(trimmed)) {
-      onAddTag(trimmed);
+      onAddTag(trimmed)
     }
-    setTagInput('');
-  };
+    setTagInput('')
+  }
 
   return (
     <Field>
@@ -51,60 +51,72 @@ export function EventTagsField({ tags, onAddTag, onRemoveTag }: Props) {
             <input
               value={tagInput}
               onChange={(e) => {
-                setTagInput(e.target.value);
-                setShowSuggestions(true);
+                setTagInput(e.target.value)
+                setShowSuggestions(true)
               }}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setShowSuggestions(false)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ',') {
-                  e.preventDefault();
-                  addTag(tagInput);
-                  setShowSuggestions(false);
+                  e.preventDefault()
+                  addTag(tagInput)
+                  setShowSuggestions(false)
                 } else if (e.key === 'Escape') {
-                  setShowSuggestions(false);
+                  setShowSuggestions(false)
                 } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
-                  onRemoveTag(tags[tags.length - 1]);
+                  onRemoveTag(tags[tags.length - 1])
                 }
               }}
               className="h-7 min-w-36 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               placeholder={tags.length ? t.eventCreate.tags.addMore : t.eventCreate.tags.searchOrCreate}
             />
           </div>
-          {showSuggestions && (() => {
-            const trimmed = tagInput.trim();
-            const filtered = allTags.filter(
-              (t) => t.name.toLowerCase().includes(trimmed.toLowerCase()) && !tags.includes(t.name),
-            );
-            const canCreate = trimmed.length > 0 && !allTags.some((t) => t.name.toLowerCase() === trimmed.toLowerCase()) && !tags.includes(trimmed);
-            if (!filtered.length && !canCreate) return null;
-            return (
-              <div className="absolute top-full left-0 right-0 z-50 mt-1 overflow-hidden rounded-md border border-border bg-popover shadow-md">
-                {filtered.slice(0, 8).map((tag) => (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); addTag(tag.name); setShowSuggestions(false); }}
-                    className="w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
-                  >
-                    {tag.name}
-                  </button>
-                ))}
-                {canCreate && (
-                  <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); addTag(trimmed); setShowSuggestions(false); }}
-                    className="w-full px-3 py-1.5 text-left text-sm text-primary hover:bg-accent"
-                  >
-                    {t.eventCreate.tags.createTag.replace('{{name}}', trimmed)}
-                  </button>
-                )}
-              </div>
-            );
-          })()}
+          {showSuggestions &&
+            (() => {
+              const trimmed = tagInput.trim()
+              const filtered = allTags.filter(
+                (t) => t.name.toLowerCase().includes(trimmed.toLowerCase()) && !tags.includes(t.name),
+              )
+              const canCreate =
+                trimmed.length > 0 &&
+                !allTags.some((t) => t.name.toLowerCase() === trimmed.toLowerCase()) &&
+                !tags.includes(trimmed)
+              if (!filtered.length && !canCreate) return null
+              return (
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 overflow-hidden rounded-md border border-border bg-popover shadow-md">
+                  {filtered.slice(0, 8).map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        addTag(tag.name)
+                        setShowSuggestions(false)
+                      }}
+                      className="w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                  {canCreate && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        addTag(trimmed)
+                        setShowSuggestions(false)
+                      }}
+                      className="w-full px-3 py-1.5 text-left text-sm text-primary hover:bg-accent"
+                    >
+                      {t.eventCreate.tags.createTag.replace('{{name}}', trimmed)}
+                    </button>
+                  )}
+                </div>
+              )
+            })()}
         </div>
       </div>
       <FieldDescription>{t.eventCreate.tags.hint}</FieldDescription>
     </Field>
-  );
+  )
 }

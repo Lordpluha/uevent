@@ -1,57 +1,73 @@
-import type { RefObject } from 'react';
-import type { DateRange } from 'react-day-picker';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import type { SortBy, SortOrder } from '@pages/Events/model/useEventsFilters'
 import {
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Sheet,
   SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@shared/components';
-import type { Format } from '../model/types';
-import { useAppContext } from '@shared/lib';
-import {
-  FilterFormatField,
-  FilterTagsField,
-  FilterDateRangeField,
-  FilterLocationField,
-} from './FilterFields';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { Search, SlidersHorizontal } from 'lucide-react'
+import type { RefObject } from 'react'
+import type { DateRange } from 'react-day-picker'
+import type { Format } from '../model/types'
+import { FilterDateRangeField, FilterFormatField, FilterLocationField, FilterTagsField } from './FilterFields'
 
 interface Props {
-  query: string;
-  onQueryChange: (v: string) => void;
-  format: Format;
-  onFormatChange: (v: Format) => void;
-  selectedTags: string[];
-  onTagsChange: (v: string[]) => void;
-  dateRange: DateRange | undefined;
-  onDateRangeChange: (v: DateRange | undefined) => void;
-  location: string;
-  onLocationChange: (v: string) => void;
-  activeFilterCount: number;
-  onClearAll: () => void;
-  resultCount: number;
-  tagsAnchor: RefObject<HTMLDivElement | null>;
-  locationAnchor: RefObject<HTMLDivElement | null>;
-  tags: string[];
-  cities: string[];
+  query: string
+  onQueryChange: (v: string) => void
+  format: Format
+  onFormatChange: (v: Format) => void
+  selectedTags: string[]
+  onTagsChange: (v: string[]) => void
+  dateRange: DateRange | undefined
+  onDateRangeChange: (v: DateRange | undefined) => void
+  location: string
+  onLocationChange: (v: string) => void
+  activeFilterCount: number
+  onClearAll: () => void
+  resultCount: number
+  tagsAnchor: RefObject<HTMLDivElement | null>
+  locationAnchor: RefObject<HTMLDivElement | null>
+  tags: string[]
+  cities: string[]
+  sortBy: SortBy
+  onSortByChange: (v: SortBy) => void
+  sortOrder: SortOrder
+  onSortOrderChange: (v: SortOrder) => void
 }
 
 export function EventsMobileFilters({
-  query, onQueryChange,
-  format, onFormatChange,
-  selectedTags, onTagsChange,
-  dateRange, onDateRangeChange,
-  location, onLocationChange,
-  activeFilterCount, onClearAll,
+  query,
+  onQueryChange,
+  format,
+  onFormatChange,
+  selectedTags,
+  onTagsChange,
+  dateRange,
+  onDateRangeChange,
+  location,
+  onLocationChange,
+  activeFilterCount,
+  onClearAll,
   resultCount,
-  tagsAnchor, locationAnchor,
+  tagsAnchor,
+  locationAnchor,
   tags,
   cities,
+  sortBy,
+  onSortByChange,
+  sortOrder,
+  onSortOrderChange,
 }: Props) {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
   return (
     <div className="mb-6 flex items-center gap-3 lg:hidden">
       {/* Search */}
@@ -102,26 +118,74 @@ export function EventsMobileFilters({
           <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-8">
             {/* Format */}
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.filters.format}</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t.filters.format}
+              </p>
               <FilterFormatField format={format} onFormatChange={onFormatChange} />
             </div>
 
             {/* Tags */}
             <div>
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.filters.tags}</p>
-              <FilterTagsField selectedTags={selectedTags} onTagsChange={onTagsChange} tagsAnchor={tagsAnchor} tags={tags} />
+              <FilterTagsField
+                selectedTags={selectedTags}
+                onTagsChange={onTagsChange}
+                tagsAnchor={tagsAnchor}
+                tags={tags}
+              />
             </div>
 
             {/* Date range */}
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.filters.dateRange}</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t.filters.dateRange}
+              </p>
               <FilterDateRangeField dateRange={dateRange} onDateRangeChange={onDateRangeChange} />
             </div>
 
             {/* Location */}
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.filters.location}</p>
-              <FilterLocationField location={location} onLocationChange={onLocationChange} locationAnchor={locationAnchor} cities={cities} />
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t.filters.location}
+              </p>
+              <FilterLocationField
+                location={location}
+                onLocationChange={onLocationChange}
+                locationAnchor={locationAnchor}
+                cities={cities}
+              />
+            </div>
+
+            {/* Sort */}
+            <div>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t.filters.sortBy}
+              </p>
+              <Select value={sortBy} onValueChange={(v) => onSortByChange(v as SortBy)}>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">{t.filters.sortDate}</SelectItem>
+                  <SelectItem value="name">{t.filters.sortName}</SelectItem>
+                  <SelectItem value="attendees">{t.filters.sortAttendees}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t.filters.sortOrder}
+              </p>
+              <Select value={sortOrder} onValueChange={(v) => onSortOrderChange(v as SortOrder)}>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="asc">{t.filters.sortAsc}</SelectItem>
+                  <SelectItem value="desc">{t.filters.sortDesc}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Apply button */}
@@ -139,5 +203,5 @@ export function EventsMobileFilters({
         </SheetContent>
       </Sheet>
     </div>
-  );
+  )
 }

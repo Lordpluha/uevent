@@ -1,21 +1,21 @@
-import { Link } from 'react-router';
-import { AlertTriangle, ChevronLeft } from 'lucide-react';
-import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, Separator } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { useMe } from '@entities/User';
-import { ProfileEditForm } from './ProfileEditForm';
-import { PasswordChangeForm } from './PasswordChangeForm';
+import { useMe } from '@entities/User'
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, Separator } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { AlertTriangle, ChevronLeft } from 'lucide-react'
+import { Link } from 'react-router'
+import { PasswordChangeForm } from './PasswordChangeForm'
+import { ProfileEditForm } from './ProfileEditForm'
 
 export function ProfileEditPage() {
-  const { t } = useAppContext();
-  const { data: user, isLoading, isError } = useMe();
+  const { t } = useAppContext()
+  const { data: user, isLoading, isError } = useMe()
 
   if (isLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <p className="text-sm text-muted-foreground">{t.profileEdit.loading}</p>
       </main>
-    );
+    )
   }
 
   if (isError || !user) {
@@ -29,11 +29,13 @@ export function ProfileEditPage() {
             <EmptyTitle className="text-base">{t.profileEdit.loadFailed}</EmptyTitle>
           </EmptyHeader>
           <EmptyContent>
-            <Link to="/" className="text-sm text-primary hover:underline">{t.common.backToHome}</Link>
+            <Link to="/" className="text-sm text-primary hover:underline">
+              {t.common.backToHome}
+            </Link>
           </EmptyContent>
         </Empty>
       </main>
-    );
+    )
   }
 
   return (
@@ -55,5 +57,5 @@ export function ProfileEditPage() {
 
       <PasswordChangeForm />
     </main>
-  );
+  )
 }

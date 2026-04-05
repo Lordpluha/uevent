@@ -1,18 +1,25 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException, BadRequestException, Logger } from '@nestjs/common'
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { randomInt } from 'crypto'
+import { toDataURL } from 'qrcode'
 import * as speakeasy from 'speakeasy'
-import {toDataURL} from 'qrcode'
+import { Repository } from 'typeorm'
+import { hashPassword, verifyPassword } from '../../common/password.util'
+import { EmailService } from '../notifications/email.service'
+import { CreateUserDto } from '../users/dto/create-user.dto'
 import { User } from '../users/entities/user.entity'
-import { UserSession } from '../users/entities/user-session.entity'
 import { UserOtp } from '../users/entities/user-otp.entity'
+import { UserSession } from '../users/entities/user-session.entity'
 import { LoginDto } from './dto/login.dto'
 import { JwtPayload } from './types/jwt-payload.interface'
-import { hashPassword, verifyPassword } from '../../common/password.util'
-import { CreateUserDto } from '../users/dto/create-user.dto'
-import { EmailService } from '../notifications/email.service'
-import {randomInt} from 'crypto'
 
 const ACCESS_EXPIRES = '15m'
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -116,13 +123,15 @@ export class UsersAuthService {
 
     // Send login notification email (async, don't block login)
     if (user.login_notifications_enabled) {
-      this.emailService.sendLoginNotification(
-        user.email,
-        user.first_name || user.username,
-        meta?.ip_address || 'Unknown',
-        meta?.user_agent || 'Unknown',
-        new Date(),
-      ).catch((e: Error) => this.logger.warn(`Failed to send login notification email: ${e.message}`))
+      this.emailService
+        .sendLoginNotification(
+          user.email,
+          user.first_name || user.username,
+          meta?.ip_address || 'Unknown',
+          meta?.user_agent || 'Unknown',
+          new Date(),
+        )
+        .catch((e: Error) => this.logger.warn(`Failed to send login notification email: ${e.message}`))
     }
 
     return { access_token: tokens.access_token, refresh_token: tokens.refresh_token }
@@ -197,7 +206,7 @@ export class UsersAuthService {
       where: { user_id: userId },
       order: { last_active_at: 'DESC' },
     })
-    return sessions.map(s => ({
+    return sessions.map((s) => ({
       id: s.id,
       ip_address: s.ip_address,
       user_agent: s.user_agent,
@@ -295,10 +304,7 @@ export class UsersAuthService {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
 
     // Invalidate old password reset OTPs
-    await this.otpRepo.update(
-      { user_id: user.id, type: 'password_reset', used: false },
-      { used: true },
-    )
+    await this.otpRepo.update({ user_id: user.id, type: 'password_reset', used: false }, { used: true })
 
     // Save new OTP
     const otp = this.otpRepo.create({
@@ -310,11 +316,7 @@ export class UsersAuthService {
     await this.otpRepo.save(otp)
 
     // Send email
-    await this.emailService.sendPasswordResetEmail(
-      user.email,
-      user.first_name || user.username,
-      code,
-    )
+    await this.emailService.sendPasswordResetEmail(user.email, user.first_name || user.username, code)
 
     return { message: 'If that email exists, a reset code has been sent.' }
   }

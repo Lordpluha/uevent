@@ -1,28 +1,28 @@
-import { cva } from 'class-variance-authority';
-import { CalendarDays, Clock, MapPin, Video, QrCode } from 'lucide-react';
-import { Badge } from '@shared/components';
-import { getCurrencySymbol } from '@shared/config/payment';
-import { usePaymentConfig } from '@shared/hooks/usePaymentConfig';
-import { useAppContext } from '@shared/lib';
-import { cn } from '@shared/lib/utils';
-import type { TicketStatus, TicketType } from '../model/ticket';
+import { Badge } from '@shared/components'
+import { getCurrencySymbol } from '@shared/config/payment'
+import { usePaymentConfig } from '@shared/hooks/usePaymentConfig'
+import { useAppContext } from '@shared/lib'
+import { cn } from '@shared/lib/utils'
+import { cva } from 'class-variance-authority'
+import { CalendarDays, Clock, MapPin, QrCode, Video } from 'lucide-react'
+import type { TicketStatus, TicketType } from '../model/ticket'
 
-export type { TicketStatus, TicketType } from '../model/ticket';
+export type { TicketStatus, TicketType } from '../model/ticket'
 
 export type TicketCardProps = {
-  id: string;
-  ticketType: TicketType;
-  price: number;
-  currency?: string;
-  eventTitle: string;
-  eventDate: string;
-  eventTime: string;
-  location: string;
-  format: 'online' | 'offline';
-  seat?: string;
-  status: TicketStatus;
-  onSelect?: () => void;
-};
+  id: string
+  ticketType: TicketType
+  price: number
+  currency?: string
+  eventTitle: string
+  eventDate: string
+  eventTime: string
+  location: string
+  format: 'online' | 'offline'
+  seat?: string
+  status: TicketStatus
+  onSelect?: () => void
+}
 
 /* ── cva definitions ─────────────────────────────────────── */
 
@@ -35,7 +35,7 @@ const panelVariants = cva('flex w-28 shrink-0 flex-col items-center justify-cent
     },
   },
   defaultVariants: { ticketType: 'standard' },
-});
+})
 
 const panelTextVariants = cva('text-xs font-bold uppercase tracking-widest', {
   variants: {
@@ -46,7 +46,7 @@ const panelTextVariants = cva('text-xs font-bold uppercase tracking-widest', {
     },
   },
   defaultVariants: { ticketType: 'standard' },
-});
+})
 
 const panelPriceVariants = cva('text-2xl font-black leading-none', {
   variants: {
@@ -57,9 +57,7 @@ const panelPriceVariants = cva('text-2xl font-black leading-none', {
     },
   },
   defaultVariants: { ticketType: 'standard' },
-});
-
-
+})
 
 /* ──────────────────────────────────────────────────────────── */
 
@@ -76,21 +74,21 @@ export const TicketCard = ({
   status,
   onSelect,
 }: TicketCardProps) => {
-  const { t } = useAppContext();
-  const { data: paymentConfig } = usePaymentConfig();
+  const { t } = useAppContext()
+  const { data: paymentConfig } = usePaymentConfig()
   const TYPE_LABELS: Record<TicketType, string> = {
     free: t.common.free,
     standard: t.common.standard,
     vip: t.common.vip,
-  };
+  }
   const STATUS_BADGE: Record<TicketStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
     available: { label: t.entityCard.available, variant: 'secondary' },
     limited: { label: t.entityCard.limited, variant: 'default' },
     'sold-out': { label: t.entityCard.soldOut, variant: 'destructive' },
-  };
-  const statusBadge = STATUS_BADGE[status];
-  const isSoldOut = status === 'sold-out';
-  const currencySymbol = getCurrencySymbol({ currency, paymentConfig });
+  }
+  const statusBadge = STATUS_BADGE[status]
+  const isSoldOut = status === 'sold-out'
+  const currencySymbol = getCurrencySymbol({ currency, paymentConfig })
 
   return (
     <div
@@ -102,7 +100,9 @@ export const TicketCard = ({
       {/* Left panel — price + type */}
       <div className={cn(panelVariants({ ticketType }))}>
         <span className={cn(panelTextVariants({ ticketType }))}>{TYPE_LABELS[ticketType]}</span>
-        <span className={cn(panelPriceVariants({ ticketType }))}>{price === 0 ? t.common.free : `${currencySymbol}${price}`}</span>
+        <span className={cn(panelPriceVariants({ ticketType }))}>
+          {price === 0 ? t.common.free : `${currencySymbol}${price}`}
+        </span>
         {seat && (
           <span className="mt-1 rounded bg-black/10 px-1.5 py-0.5 text-[10px] font-semibold text-foreground/60">
             {t.entityCard.seat} {seat}
@@ -161,5 +161,5 @@ export const TicketCard = ({
         <QrCode className="h-10 w-10 text-border" />
       </div>
     </div>
-  );
-};
+  )
+}

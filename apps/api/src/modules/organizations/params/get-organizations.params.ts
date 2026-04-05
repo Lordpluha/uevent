@@ -6,10 +6,12 @@ export const GetOrganizationsParamsSchema = z.object({
   category: z.string().optional(),
   verified: z.preprocess((v) => v === 'true' || v === true, z.boolean()).optional(),
   search: z.string().optional(),
-  tags: z.preprocess(
-    (val) => (Array.isArray(val) ? val : val !== undefined ? [val] : undefined),
-    z.array(z.string()).optional(),
-  ).optional(),
+  tags: z
+    .preprocess(
+      (val) => (Array.isArray(val) ? val : val !== undefined ? [val] : undefined),
+      z.array(z.string()).optional(),
+    )
+    .optional(),
   city: z.string().optional(),
 })
 

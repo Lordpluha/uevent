@@ -113,13 +113,14 @@ export class ContentLocalizationService {
     const includeEvent = options.includeEvent ?? true
     const source = this.asObject(ticket)
 
-    const event = includeEvent && this.isPlainObject(source.event)
-      ? await this.localizeEvent(source.event, locale, {
-          includeOrganization: true,
-          includeTickets: false,
-          includeTags: true,
-        })
-      : source.event
+    const event =
+      includeEvent && this.isPlainObject(source.event)
+        ? await this.localizeEvent(source.event, locale, {
+            includeOrganization: true,
+            includeTickets: false,
+            includeTags: true,
+          })
+        : source.event
 
     return {
       ...localized,
@@ -148,7 +149,7 @@ export class ContentLocalizationService {
 
   private async translateUnknown<T>(value: T, locale: RequestedLocale): Promise<T> {
     if (!locale || typeof value !== 'string') return value
-    return await this.translateText(value, locale) as T
+    return (await this.translateText(value, locale)) as T
   }
 
   private localizeTags(tags: unknown, locale: RequestedLocale) {
@@ -195,7 +196,9 @@ export class ContentLocalizationService {
 
     const request = this.requestTranslation(text, locale)
       .catch((error) => {
-        this.logger.warn(`Translation failed for locale ${locale}: ${error instanceof Error ? error.message : 'unknown error'}`)
+        this.logger.warn(
+          `Translation failed for locale ${locale}: ${error instanceof Error ? error.message : 'unknown error'}`,
+        )
         return text
       })
       .finally(() => {
@@ -230,7 +233,7 @@ export class ContentLocalizationService {
         throw new Error(`translation upstream returned ${response.status}`)
       }
 
-      const payload = await response.json() as unknown
+      const payload = (await response.json()) as unknown
       const translated = this.extractTranslatedText(payload)
       return translated || text
     } finally {

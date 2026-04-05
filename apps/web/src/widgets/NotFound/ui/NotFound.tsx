@@ -1,9 +1,9 @@
-import { useNavigate } from 'react-router';
-import { useAppContext } from '@shared/lib';
+import { useAppContext } from '@shared/lib'
+import { useNavigate } from 'react-router'
 
 export const NotFound = () => {
-  const navigate = useNavigate();
-  const { t } = useAppContext();
+  const navigate = useNavigate()
+  const { t } = useAppContext()
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 bg-background px-6 text-center">
@@ -19,9 +19,7 @@ export const NotFound = () => {
 
       <div className="flex flex-col items-center gap-3">
         <h1 className="text-2xl font-semibold text-foreground">{t.errors.pageNotFound}</h1>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          {t.errors.pageNotFoundDesc}
-        </p>
+        <p className="max-w-sm text-sm text-muted-foreground">{t.errors.pageNotFoundDesc}</p>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-3">
@@ -40,5 +38,5 @@ export const NotFound = () => {
         </a>
       </div>
     </div>
-  );
-};
+  )
+}

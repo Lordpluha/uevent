@@ -1,8 +1,8 @@
-import { z } from 'zod';
-import { ticketStatusSchema, ticketTypeSchema } from '@shared/lib/ticket-schemas';
+import { ticketStatusSchema, ticketTypeSchema } from '@shared/lib/ticket-schemas'
+import { z } from 'zod'
 
-export { ticketStatusSchema, ticketTypeSchema } from '@shared/lib/ticket-schemas';
-export type { TicketStatus, TicketType } from '@shared/lib/ticket-schemas';
+export type { TicketStatus, TicketType } from '@shared/lib/ticket-schemas'
+export { ticketStatusSchema, ticketTypeSchema } from '@shared/lib/ticket-schemas'
 
 export const ticketSchema = z.object({
   ticketType: ticketTypeSchema,
@@ -15,9 +15,9 @@ export const ticketSchema = z.object({
   format: z.enum(['online', 'offline']),
   seat: z.string().optional(),
   status: ticketStatusSchema,
-});
+})
 
-export const ticketListSchema = z.array(ticketSchema);
+export const ticketListSchema = z.array(ticketSchema)
 
-export type TicketModel = z.infer<typeof ticketSchema>;
-export type TicketList = z.infer<typeof ticketListSchema>;
+export type TicketModel = z.infer<typeof ticketSchema>
+export type TicketList = z.infer<typeof ticketListSchema>

@@ -1,5 +1,5 @@
-import type { AxiosInstance } from 'axios';
-import { api } from './api';
+import type { AxiosInstance } from 'axios'
+import { api } from './api'
 
 /**
  * Base class for API resource clients.
@@ -7,11 +7,11 @@ import { api } from './api';
  * with the response-type generic: `(await this.http.get<T>(path)).data`.
  */
 export class BasicClientApi {
-  protected readonly basePath: string;
+  protected readonly basePath: string
   /** Shared axios instance — accessible in every subclass via `this.http` */
-  protected readonly http: AxiosInstance = api;
+  protected readonly http: AxiosInstance = api
 
   constructor(basePath: string) {
-    this.basePath = basePath.replace(/\/$/, '');
+    this.basePath = basePath.replace(/\/$/, '')
   }
 }

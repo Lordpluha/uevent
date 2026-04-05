@@ -1,4 +1,4 @@
-export type Locale = 'en' | 'ua';
+export type Locale = 'en' | 'ua'
 
 /**
  * Explicit Dictionary type matching the structure of public/locales/*.json.
@@ -7,942 +7,969 @@ export type Locale = 'en' | 'ua';
  */
 export type Dictionary = {
   header: {
-    nav: { events: string; organizations: string; tickets: string };
+    nav: { events: string; organizations: string; tickets: string }
     actions: {
-      dark: string;
-      light: string;
-      darkTheme: string;
-      lightTheme: string;
-      searchEvents: string;
-      searchSubtitle: string;
-      startGroup: string;
-      login: string;
-      logout: string;
-      myAccount: string;
-      profileSettings: string;
-    };
+      dark: string
+      light: string
+      darkTheme: string
+      lightTheme: string
+      searchEvents: string
+      searchSubtitle: string
+      startGroup: string
+      login: string
+      logout: string
+      myAccount: string
+      profileSettings: string
+    }
     search: {
-      placeholder: string;
-      empty: string;
-      groups: { events: string; organizations: string };
-    };
-    menu: { open: string; close: string };
-  };
+      placeholder: string
+      empty: string
+      groups: { events: string; organizations: string }
+    }
+    menu: { open: string; close: string }
+  }
   auth: {
     tabs: {
-      user: string;
-      organization: string;
-    };
+      user: string
+      organization: string
+    }
     login: {
-      title: string;
-      subtitle: string;
-      email: string;
-      emailPlaceholder: string;
-      password: string;
-      passwordPlaceholder: string;
-      submit: string;
-      noAccount: string;
-      switchToRegister: string;
-      continueWithGoogle: string;
-      orDivider: string;
-    };
+      title: string
+      subtitle: string
+      email: string
+      emailPlaceholder: string
+      password: string
+      passwordPlaceholder: string
+      submit: string
+      noAccount: string
+      switchToRegister: string
+      continueWithGoogle: string
+      orDivider: string
+    }
     orgLogin: {
-      title: string;
-      subtitle: string;
-      email: string;
-      emailPlaceholder: string;
-      password: string;
-      passwordPlaceholder: string;
-      submit: string;
-      noAccount: string;
-      switchToRegister: string;
-      orDivider: string;
-    };
+      title: string
+      subtitle: string
+      email: string
+      emailPlaceholder: string
+      password: string
+      passwordPlaceholder: string
+      submit: string
+      noAccount: string
+      switchToRegister: string
+      orDivider: string
+    }
     orgRegister: {
-      title: string;
-      subtitle: string;
-      orgName: string;
-      orgNamePlaceholder: string;
-      email: string;
-      emailPlaceholder: string;
-      password: string;
-      passwordPlaceholder: string;
-      confirmPassword: string;
-      confirmPasswordPlaceholder: string;
-      submit: string;
-      hasAccount: string;
-      switchToLogin: string;
-      orDivider: string;
-    };
+      title: string
+      subtitle: string
+      orgName: string
+      orgNamePlaceholder: string
+      email: string
+      emailPlaceholder: string
+      password: string
+      passwordPlaceholder: string
+      confirmPassword: string
+      confirmPasswordPlaceholder: string
+      submit: string
+      hasAccount: string
+      switchToLogin: string
+      orDivider: string
+    }
     register: {
-      title: string;
-      subtitle: string;
-      name: string;
-      namePlaceholder: string;
-      email: string;
-      emailPlaceholder: string;
-      password: string;
-      passwordPlaceholder: string;
-      confirmPassword: string;
-      confirmPasswordPlaceholder: string;
-      submit: string;
-      hasAccount: string;
-      switchToLogin: string;
-      continueWithGoogle: string;
-      orDivider: string;
-    };
-  };
+      title: string
+      subtitle: string
+      name: string
+      namePlaceholder: string
+      email: string
+      emailPlaceholder: string
+      password: string
+      passwordPlaceholder: string
+      confirmPassword: string
+      confirmPasswordPlaceholder: string
+      submit: string
+      hasAccount: string
+      switchToLogin: string
+      continueWithGoogle: string
+      orDivider: string
+    }
+  }
   footer: {
-    description: string;
-    createGroup: string;
+    description: string
+    createGroup: string
     sections: {
-      account: { title: string; links: string[] };
-      discover: { title: string; links: string[] };
-      about: { title: string; links: string[] };
-      organizers: { title: string; links: string[] };
-    };
-    copyright: string;
-    privacyPolicy: string;
-    termsOfUse: string;
-  };
+      account: { title: string; links: string[] }
+      discover: { title: string; links: string[] }
+      about: { title: string; links: string[] }
+      organizers: { title: string; links: string[] }
+    }
+    copyright: string
+    privacyPolicy: string
+    termsOfUse: string
+  }
   home: {
     hero: {
-      headline: string;
-      subheadline: string;
-      cta: string;
-      ctaHost: string;
-    };
+      headline: string
+      subheadline: string
+      cta: string
+      ctaHost: string
+    }
     stats: {
-      events: string;
-      cities: string;
-      attendees: string;
-      organizations: string;
-    };
+      events: string
+      cities: string
+      attendees: string
+      organizations: string
+    }
     trending: {
-      title: string;
-      browseAll: string;
-      noEvents: string;
-    };
+      title: string
+      browseAll: string
+      noEvents: string
+    }
     categories: {
-      title: string;
+      title: string
       items: {
-        technology: string;
-        design: string;
-        music: string;
-        business: string;
-        photography: string;
-        networking: string;
-        culture: string;
-        online: string;
-      };
-    };
+        technology: string
+        design: string
+        music: string
+        business: string
+        photography: string
+        networking: string
+        culture: string
+        online: string
+      }
+    }
     howItWorks: {
-      title: string;
-      steps: Array<{ title: string; desc: string }>;
-    };
+      title: string
+      steps: Array<{ title: string; desc: string }>
+    }
     featuredOrgs: {
-      title: string;
-      browseAll: string;
-    };
+      title: string
+      browseAll: string
+    }
     hostCta: {
-      title: string;
-      subtitle: string;
-      cta: string;
-    };
-  };
+      title: string
+      subtitle: string
+      cta: string
+    }
+  }
   common: {
-    loading: string;
-    loadingLabel: string;
-    cancel: string;
-    close: string;
-    save: string;
-    saving: string;
-    saveChanges: string;
-    back: string;
-    backToHome: string;
-    backToEvents: string;
-    backToEvent: string;
-    backToOrganizations: string;
-    backToProfile: string;
-    seeAll: string;
-    noImage: string;
-    online: string;
-    offline: string;
-    free: string;
-    standard: string;
-    vip: string;
-    gmt: string;
-    retry: string;
-    goBack: string;
-    home: string;
-    open: string;
-    share: string;
-    none: string;
-    linkCopied: string;
-    copyFailed: string;
-    processing: string;
-    creating: string;
-    updating: string;
-    verifying: string;
-    date: string;
-    time: string;
-    location: string;
-    description: string;
-    email: string;
-    password: string;
-    title: string;
-    tags: string;
-    format: string;
-    category: string;
-    website: string;
-    phone: string;
-    bio: string;
-    members: string;
-    followers: string;
-    following: string;
-    events: string;
-    attendees: string;
-    quantity: string;
-    price: string;
-    total: string;
-    discount: string;
-    verified: string;
-    createEvent: string;
-  };
+    loading: string
+    loadingLabel: string
+    cancel: string
+    close: string
+    save: string
+    saving: string
+    saveChanges: string
+    back: string
+    backToHome: string
+    backToEvents: string
+    backToEvent: string
+    backToOrganizations: string
+    backToProfile: string
+    seeAll: string
+    noImage: string
+    online: string
+    offline: string
+    free: string
+    standard: string
+    vip: string
+    gmt: string
+    retry: string
+    goBack: string
+    unknown: string
+    home: string
+    open: string
+    share: string
+    none: string
+    linkCopied: string
+    copyFailed: string
+    processing: string
+    creating: string
+    updating: string
+    verifying: string
+    date: string
+    time: string
+    location: string
+    description: string
+    email: string
+    password: string
+    title: string
+    tags: string
+    format: string
+    category: string
+    website: string
+    phone: string
+    bio: string
+    members: string
+    followers: string
+    following: string
+    events: string
+    attendees: string
+    quantity: string
+    price: string
+    total: string
+    discount: string
+    verified: string
+    createEvent: string
+  }
   events: {
-    title: string;
-    subtitle: string;
-    notFound: string;
-    noEvents: string;
-    noEventsTip: string;
-    pagination: string;
-    promoApplied: string;
-    promoRemoved: string;
-    subscribeEvent: string;
-    unsubscribeEvent: string;
-    followOrg: string;
-    unfollowOrg: string;
-    attendees: string;
-    allEvents: string;
-    tickets: string;
-    addTicket: string;
-    photos: string;
-    openGallery: string;
+    title: string
+    subtitle: string
+    notFound: string
+    noEvents: string
+    noEventsTip: string
+    pagination: string
+    promoApplied: string
+    promoRemoved: string
+    subscribeEvent: string
+    unsubscribeEvent: string
+    followOrg: string
+    unfollowOrg: string
+    attendees: string
+    allEvents: string
+    tickets: string
+    addTicket: string
+    photos: string
+    openGallery: string
     details: {
-      calendarAdded: string;
-      calendarApiDisabled: string;
-      calendarAccessDenied: string;
-      calendarLinkGoogle: string;
-      calendarFailed: string;
-      googleCalendar: string;
-      platform: string;
-      venue: string;
-      organizedBy: string;
-      rating: string;
-      aboutEvent: string;
-      joinMeeting: string;
-      openGoogleMaps: string;
-      whosGoing: string;
-      peopleAttending: string;
-      attendeesSeeAll: string;
-      attendeesHide: string;
-      attendeesPrivate: string;
-      attendeesNone: string;
-      onlineEvent: string;
-      noPhysicalLocation: string;
-      mapTitle: string;
-    };
+      calendarAdded: string
+      calendarApiDisabled: string
+      calendarAccessDenied: string
+      calendarLinkGoogle: string
+      calendarFailed: string
+      googleCalendar: string
+      platform: string
+      venue: string
+      organizedBy: string
+      rating: string
+      aboutEvent: string
+      joinMeeting: string
+      openGoogleMaps: string
+      whosGoing: string
+      peopleAttending: string
+      attendeesSeeAll: string
+      attendeesHide: string
+      attendeesPrivate: string
+      attendeesNone: string
+      onlineEvent: string
+      noPhysicalLocation: string
+      mapTitle: string
+    }
     related: {
-      byOrganizer: string;
-      noByOrganizer: string;
-      similar: string;
-      discoverMore: string;
-      noSimilar: string;
-    };
-  };
+      byOrganizer: string
+      noByOrganizer: string
+      similar: string
+      discoverMore: string
+      noSimilar: string
+    }
+  }
   organizations: {
-    title: string;
-    subtitle: string;
-    searchPlaceholder: string;
-    found: string;
-    noOrgs: string;
-    noOrgsTip: string;
-    notFound: string;
-    subscribed: string;
-    unsubscribed: string;
-    subscribeFailed: string;
-    subscribe: string;
-    unsubscribe: string;
-    noEventsYet: string;
-    noEventsDesc: string;
-    eventsBy: string;
-    founded: string;
-    dashboard: string;
-  };
+    title: string
+    subtitle: string
+    searchPlaceholder: string
+    found: string
+    noOrgs: string
+    noOrgsTip: string
+    notFound: string
+    subscribed: string
+    unsubscribed: string
+    subscribeFailed: string
+    subscribe: string
+    unsubscribe: string
+    noEventsYet: string
+    noEventsDesc: string
+    eventsBy: string
+    founded: string
+    dashboard: string
+  }
   orgAccount: {
-    title: string;
-    subtitle: string;
-    loading: string;
-    unavailable: string;
-    backToPublic: string;
-    quickAction: string;
-    launchEvent: string;
-    launchEventDesc: string;
-    browseEvents: string;
+    title: string
+    subtitle: string
+    loading: string
+    unavailable: string
+    backToPublic: string
+    quickAction: string
+    launchEvent: string
+    launchEventDesc: string
+    browseEvents: string
     stats: {
-      organization: string;
-      publishedEvents: string;
-      security: string;
-      twoFaEnabled: string;
-      twoFaDisabled: string;
-    };
+      organization: string
+      publishedEvents: string
+      security: string
+      twoFaEnabled: string
+      twoFaDisabled: string
+    }
     profile: {
-      title: string;
-      updated: string;
-      updateFailed: string;
-      name: string;
-      slogan: string;
-      sloganPlaceholder: string;
-      descriptionPlaceholder: string;
-      city: string;
-      categoryPlaceholder: string;
-      cityPlaceholder: string;
-      phonePlaceholder: string;
-      saveProfile: string;
-    };
+      title: string
+      updated: string
+      updateFailed: string
+      name: string
+      slogan: string
+      sloganPlaceholder: string
+      descriptionPlaceholder: string
+      city: string
+      categoryPlaceholder: string
+      cityPlaceholder: string
+      phonePlaceholder: string
+      saveProfile: string
+    }
     settings: {
-      title: string;
-      emailDesc: string;
-      emailPlaceholder: string;
-      updateEmail: string;
-      emailUpdated: string;
-      emailUpdateFailed: string;
-      currentPassword: string;
-      newPassword: string;
-      changePassword: string;
-      passwordUpdated: string;
-      passwordUpdateFailed: string;
-    };
+      title: string
+      emailDesc: string
+      emailPlaceholder: string
+      updateEmail: string
+      emailUpdated: string
+      emailUpdateFailed: string
+      currentPassword: string
+      newPassword: string
+      changePassword: string
+      passwordUpdated: string
+      passwordUpdateFailed: string
+    }
     branding: {
-      title: string;
-      subtitle: string;
-      logoUpdated: string;
-      logoFailed: string;
-      coverUpdated: string;
-      coverFailed: string;
-      changeCover: string;
-      changeLogo: string;
-      coverAlt: string;
-      uploadingCover: string;
-      logoLabel: string;
-      changeLogoAria: string;
-      logoHint: string;
-      uploadingLogo: string;
-    };
+      title: string
+      subtitle: string
+      logoUpdated: string
+      logoFailed: string
+      coverUpdated: string
+      coverFailed: string
+      changeCover: string
+      changeLogo: string
+      coverAlt: string
+      uploadingCover: string
+      logoLabel: string
+      changeLogoAria: string
+      logoHint: string
+      uploadingLogo: string
+    }
     security: {
-      title: string;
-      enableTitle: string;
-      enableDesc: string;
-      setupTitle: string;
-      setupDesc: string;
-      manualKey: string;
-      verificationCode: string;
-      qrAlt: string;
-      disableTitle: string;
-      disableDesc: string;
-      disabling: string;
-      disable2fa: string;
-      twoFa: string;
-      twoFaDesc: string;
-      enabledDesc: string;
-      setupFailed: string;
-      enabled: string;
-      invalidCode: string;
-      disabled: string;
-      saveSettings: string;
-      updated: string;
-      updateFailed: string;
-      enabling: string;
-      toggleTwoFa: string;
-      enable2fa: string;
-    };
+      title: string
+      enableTitle: string
+      enableDesc: string
+      setupTitle: string
+      setupDesc: string
+      manualKey: string
+      verificationCode: string
+      qrAlt: string
+      disableTitle: string
+      disableDesc: string
+      disabling: string
+      disable2fa: string
+      twoFa: string
+      twoFaDesc: string
+      enabledDesc: string
+      setupFailed: string
+      enabled: string
+      invalidCode: string
+      disabled: string
+      saveSettings: string
+      updated: string
+      updateFailed: string
+      enabling: string
+      toggleTwoFa: string
+      enable2fa: string
+    }
     eventsSection: {
-      title: string;
-      events: string;
-      noEvents: string;
-      openEvent: string;
-      addTicket: string;
-    };
-  };
-  orgEdit: {
-    title: string;
-    loading: string;
-    notFound: string;
-    backToOrg: string;
-    updated: string;
-    updateFailed: string;
-    name: string;
-    namePlaceholder: string;
-    description: string;
-    descriptionPlaceholder: string;
-    maxChars: string;
-    category: string;
-    categoryPlaceholder: string;
-    location: string;
-    locationPlaceholder: string;
-    website: string;
-    websiteHint: string;
-    coverUpdated: string;
-    coverFailed: string;
-    logoUpdated: string;
-    logoFailed: string;
-    changeCover: string;
-    changeLogo: string;
-    coverAlt: string;
-    logoLabel: string;
-    logoHint: string;
-    websitePlaceholder: string;
-  };
-  checkout: {
-    configError: string;
-    loadFailed: string;
-    noPayment: string;
-    back: string;
-    title: string;
-    subtitle: string;
-    secureNote: string;
-    redirectNote: string;
-    pay: string;
-    event: string;
-    ticketType: string;
-    totalAmount: string;
-    stripeNotReady: string;
-    paymentSuccess: string;
-    paymentProcessing: string;
-    paymentFailed: string;
-    defaultName: string;
-  };
-  checkoutReview: {
-    loading: string;
-    title: string;
-    subtitle: string;
-    securePurchase: string;
-    selectedTicket: string;
-    unitPrice: string;
-    available: string;
-    quantityShort: string;
-    decreaseQuantity: string;
-    increaseQuantity: string;
-    subtotal: string;
-    proceedToPayment: string;
-    editSelection: string;
-    soldOut: string;
-    startFailed: string;
-  };
-  checkoutSuccess: {
-    confirming: string;
-    confirmingDesc: string;
-    success: string;
-    successDesc: string;
-    orderId: string;
-    eventId: string;
-    ticketType: string;
-    totalPaid: string;
-    promoCode: string;
-    calendarAdding: string;
-    calendarAdded: string;
-    calendarUnavailable: string;
-    downloadTicket: string;
-    discoverMore: string;
-  };
-  paymentFailed: {
-    invalidLink: string;
-    title: string;
-    description: string;
-    reason: string;
-    paymentIntentId: string;
-    keepRecords: string;
-    tryAgain: string;
-    backToEvents: string;
-    helpText: string;
-  };
-  paymentSuccess: {
-    invalidLink: string;
-    confirming: string;
-    confirmingDesc: string;
-    failed: string;
-    failedDesc: string;
-    success: string;
-    successDesc: string;
-    paid: string;
-    paymentIntentId: string;
-    keepRecords: string;
-    viewTickets: string;
-    browseMore: string;
-  };
-  paymentModal: {
-    intentCreated: string;
-    createFailed: string;
-    fillFields: string;
-    title: string;
-    ticketPrice: string;
-    total: string;
-    fullName: string;
-    fullNamePlaceholder: string;
-    emailPlaceholder: string;
-    secureNote: string;
-    pay: string;
-  };
-  profile: {
-    unavailable: string;
-    eventsAttended: string;
-    tickets: string;
-    interests: string;
-    myEvents: string;
-    noEventsYet: string;
-    browseEvents: string;
-    myTickets: string;
-    noTickets: string;
-    editProfile: string;
-    settings: string;
-    goToSettings: string;
-    shareTitle: string;
-    joined: string;
-    recentEvents: string;
-    eventFallback: string;
-    downloadTicket: string;
-    overview: string;
-    orgProfileBanner: string;
-    orgProfileDesc: string;
-    previewProfile: string;
-  };
-  profileEdit: {
-    loading: string;
-    loadFailed: string;
-    title: string;
-    subtitle: string;
-    photoUpdated: string;
-    photoFailed: string;
-    profileUpdated: string;
-    saveFailed: string;
-    profilePhoto: string;
-    changePhoto: string;
-    photoHint: string;
-    togglePasswordVisibility: string;
-    toggleTwoFa: string;
-    fullName: string;
-    fullNamePlaceholder: string;
-    username: string;
-    usernamePlaceholder: string;
-    usernameHint: string;
-    bio: string;
-    bioPlaceholder: string;
-    bioMaxChars: string;
-    location: string;
-    locationPlaceholder: string;
-    website: string;
-    websitePlaceholder: string;
-    security: string;
-    securityDesc: string;
-    twoFa: string;
-    twoFaEnabledDesc: string;
-    twoFaDisabledDesc: string;
-    currentPassword: string;
-    currentPasswordPlaceholder: string;
-    currentPasswordRequired: string;
-    newPassword: string;
-    newPasswordPlaceholder: string;
-    passwordMinChars: string;
-    confirmPassword: string;
-    confirmPasswordPlaceholder: string;
-    passwordMismatch: string;
-    passwordNotAvailable: string;
-    updatePassword: string;
-  };
-  profileSettings: {
-    title: string;
-    subtitle: string;
-    tabs: {
-      profile: string;
-      preferences: string;
-      security: string;
-      notifications: string;
-      sessions: string;
-    };
-    activeSessions: string;
-    profileSection: {
-      photoUpdated: string;
-      photoFailed: string;
-      profileUpdated: string;
-      updateFailed: string;
-      profilePhoto: string;
-      photoHint: string;
-      changePhoto: string;
-      changeAvatar: string;
-      uploadAvatar: string;
-      fullName: string;
-      fullNamePlaceholder: string;
-      username: string;
-      usernamePlaceholder: string;
-      usernameHint: string;
-      bio: string;
-      bioPlaceholder: string;
-      characters: string;
-      location: string;
-      locationPlaceholder: string;
-      website: string;
-      websitePlaceholder: string;
-      saveProfile: string;
-    };
-    preferences: {
-      timezone: string;
-      timezonePlaceholder: string;
-      timezones: string;
-      timezoneHint: string;
-      favoriteTopics: string;
-      topicsHint: string;
-      noTags: string;
-      selected: string;
-      saved: string;
-      saveFailed: string;
-      savePreferences: string;
-    };
-    security: {
-      setupTitle: string;
-      setupDesc: string;
-      manualKey: string;
-      verificationCode: string;
-      qrAlt: string;
-      toggleTwoFa: string;
-      enable2fa: string;
-      disableTitle: string;
-      disableDesc: string;
-      disabling: string;
-      disable2fa: string;
-      twoFa: string;
-      enabledDesc: string;
-      disabledDesc: string;
-      setupFailed: string;
-      enabled: string;
-      invalidCode: string;
-      disabled: string;
-    };
-    password: {
-      title: string;
-      newPassword: string;
-      newPasswordPlaceholder: string;
-      confirmPassword: string;
-      confirmPlaceholder: string;
-      updated: string;
-      updateFailed: string;
-      minChars: string;
-      mismatch: string;
-      togglePasswordVisibility: string;
-      updatePassword: string;
-    };
+      title: string
+      events: string
+      noEvents: string
+      openEvent: string
+      addTicket: string
+    }
     notifications: {
-      email: string;
-      emailDesc: string;
-      updateFailed: string;
-      push: string;
-      permissionStatus: string;
-      permissionUnsupported: string;
-      paymentEmail: string;
-      paymentEmailDesc: string;
-      subscription: string;
-      subscriptionDesc: string;
-      toggleEmail: string;
-      togglePush: string;
-      togglePaymentEmail: string;
-      toggleSubscription: string;
-      toggleLogin: string;
-      login: string;
-      loginDesc: string;
-      hiddenFromAttendees: string;
-      hiddenFromAttendeesDesc: string;
-      pushUnsupported: string;
-      pushDenied: string;
-      pushEnabled: string;
-    };
+      title: string
+      subtitle: string
+      emailNotifications: string
+      emailNotificationsDesc: string
+      pushNotifications: string
+      pushNotificationsDesc: string
+      updated: string
+      updateFailed: string
+    }
+  }
+  orgEdit: {
+    title: string
+    loading: string
+    notFound: string
+    backToOrg: string
+    updated: string
+    updateFailed: string
+    name: string
+    namePlaceholder: string
+    description: string
+    descriptionPlaceholder: string
+    maxChars: string
+    category: string
+    categoryPlaceholder: string
+    location: string
+    locationPlaceholder: string
+    website: string
+    websiteHint: string
+    coverUpdated: string
+    coverFailed: string
+    logoUpdated: string
+    logoFailed: string
+    changeCover: string
+    changeLogo: string
+    coverAlt: string
+    logoLabel: string
+    logoHint: string
+    websitePlaceholder: string
+  }
+  checkout: {
+    configError: string
+    loadFailed: string
+    noPayment: string
+    back: string
+    title: string
+    subtitle: string
+    secureNote: string
+    redirectNote: string
+    pay: string
+    event: string
+    ticketType: string
+    totalAmount: string
+    stripeNotReady: string
+    paymentSuccess: string
+    paymentProcessing: string
+    paymentFailed: string
+    defaultName: string
+  }
+  checkoutReview: {
+    loading: string
+    title: string
+    subtitle: string
+    securePurchase: string
+    selectedTicket: string
+    unitPrice: string
+    available: string
+    quantityShort: string
+    decreaseQuantity: string
+    increaseQuantity: string
+    subtotal: string
+    proceedToPayment: string
+    editSelection: string
+    soldOut: string
+    startFailed: string
+  }
+  checkoutSuccess: {
+    confirming: string
+    confirmingDesc: string
+    success: string
+    successDesc: string
+    orderId: string
+    eventId: string
+    ticketType: string
+    totalPaid: string
+    promoCode: string
+    calendarAdding: string
+    calendarAdded: string
+    calendarUnavailable: string
+    downloadTicket: string
+    discoverMore: string
+  }
+  paymentFailed: {
+    invalidLink: string
+    title: string
+    description: string
+    reason: string
+    paymentIntentId: string
+    keepRecords: string
+    tryAgain: string
+    backToEvents: string
+    helpText: string
+  }
+  paymentSuccess: {
+    invalidLink: string
+    confirming: string
+    confirmingDesc: string
+    failed: string
+    failedDesc: string
+    success: string
+    successDesc: string
+    paid: string
+    paymentIntentId: string
+    keepRecords: string
+    viewTickets: string
+    browseMore: string
+  }
+  paymentModal: {
+    intentCreated: string
+    createFailed: string
+    fillFields: string
+    title: string
+    ticketPrice: string
+    total: string
+    fullName: string
+    fullNamePlaceholder: string
+    emailPlaceholder: string
+    secureNote: string
+    pay: string
+  }
+  profile: {
+    unavailable: string
+    eventsAttended: string
+    tickets: string
+    interests: string
+    myEvents: string
+    noEventsYet: string
+    browseEvents: string
+    myTickets: string
+    noTickets: string
+    editProfile: string
+    settings: string
+    goToSettings: string
+    shareTitle: string
+    joined: string
+    recentEvents: string
+    eventFallback: string
+    downloadTicket: string
+    overview: string
+    orgProfileBanner: string
+    orgProfileDesc: string
+    previewProfile: string
+  }
+  profileEdit: {
+    loading: string
+    loadFailed: string
+    title: string
+    subtitle: string
+    photoUpdated: string
+    photoFailed: string
+    profileUpdated: string
+    saveFailed: string
+    profilePhoto: string
+    changePhoto: string
+    photoHint: string
+    togglePasswordVisibility: string
+    toggleTwoFa: string
+    fullName: string
+    fullNamePlaceholder: string
+    username: string
+    usernamePlaceholder: string
+    usernameHint: string
+    bio: string
+    bioPlaceholder: string
+    bioMaxChars: string
+    location: string
+    locationPlaceholder: string
+    website: string
+    websitePlaceholder: string
+    security: string
+    securityDesc: string
+    twoFa: string
+    twoFaEnabledDesc: string
+    twoFaDisabledDesc: string
+    currentPassword: string
+    currentPasswordPlaceholder: string
+    currentPasswordRequired: string
+    newPassword: string
+    newPasswordPlaceholder: string
+    passwordMinChars: string
+    confirmPassword: string
+    confirmPasswordPlaceholder: string
+    passwordMismatch: string
+    passwordNotAvailable: string
+    updatePassword: string
+  }
+  profileSettings: {
+    title: string
+    subtitle: string
+    tabs: {
+      profile: string
+      preferences: string
+      security: string
+      notifications: string
+      sessions: string
+    }
+    activeSessions: string
+    profileSection: {
+      photoUpdated: string
+      photoFailed: string
+      profileUpdated: string
+      updateFailed: string
+      profilePhoto: string
+      photoHint: string
+      changePhoto: string
+      changeAvatar: string
+      uploadAvatar: string
+      fullName: string
+      fullNamePlaceholder: string
+      username: string
+      usernamePlaceholder: string
+      usernameHint: string
+      bio: string
+      bioPlaceholder: string
+      characters: string
+      location: string
+      locationPlaceholder: string
+      website: string
+      websitePlaceholder: string
+      saveProfile: string
+    }
+    preferences: {
+      timezone: string
+      timezonePlaceholder: string
+      timezones: string
+      timezoneHint: string
+      favoriteTopics: string
+      topicsHint: string
+      noTags: string
+      selected: string
+      saved: string
+      saveFailed: string
+      savePreferences: string
+    }
+    security: {
+      setupTitle: string
+      setupDesc: string
+      manualKey: string
+      verificationCode: string
+      qrAlt: string
+      toggleTwoFa: string
+      enable2fa: string
+      disableTitle: string
+      disableDesc: string
+      disabling: string
+      disable2fa: string
+      twoFa: string
+      enabledDesc: string
+      disabledDesc: string
+      setupFailed: string
+      enabled: string
+      invalidCode: string
+      disabled: string
+    }
+    password: {
+      title: string
+      newPassword: string
+      newPasswordPlaceholder: string
+      confirmPassword: string
+      confirmPlaceholder: string
+      updated: string
+      updateFailed: string
+      minChars: string
+      mismatch: string
+      togglePasswordVisibility: string
+      updatePassword: string
+    }
+    notifications: {
+      email: string
+      emailDesc: string
+      updateFailed: string
+      push: string
+      permissionStatus: string
+      permissionUnsupported: string
+      paymentEmail: string
+      paymentEmailDesc: string
+      subscription: string
+      subscriptionDesc: string
+      toggleEmail: string
+      togglePush: string
+      togglePaymentEmail: string
+      toggleSubscription: string
+      toggleLogin: string
+      login: string
+      loginDesc: string
+      hiddenFromAttendees: string
+      hiddenFromAttendeesDesc: string
+      pushUnsupported: string
+      pushDenied: string
+      pushEnabled: string
+    }
     sessions: {
-      confirmTitle: string;
-      confirmDesc: string;
-      revoking: string;
-      revokeSession: string;
-      revokeCurrentTitle: string;
-      revokeCurrentDesc: string;
-      logoutRevoke: string;
-      description: string;
-      revoked: string;
-      revokeFailed: string;
-      current: string;
-      browserOn: string;
-      ip: string;
-      lastActive: string;
-      created: string;
-      unknown: string;
-      justNow: string;
-      minutesAgo: string;
-      hoursAgo: string;
-      daysAgo: string;
-      revoke: string;
-      noSessions: string;
-    };
-  };
+      confirmTitle: string
+      confirmDesc: string
+      revoking: string
+      revokeSession: string
+      revokeCurrentTitle: string
+      revokeCurrentDesc: string
+      logoutRevoke: string
+      description: string
+      revoked: string
+      revokeFailed: string
+      current: string
+      browserOn: string
+      ip: string
+      lastActive: string
+      created: string
+      unknown: string
+      justNow: string
+      minutesAgo: string
+      hoursAgo: string
+      daysAgo: string
+      revoke: string
+      noSessions: string
+    }
+  }
   userProfile: {
-    loading: string;
-    notFound: string;
-    backToHome: string;
-    back: string;
-    onUevent: string;
-    joined: string;
-    eventsAttended: string;
-    tickets: string;
-    followers: string;
-    following: string;
-    interests: string;
-    recentEvents: string;
-    seeAll: string;
-  };
+    loading: string
+    notFound: string
+    backToHome: string
+    back: string
+    onUevent: string
+    joined: string
+    eventsAttended: string
+    tickets: string
+    followers: string
+    following: string
+    interests: string
+    recentEvents: string
+    seeAll: string
+  }
   eventCreate: {
-    backToEvents: string;
-    title: string;
-    subtitle: string;
-    created: string;
-    createFailed: string;
-    hint: string;
-    titleLabel: string;
-    titlePlaceholder: string;
-    descriptionPlaceholder: string;
-    duration: string;
-    durationPlaceholder: string;
-    duration1h: string;
-    duration2h: string;
-    duration3h: string;
-    duration4h: string;
-    durationHint: string;
-    formatPlaceholder: string;
-    meetingLink: string;
-    meetingLinkPlaceholder: string;
-    organization: string;
-    orgPlaceholder: string;
-    orgLoading: string;
-    orgFailed: string;
-    orgHint: string;
-    attendeesPublicLabel: string;
-    attendeesPublicHint: string;
-    notifyAttendeesLabel: string;
-    notifyAttendeesHint: string;
-    redirectUrlLabel: string;
-    redirectUrlHint: string;
-    publishAtLabel: string;
-    publishAtHint: string;
-    create: string;
+    backToEvents: string
+    title: string
+    subtitle: string
+    created: string
+    createFailed: string
+    hint: string
+    titleLabel: string
+    titlePlaceholder: string
+    descriptionPlaceholder: string
+    duration: string
+    durationPlaceholder: string
+    duration1h: string
+    duration2h: string
+    duration3h: string
+    duration4h: string
+    durationHint: string
+    formatPlaceholder: string
+    meetingLink: string
+    meetingLinkPlaceholder: string
+    organization: string
+    orgPlaceholder: string
+    orgLoading: string
+    orgFailed: string
+    orgHint: string
+    attendeesPublicLabel: string
+    attendeesPublicHint: string
+    notifyAttendeesLabel: string
+    notifyAttendeesHint: string
+    redirectUrlLabel: string
+    redirectUrlHint: string
+    publishAtLabel: string
+    publishAtHint: string
+    create: string
     tags: {
-      addMore: string;
-      searchOrCreate: string;
-      createTag: string;
-      hint: string;
-    };
+      addMore: string
+      searchOrCreate: string
+      createTag: string
+      hint: string
+    }
     images: {
-      label: string;
-      cover: string;
-      add: string;
-      imageAlt: string;
-      removeImage: string;
-      dragDrop: string;
-      hint: string;
-      coverHint: string;
-    };
+      label: string
+      cover: string
+      add: string
+      imageAlt: string
+      removeImage: string
+      dragDrop: string
+      hint: string
+      coverHint: string
+    }
     locationFields: {
-      placeholder: string;
-      mapsLink: string;
-      mapsPlaceholder: string;
-      useCurrentLocation: string;
-      hideMap: string;
-      chooseOnMap: string;
-      openMapTab: string;
-      selectedCoords: string;
-    };
-  };
+      placeholder: string
+      mapsLink: string
+      mapsPlaceholder: string
+      useCurrentLocation: string
+      hideMap: string
+      chooseOnMap: string
+      openMapTab: string
+      selectedCoords: string
+    }
+  }
   eventEdit: {
-    titlePlaceholder: string;
-    descriptionPlaceholder: string;
-    formatPlaceholder: string;
-    locationPlaceholder: string;
-    coverImageUrl: string;
-    imageUrlPlaceholder: string;
-    tagsPlaceholder: string;
-  };
+    titlePlaceholder: string
+    descriptionPlaceholder: string
+    formatPlaceholder: string
+    locationPlaceholder: string
+    coverImageUrl: string
+    imageUrlPlaceholder: string
+    tagsPlaceholder: string
+  }
   ticketCreate: {
-    title: string;
-    eventId: string;
-    unknownId: string;
-    ticketName: string;
-    ticketNamePlaceholder: string;
-    ticketDescription: string;
-    ticketDescPlaceholder: string;
-    type: string;
-    typePlaceholder: string;
-    quantityMode: string;
-    unlimited: string;
-    limited: string;
-    availableAmount: string;
-    startDatetime: string;
-    endDatetime: string;
-    privateInfo: string;
-    privateInfoPlaceholder: string;
-    pricePlaceholder: string;
-    quantityPlaceholder: string;
-    saveTicket: string;
-    created: string;
-    createFailed: string;
-  };
+    title: string
+    eventId: string
+    unknownId: string
+    ticketName: string
+    ticketNamePlaceholder: string
+    ticketDescription: string
+    ticketDescPlaceholder: string
+    type: string
+    typePlaceholder: string
+    quantityMode: string
+    unlimited: string
+    limited: string
+    availableAmount: string
+    startDatetime: string
+    endDatetime: string
+    privateInfo: string
+    privateInfoPlaceholder: string
+    pricePlaceholder: string
+    quantityPlaceholder: string
+    saveTicket: string
+    created: string
+    createFailed: string
+  }
   localeSwitcher: {
-    english: string;
-    ukrainian: string;
-    selectLanguage: string;
-  };
+    english: string
+    ukrainian: string
+    selectLanguage: string
+  }
   filters: {
-    format: string;
-    tags: string;
-    dateRange: string;
-    location: string;
-    search: string;
-    searchPlaceholder: string;
-    filtersTitle: string;
-    clearAll: string;
-    showResults: string;
-    filterByTags: string;
-    searchTags: string;
-    noTags: string;
-    pickDates: string;
-    pickDateRange: string;
-    locationPlaceholder: string;
-    noLocations: string;
-    all: string;
-  };
+    format: string
+    tags: string
+    dateRange: string
+    location: string
+    search: string
+    searchPlaceholder: string
+    filtersTitle: string
+    clearAll: string
+    showResults: string
+    filterByTags: string
+    searchTags: string
+    noTags: string
+    pickDates: string
+    pickDateRange: string
+    locationPlaceholder: string
+    noLocations: string
+    all: string
+    sortBy: string
+    sortOrder: string
+    sortDate: string
+    sortName: string
+    sortAttendees: string
+    sortAsc: string
+    sortDesc: string
+  }
   searchModal: {
-    loadingEvents: string;
-    failedEvents: string;
-    loadingOrgs: string;
-    failedOrgs: string;
-  };
+    loadingEvents: string
+    failedEvents: string
+    loadingOrgs: string
+    failedOrgs: string
+  }
   authExtra: {
-    forgotPassword: string;
-    loginSuccess: string;
-    invalidCredentials: string;
-    accountBanned: string;
-    passwordsMismatch: string;
-    accountCreated: string;
-    registerFailed: string;
-    orgRegistered: string;
-    orgRegisterFailed: string;
-    twoFaTitle: string;
-    twoFaDesc: string;
-    verify: string;
-    backToLogin: string;
-    invalid2fa: string;
-    forgotTitle: string;
-    forgotDesc: string;
-    email: string;
-    emailPlaceholder: string;
-    sendResetCode: string;
-    resetCodeSent: string;
-    resetCodeFailed: string;
-    resetTitle: string;
-    resetDesc: string;
-    verificationCode: string;
-    newPassword: string;
-    newPasswordPlaceholder: string;
-    confirmPlaceholder: string;
-    confirmPassword: string;
-    resetPassword: string;
-    resetSuccess: string;
-    resetFailed: string;
-  };
+    forgotPassword: string
+    loginSuccess: string
+    invalidCredentials: string
+    accountBanned: string
+    passwordsMismatch: string
+    accountCreated: string
+    registerFailed: string
+    orgRegistered: string
+    orgRegisterFailed: string
+    twoFaTitle: string
+    twoFaDesc: string
+    verify: string
+    backToLogin: string
+    invalid2fa: string
+    forgotTitle: string
+    forgotDesc: string
+    email: string
+    emailPlaceholder: string
+    sendResetCode: string
+    resetCodeSent: string
+    resetCodeFailed: string
+    resetTitle: string
+    resetDesc: string
+    verificationCode: string
+    newPassword: string
+    newPasswordPlaceholder: string
+    confirmPlaceholder: string
+    confirmPassword: string
+    resetPassword: string
+    resetSuccess: string
+    resetFailed: string
+  }
   notificationsBell: {
-    title: string;
-    unread: string;
-    noNotifications: string;
-  };
+    title: string
+    unread: string
+    noNotifications: string
+  }
   errors: {
-    pageNotFound: string;
-    pageNotFoundDesc: string;
-    somethingWrong: string;
-    error: string;
-    unexpectedError: string;
-    stackTrace: string;
-  };
+    pageNotFound: string
+    pageNotFoundDesc: string
+    somethingWrong: string
+    error: string
+    unexpectedError: string
+    stackTrace: string
+  }
   pagination: {
-    navigation: string;
-    previous: string;
-    previousPage: string;
-    next: string;
-    nextPage: string;
-    morePages: string;
-  };
+    navigation: string
+    previous: string
+    previousPage: string
+    next: string
+    nextPage: string
+    morePages: string
+  }
   promoCode: {
-    label: string;
-    inputPlaceholder: string;
-    enterCode: string;
-    invalidCode: string;
-    checking: string;
-    apply: string;
-    applied: string;
-    discountValue: string;
-    remove: string;
-    examples: string;
-  };
+    label: string
+    inputPlaceholder: string
+    enterCode: string
+    invalidCode: string
+    checking: string
+    apply: string
+    applied: string
+    discountValue: string
+    remove: string
+    examples: string
+  }
   entityCard: {
-    from: string;
-    attendees: string;
-    members: string;
-    events: string;
-    eventsAttended: string;
-    getTicket: string;
-    seat: string;
-    available: string;
-    limited: string;
-    soldOut: string;
-  };
+    from: string
+    attendees: string
+    members: string
+    events: string
+    eventsAttended: string
+    getTicket: string
+    seat: string
+    available: string
+    limited: string
+    soldOut: string
+  }
   eventLocationMap: {
-    mapFor: string;
-  };
+    mapFor: string
+  }
   richTextEditor: {
-    heading1: string;
-    heading2: string;
-    heading3: string;
-    quote: string;
-    bold: string;
-    italic: string;
-    underline: string;
-    strikethrough: string;
-    inlineCode: string;
-    bulletList: string;
-    numberedList: string;
-    startWriting: string;
-  };
+    heading1: string
+    heading2: string
+    heading3: string
+    quote: string
+    bold: string
+    italic: string
+    underline: string
+    strikethrough: string
+    inlineCode: string
+    bulletList: string
+    numberedList: string
+    startWriting: string
+  }
   sidebar: {
-    title: string;
-    mobileDescription: string;
-    toggle: string;
-  };
-};
+    title: string
+    mobileDescription: string
+    toggle: string
+  }
+  comments: {
+    title: string
+    noComments: string
+    placeholder: string
+    post: string
+    delete: string
+    loginToComment: string
+    createFailed: string
+  }
+}
 
 export const resolveLocale = (locale: string | null | undefined): Locale => {
-  if (!locale) return 'en';
-  const normalized = locale.toLowerCase();
-  if (normalized === 'ua' || normalized.startsWith('uk')) return 'ua';
-  return 'en';
-};
+  if (!locale) return 'en'
+  const normalized = locale.toLowerCase()
+  if (normalized === 'ua' || normalized.startsWith('uk')) return 'ua'
+  return 'en'
+}
 
 /**
  * Client-side: fetch a locale bundle from the public static assets.
  * Call this when the user switches language at runtime.
  */
 export async function fetchLocale(locale: Locale): Promise<Dictionary> {
-  const res = await fetch(`/locales/${locale}.json`);
-  if (!res.ok) throw new Error(`Failed to load locale "${locale}": ${res.status}`);
-  return res.json() as Promise<Dictionary>;
+  const res = await fetch(`/locales/${locale}.json`)
+  if (!res.ok) throw new Error(`Failed to load locale "${locale}": ${res.status}`)
+  return res.json() as Promise<Dictionary>
 }

@@ -1,13 +1,13 @@
-import { Link, Navigate } from 'react-router';
-import { Building2, ChevronLeft, ShieldCheck } from 'lucide-react';
-import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { OrgChartsSection } from './OrgChartsSection';
-import { OrgWalletSection } from './OrgWalletSection';
-import { useOrgAccountData } from './useOrgAccountData';
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { Building2, ChevronLeft, ShieldCheck } from 'lucide-react'
+import { Link, Navigate } from 'react-router'
+import { OrgChartsSection } from './OrgChartsSection'
+import { OrgWalletSection } from './OrgWalletSection'
+import { useOrgAccountData } from './useOrgAccountData'
 
 export function OrgAccountPage() {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
   const {
     id,
     isAuthenticated,
@@ -22,27 +22,27 @@ export function OrgAccountPage() {
     wallet,
     verification,
     invalidateOrgQueries,
-  } = useOrgAccountData();
+  } = useOrgAccountData()
 
-  if (!isReady) return null;
-  if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />;
+  if (!isReady) return null
+  if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />
 
   if (myOrgLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </main>
-    );
+    )
   }
 
-  if (id && myOrg?.id !== id) return <Navigate to={myOrg ? `/profile/organization/${myOrg.id}` : '/'} replace />;
+  if (id && myOrg?.id !== id) return <Navigate to={myOrg ? `/profile/organization/${myOrg.id}` : '/'} replace />
 
   if (isLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <p className="text-sm text-muted-foreground">{t.orgAccount.loading}</p>
       </main>
-    );
+    )
   }
 
   if (!org || isError) {
@@ -56,18 +56,23 @@ export function OrgAccountPage() {
             <EmptyTitle className="text-base">{t.orgAccount.unavailable}</EmptyTitle>
           </EmptyHeader>
           <EmptyContent>
-            <Link to="/organizations" className="text-sm text-primary hover:underline">{t.common.backToOrganizations}</Link>
+            <Link to="/organizations" className="text-sm text-primary hover:underline">
+              {t.common.backToOrganizations}
+            </Link>
           </EmptyContent>
         </Empty>
       </main>
-    );
+    )
   }
 
-  const twoFactorEnabled = org.twoFactorEnabled ?? false;
+  const twoFactorEnabled = org.twoFactorEnabled ?? false
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
-      <Link to={`/organizations/${org.id}`} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to={`/organizations/${org.id}`}
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ChevronLeft className="h-4 w-4" />
         {t.orgAccount.backToPublic}
       </Link>
@@ -97,9 +102,7 @@ export function OrgAccountPage() {
       </section>
 
       <OrgChartsSection wallet={wallet} orgEvents={orgEvents} />
-
       <OrgWalletSection wallet={wallet} verification={verification} onRefresh={invalidateOrgQueries} />
-
     </main>
-  );
+  )
 }

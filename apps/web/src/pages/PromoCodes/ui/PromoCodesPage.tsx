@@ -1,14 +1,13 @@
-import { Navigate } from 'react-router';
-import { Link } from 'react-router';
-import { ChevronLeft } from 'lucide-react';
-import { useAuth } from '@shared/lib/auth-context';
-import { OrgPromoCodesSection } from '@pages/OrgAccount/ui/OrgPromoCodesSection';
+import { OrgPromoCodesSection } from '@pages/OrgAccount/ui/OrgPromoCodesSection'
+import { useAuth } from '@shared/lib/auth-context'
+import { ChevronLeft } from 'lucide-react'
+import { Link, Navigate } from 'react-router'
 
 export function PromoCodesPage() {
-  const { isAuthenticated, accountType, isReady } = useAuth();
+  const { isAuthenticated, accountType, isReady } = useAuth()
 
-  if (!isReady) return null;
-  if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />;
+  if (!isReady) return null
+  if (!isAuthenticated || accountType !== 'organization') return <Navigate to="/" replace />
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
@@ -27,5 +26,5 @@ export function PromoCodesPage() {
 
       <OrgPromoCodesSection onChanged={async () => {}} />
     </main>
-  );
+  )
 }

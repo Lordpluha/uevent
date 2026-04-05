@@ -1,22 +1,19 @@
-import axios from 'axios';
-import { toast } from 'sonner';
-import { getAuthState, clearServerCookies } from '@shared/lib/auth-context';
-import { resolveLocale } from '@shared/lib/i18n';
+import { clearServerCookies, getAuthState } from '@shared/lib/auth-context'
+import { resolveLocale } from '@shared/lib/i18n'
+import axios from 'axios'
+import { toast } from 'sonner'
 
 const getServerApiUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = import.meta.env.VITE_API_URL
 
   if (!apiUrl) {
-    throw new Error('VITE_API_URL must be set for server-side API requests.');
+    throw new Error('VITE_API_URL must be set for server-side API requests.')
   }
 
-  return apiUrl;
-};
+  return apiUrl
+}
 
-const baseURL =
-  typeof window === 'undefined'
-    ? getServerApiUrl()
-    : '/api';
+const baseURL = typeof window === 'undefined' ? getServerApiUrl() : '/api'
 
 export const api = axios.create({
   baseURL,
@@ -24,107 +21,106 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-});
+})
 
 const getRequestLocale = (): 'en' | 'ua' => {
-  if (typeof window === 'undefined') return 'en';
-  return resolveLocale(localStorage.getItem('locale') || navigator.language || 'en');
-};
+  if (typeof window === 'undefined') return 'en'
+  return resolveLocale(localStorage.getItem('locale') || navigator.language || 'en')
+}
 
 api.interceptors.request.use((config) => {
-  config.headers = config.headers ?? {};
-  config.headers['Accept-Language'] = getRequestLocale();
-  return config;
-});
+  config.headers = config.headers ?? {}
+  config.headers['Accept-Language'] = getRequestLocale()
+  return config
+})
 
 /* ── Token queue for concurrent 401 handling ─────────────── */
-let isRefreshing = false;
-let refreshQueue: Array<() => void> = [];
+let isRefreshing = false
+let refreshQueue: Array<() => void> = []
 
 const drainQueue = () => {
-  for (const cb of refreshQueue) cb();
-  refreshQueue = [];
-};
+  for (const cb of refreshQueue) cb()
+  refreshQueue = []
+}
 
 /* ── Response interceptor ────────────────────────────────── */
 // Cookies (httpOnly) are sent automatically by the browser — no manual token injection needed.
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config as typeof error.config & { _retry?: boolean };
-    const requestUrl = String(originalRequest?.url ?? '');
+    const originalRequest = error.config as typeof error.config & { _retry?: boolean }
+    const requestUrl = String(originalRequest?.url ?? '')
 
     if (!axios.isAxiosError(error)) {
-      return Promise.reject(error);
+      return Promise.reject(error)
     }
 
     // Handle banned account (403 Forbidden from JWT guard)
     if (error.response?.status === 403) {
-      const msg: string = (error.response.data as { message?: string })?.message ?? '';
+      const msg: string = (error.response.data as { message?: string })?.message ?? ''
       if (msg.toLowerCase().includes('banned')) {
-        const { logout, isAuthenticated } = getAuthState();
+        const { logout, isAuthenticated } = getAuthState()
         if (isAuthenticated) {
-          logout();
-          await clearServerCookies(getAuthState().accountType);
-          const locale = typeof window !== 'undefined'
-            ? resolveLocale(localStorage.getItem('locale') || navigator.language || 'en')
-            : 'en';
-          const bannedMsg = locale === 'ua'
-            ? 'Ваш акаунт заблоковано. Будь ласка, зверніться до підтримки.'
-            : 'Your account has been banned. Please contact support.';
-          toast.error(bannedMsg);
-          if (typeof window !== 'undefined') window.location.href = '/';
+          logout()
+          await clearServerCookies(getAuthState().accountType)
+          const locale =
+            typeof window !== 'undefined'
+              ? resolveLocale(localStorage.getItem('locale') || navigator.language || 'en')
+              : 'en'
+          const bannedMsg =
+            locale === 'ua'
+              ? 'Ваш акаунт заблоковано. Будь ласка, зверніться до підтримки.'
+              : 'Your account has been banned. Please contact support.'
+          toast.error(bannedMsg)
+          if (typeof window !== 'undefined') window.location.href = '/'
         }
       }
-      return Promise.reject(error);
+      return Promise.reject(error)
     }
 
     if (error.response?.status !== 401 || originalRequest._retry) {
-      return Promise.reject(error);
+      return Promise.reject(error)
     }
 
     // Google Calendar 401 means Google OAuth/relink issue, not an app session expiration.
     if (requestUrl.includes('/auth/google/calendar')) {
-      return Promise.reject(error);
+      return Promise.reject(error)
     }
 
-    const { accountType, isAuthenticated, setAuthenticated, logout } = getAuthState();
+    const { accountType, isAuthenticated, setAuthenticated, logout } = getAuthState()
 
     if (!isAuthenticated) {
-      logout();
-      return Promise.reject(error);
+      logout()
+      return Promise.reject(error)
     }
 
     if (isRefreshing) {
       return new Promise((resolve) => {
-        refreshQueue.push(() => resolve(api(originalRequest)));
-      });
+        refreshQueue.push(() => resolve(api(originalRequest)))
+      })
     }
 
-    originalRequest._retry = true;
-    isRefreshing = true;
+    originalRequest._retry = true
+    isRefreshing = true
 
-    const endpoint =
-      accountType === 'organization'
-        ? '/auth/organizations/refresh'
-        : '/auth/users/refresh';
+    const endpoint = accountType === 'organization' ? '/auth/organizations/refresh' : '/auth/users/refresh'
 
     try {
       // No body — refresh_token cookie is sent automatically via withCredentials
-      await api.post(endpoint, {});
+      await api.post(endpoint, {})
 
-      setAuthenticated(accountType ?? 'user');
-      drainQueue();
+      setAuthenticated(accountType ?? 'user')
+      drainQueue()
 
-      return api(originalRequest);
+      return api(originalRequest)
     } catch {
-      logout();
-      refreshQueue = [];
-      await clearServerCookies(accountType);
-      if (typeof window !== 'undefined') window.location.href = '/';
-      return Promise.reject(error);
+      logout()
+      refreshQueue = []
+      await clearServerCookies(accountType)
+      if (typeof window !== 'undefined') window.location.href = '/'
+      return Promise.reject(error)
     } finally {
-      isRefreshing = false;
+      isRefreshing = false
     }
   },
-);
+)

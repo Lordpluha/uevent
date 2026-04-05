@@ -1,1 +1,1 @@
-export { EventLocationMap } from './EventLocationMap';
+export { EventLocationMap } from './EventLocationMap'

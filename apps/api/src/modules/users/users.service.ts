@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { FindOptionsSelect, Repository } from 'typeorm'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { InjectRepository } from '@nestjs/typeorm'
 import { User } from './entities/user.entity'
 import { UserSession } from './entities/user-session.entity'
-import { FindOptionsSelect, Repository } from 'typeorm'
 import { GetUsersParams } from './params'
 import { UsersPrivateService } from './users-private.service'
 

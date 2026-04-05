@@ -1,24 +1,26 @@
-import { Link } from 'react-router';
-import { CalendarX2 } from 'lucide-react';
-import { EventCard } from '@entities/Event';
-import type { EventModel } from '@entities/Event';
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@shared/components';
-import { useAppContext } from '@shared/lib';
+import type { EventModel } from '@entities/Event'
+import { EventCard } from '@entities/Event'
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { CalendarX2 } from 'lucide-react'
+import { Link } from 'react-router'
 
 interface Props {
-  organizerEvents: EventModel[];
-  similarEvents: EventModel[];
+  organizerEvents: EventModel[]
+  similarEvents: EventModel[]
 }
 
 export function EventRelatedSection({ organizerEvents, similarEvents }: Props) {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
   return (
     <>
       <section className="mb-8">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-foreground">{t.events.related.byOrganizer}</h2>
           {organizerEvents.length > 0 && (
-            <Link to="/events" className="text-xs text-primary hover:underline">{t.common.seeAll}</Link>
+            <Link to="/events" className="text-xs text-primary hover:underline">
+              {t.common.seeAll}
+            </Link>
           )}
         </div>
         {organizerEvents.length === 0 ? (
@@ -45,7 +47,9 @@ export function EventRelatedSection({ organizerEvents, similarEvents }: Props) {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-foreground">{t.events.related.similar}</h2>
           {similarEvents.length > 0 && (
-            <Link to="/events" className="text-xs text-primary hover:underline">{t.events.related.discoverMore}</Link>
+            <Link to="/events" className="text-xs text-primary hover:underline">
+              {t.events.related.discoverMore}
+            </Link>
           )}
         </div>
         {similarEvents.length === 0 ? (
@@ -68,5 +72,5 @@ export function EventRelatedSection({ organizerEvents, similarEvents }: Props) {
         )}
       </section>
     </>
-  );
+  )
 }

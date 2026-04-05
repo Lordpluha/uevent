@@ -1,25 +1,37 @@
-import { useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft } from 'lucide-react';
-import { Button, Field, FieldError, FieldGroup, FieldLabel, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components';
-import { useAuth } from '@shared/lib/auth-context';
-import { useAppContext } from '@shared/lib';
-import { useMyOrg } from '@entities/Organization';
-import { useEvent } from '@entities/Event';
-import { ticketFormSchema, type TicketForm } from './ticketFormSchema';
-import { submitTicket } from './submitTicket';
+import { useEvent } from '@entities/Event'
+import { useMyOrg } from '@entities/Organization'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Button,
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useAuth } from '@shared/lib/auth-context'
+import { ChevronLeft } from 'lucide-react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
+import { submitTicket } from './submitTicket'
+import { type TicketForm, ticketFormSchema } from './ticketFormSchema'
 
 export function TicketCreatePage() {
-  const { t } = useAppContext();
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { isAuthenticated, accountType, isReady } = useAuth();
-  const { data: myOrg, isLoading: myOrgLoading } = useMyOrg();
-  const { data: event, isLoading: eventLoading } = useEvent(id ?? '');
-  const [ticketType, setTicketType] = useState<'free' | 'standard' | 'vip'>('standard');
-  const [quantityLimited, setQuantityLimited] = useState(false);
+  const { t } = useAppContext()
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { isAuthenticated, accountType, isReady } = useAuth()
+  const { data: myOrg, isLoading: myOrgLoading } = useMyOrg()
+  const { data: event, isLoading: eventLoading } = useEvent(id ?? '')
+  const [ticketType, setTicketType] = useState<'free' | 'standard' | 'vip'>('standard')
+  const [quantityLimited, setQuantityLimited] = useState(false)
 
   const {
     register,
@@ -33,26 +45,26 @@ export function TicketCreatePage() {
       price: 0,
       quantityLimited: false,
     },
-  });
+  })
 
-  if (!isReady) return null;
+  if (!isReady) return null
   if (!isAuthenticated || accountType !== 'organization') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/" replace />
   }
 
-  if (!id) return <Navigate to="/events" replace />;
+  if (!id) return <Navigate to="/events" replace />
 
   if (myOrgLoading || eventLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </main>
-    );
+    )
   }
 
-  const isOwner = Boolean(myOrg?.id && event?.organizer === myOrg.id);
+  const isOwner = Boolean(myOrg?.id && event?.organizerOrgId === myOrg.id)
   if (!isOwner) {
-    return <Navigate to={`/events/${id}`} replace />;
+    return <Navigate to={`/events/${id}`} replace />
   }
 
   const onSubmit = async (data: TicketForm) => {
@@ -63,8 +75,8 @@ export function TicketCreatePage() {
       onSuccess: () => navigate(`/events/${id}`),
       successMessage: t.ticketCreate.created,
       fallbackError: t.ticketCreate.createFailed,
-    });
-  };
+    })
+  }
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
@@ -91,7 +103,11 @@ export function TicketCreatePage() {
 
           <Field>
             <FieldLabel htmlFor="ticket-description">{t.ticketCreate.ticketDescription}</FieldLabel>
-            <Input id="ticket-description" placeholder={t.ticketCreate.ticketDescPlaceholder} {...register('description')} />
+            <Input
+              id="ticket-description"
+              placeholder={t.ticketCreate.ticketDescPlaceholder}
+              {...register('description')}
+            />
           </Field>
 
           <Field>
@@ -99,10 +115,10 @@ export function TicketCreatePage() {
             <Select
               value={ticketType}
               onValueChange={(value) => {
-                const nextType = value as 'free' | 'standard' | 'vip';
-                setTicketType(nextType);
-                setValue('ticketType', nextType, { shouldValidate: true });
-                if (nextType === 'free') setValue('price', 0, { shouldValidate: true });
+                const nextType = value as 'free' | 'standard' | 'vip'
+                setTicketType(nextType)
+                setValue('ticketType', nextType, { shouldValidate: true })
+                if (nextType === 'free') setValue('price', 0, { shouldValidate: true })
               }}
             >
               <SelectTrigger id="ticket-type">
@@ -135,10 +151,10 @@ export function TicketCreatePage() {
             <Select
               value={quantityLimited ? 'limited' : 'unlimited'}
               onValueChange={(value) => {
-                const limited = value === 'limited';
-                setQuantityLimited(limited);
-                setValue('quantityLimited', limited, { shouldValidate: true });
-                if (!limited) setValue('quantityTotal', undefined, { shouldValidate: true });
+                const limited = value === 'limited'
+                setQuantityLimited(limited)
+                setValue('quantityLimited', limited, { shouldValidate: true })
+                if (!limited) setValue('quantityTotal', undefined, { shouldValidate: true })
               }}
             >
               <SelectTrigger id="ticket-quantity-mode">
@@ -180,7 +196,11 @@ export function TicketCreatePage() {
 
           <Field>
             <FieldLabel htmlFor="ticket-private-info">{t.ticketCreate.privateInfo}</FieldLabel>
-            <Input id="ticket-private-info" placeholder={t.ticketCreate.privateInfoPlaceholder} {...register('privateInfo')} />
+            <Input
+              id="ticket-private-info"
+              placeholder={t.ticketCreate.privateInfoPlaceholder}
+              {...register('privateInfo')}
+            />
           </Field>
         </FieldGroup>
 
@@ -189,5 +209,5 @@ export function TicketCreatePage() {
         </Button>
       </form>
     </main>
-  );
+  )
 }

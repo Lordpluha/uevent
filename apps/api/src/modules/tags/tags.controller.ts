@@ -1,12 +1,18 @@
-import { Controller, Get, Post, Body, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common'
-import { TagsService } from './tags.service'
-import { CreateTagDto, CreateTagDtoSchema, FindOrCreateTagsDto, FindOrCreateTagsDtoSchema } from './dto'
-import { GetTagsParams, GetTagsParamsSchema } from './params'
-import { ZodValidationPipe } from 'nestjs-zod'
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common'
 import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
+import { ZodValidationPipe } from 'nestjs-zod'
+import {
+  ApiAccessCookieAuth,
+  ApiUuidParam,
+  ApiZodBody,
+  paginatedResponseSchema,
+  tagResponseSchema,
+} from '../../common/swagger/openapi.util'
 import { JwtGuard } from '../auth/guards/jwt.guard'
-import { ApiAccessCookieAuth, ApiUuidParam, ApiZodBody, paginatedResponseSchema, tagResponseSchema } from '../../common/swagger/openapi.util'
+import { CreateTagDto, CreateTagDtoSchema, FindOrCreateTagsDto, FindOrCreateTagsDtoSchema } from './dto'
 import { Tag } from './entities/tag.entity'
+import { GetTagsParams, GetTagsParamsSchema } from './params'
+import { TagsService } from './tags.service'
 
 @Controller('tags')
 @ApiTags('Tags')

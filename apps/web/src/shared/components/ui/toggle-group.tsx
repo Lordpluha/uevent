@@ -1,23 +1,22 @@
-import { createContext, useContext } from 'react';
-import type { CSSProperties } from 'react';
-import { Toggle as TogglePrimitive } from '@base-ui/react/toggle';
-import { ToggleGroup as ToggleGroupPrimitive } from '@base-ui/react/toggle-group';
-import type { VariantProps } from 'class-variance-authority';
-
-import { cn } from '@shared/lib/utils';
-import { toggleVariants } from '@shared/components/ui/toggle';
+import { Toggle as TogglePrimitive } from '@base-ui/react/toggle'
+import { ToggleGroup as ToggleGroupPrimitive } from '@base-ui/react/toggle-group'
+import { toggleVariants } from '@shared/components/ui/toggle'
+import { cn } from '@shared/lib/utils'
+import type { VariantProps } from 'class-variance-authority'
+import type { CSSProperties } from 'react'
+import { createContext, useContext } from 'react'
 
 const ToggleGroupContext = createContext<
   VariantProps<typeof toggleVariants> & {
-    spacing?: number;
-    orientation?: 'horizontal' | 'vertical';
+    spacing?: number
+    orientation?: 'horizontal' | 'vertical'
   }
 >({
   size: 'default',
   variant: 'default',
   spacing: 0,
   orientation: 'horizontal',
-});
+})
 
 function ToggleGroup({
   className,
@@ -29,8 +28,8 @@ function ToggleGroup({
   ...props
 }: ToggleGroupPrimitive.Props &
   VariantProps<typeof toggleVariants> & {
-    spacing?: number;
-    orientation?: 'horizontal' | 'vertical';
+    spacing?: number
+    orientation?: 'horizontal' | 'vertical'
   }) {
   return (
     <ToggleGroupPrimitive
@@ -50,7 +49,7 @@ function ToggleGroup({
         {children}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive>
-  );
+  )
 }
 
 function ToggleGroupItem({
@@ -60,7 +59,7 @@ function ToggleGroupItem({
   size = 'default',
   ...props
 }: TogglePrimitive.Props & VariantProps<typeof toggleVariants>) {
-  const context = useContext(ToggleGroupContext);
+  const context = useContext(ToggleGroupContext)
 
   return (
     <TogglePrimitive
@@ -80,7 +79,7 @@ function ToggleGroupItem({
     >
       {children}
     </TogglePrimitive>
-  );
+  )
 }
 
-export { ToggleGroup, ToggleGroupItem };
+export { ToggleGroup, ToggleGroupItem }

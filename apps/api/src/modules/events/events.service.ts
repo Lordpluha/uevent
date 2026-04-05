@@ -1,17 +1,20 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository, In } from 'typeorm'
-import { Event } from './entities/event.entity'
-import { EventSubscription } from './entities/event-subscription.entity'
-import { Tag } from '../tags/entities/tag.entity'
-import { CreateEventDto } from './dto/create-event.dto'
-import { UpdateEventDto } from './dto/update-event.dto'
-import { GetEventsParams } from './params/get-events.params'
-import { Organization } from '../organizations/entities/organization.entity'
-import { Notification } from '../notifications/entities/notification.entity'
-import { User } from '../users/entities/user.entity'
+import { In, Repository } from 'typeorm'
 import { ContentLocalizationService } from '../../common/localization/content-localization.service'
 import { JwtPayload } from '../auth/types/jwt-payload.interface'
+import { EmailService } from '../notifications/email.service'
+import { Notification } from '../notifications/entities/notification.entity'
+import { PushNotificationService } from '../notifications/push-notification.service'
+import { Organization } from '../organizations/entities/organization.entity'
+import { Tag } from '../tags/entities/tag.entity'
+import { User } from '../users/entities/user.entity'
+import { CreateEventDto } from './dto/create-event.dto'
+import { UpdateEventDto } from './dto/update-event.dto'
+import { Event } from './entities/event.entity'
+import { EventComment } from './entities/event-comment.entity'
+import { EventSubscription } from './entities/event-subscription.entity'
+import { GetEventsParams } from './params/get-events.params'
 
 @Injectable()
 export class EventsService {
@@ -21,6 +24,9 @@ export class EventsService {
 
     @InjectRepository(EventSubscription)
     private readonly eventSubRepo: Repository<EventSubscription>,
+
+    @InjectRepository(EventComment)
+    private readonly eventCommentRepo: Repository<EventComment>,
 
     @InjectRepository(Tag)
     private readonly tagsRepo: Repository<Tag>,
@@ -35,6 +41,8 @@ export class EventsService {
     private readonly usersRepo: Repository<User>,
 
     private readonly contentLocalization: ContentLocalizationService,
+    private readonly emailService: EmailService,
+    private readonly pushService: PushNotificationService,
   ) {}
 
   async create({ tags, ...rest }: CreateEventDto, user: JwtPayload) {
@@ -62,7 +70,9 @@ export class EventsService {
         .getRawMany<{ id: string }>()
 
       if (recipientIds.length > 0) {
-        const orgName = (await this.organizationsRepo.findOne({ where: { id: savedEvent.organization_id }, select: ['name'] }))?.name ?? 'An organization'
+        const orgName =
+          (await this.organizationsRepo.findOne({ where: { id: savedEvent.organization_id }, select: ['name'] }))
+            ?.name ?? 'An organization'
         const notifications = recipientIds.map(({ id }) =>
           this.notificationsRepo.create({
             name: 'New event from organization',
@@ -72,6 +82,33 @@ export class EventsService {
           }),
         )
         await this.notificationsRepo.save(notifications)
+
+        // Fetch per-user email + push preferences in a single query
+        const userPrefs = await this.usersRepo
+          .createQueryBuilder('u')
+          .select(['u.id', 'u.email', 'u.first_name', 'u.last_name', 'u.username', 'u.push_notifications_enabled'])
+          .where('u.id IN (:...ids)', { ids: recipientIds.map((r) => r.id) })
+          .getMany()
+
+        for (const u of userPrefs) {
+          const displayName = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'User'
+          // Web-push
+          if (u.push_notifications_enabled) {
+            this.pushService
+              .sendToUser(u.id, {
+                title: `New event from ${orgName}`,
+                body: savedEvent.name,
+                url: `/events/${savedEvent.id}`,
+              })
+              .catch(() => undefined)
+          }
+          // Email
+          if (u.email) {
+            this.emailService
+              .sendSubscriptionNotificationEmail(u.email, displayName, orgName, savedEvent.name, savedEvent.id)
+              .catch(() => undefined)
+          }
+        }
       }
     }
 
@@ -102,6 +139,8 @@ export class EventsService {
       location_to,
       organization_id,
       user_id,
+      sort_by,
+      sort_order,
     } = query
     const now = new Date()
 
@@ -171,6 +210,17 @@ export class EventsService {
       qb.andWhere('ticket.user_id = :user_id', { user_id })
     }
 
+    // Sorting
+    const order = sort_order === 'asc' ? 'ASC' : 'DESC'
+    if (sort_by === 'name') {
+      qb.orderBy('event.name', order)
+    } else if (sort_by === 'attendees') {
+      qb.orderBy('event.seats', order, 'NULLS LAST')
+    } else {
+      // default: by date (upcoming first when desc, oldest first when asc)
+      qb.orderBy('event.datetime_start', sort_by ? order : 'ASC')
+    }
+
     const total = await qb.getCount()
     const items = await qb
       .skip((page - 1) * limit)
@@ -179,11 +229,13 @@ export class EventsService {
     const locale = this.contentLocalization.resolveRequestedLocale(acceptLanguage)
     const data = await Promise.all(
       items.map((event) =>
-        this.contentLocalization.localizeEvent(event, locale, {
-          includeOrganization: true,
-          includeTickets: true,
-          includeTags: true,
-        }).then((localized) => this.sanitizeEvent(localized)),
+        this.contentLocalization
+          .localizeEvent(event, locale, {
+            includeOrganization: true,
+            includeTickets: true,
+            includeTags: true,
+          })
+          .then((localized) => this.sanitizeEvent(localized)),
       ),
     )
 
@@ -229,7 +281,7 @@ export class EventsService {
       includeTickets: true,
       includeTags: true,
     })
-    const sanitized: Record<string, unknown> = { ...this.sanitizeEvent(localized) as object }
+    const sanitized: Record<string, unknown> = { ...(this.sanitizeEvent(localized) as object) }
 
     // Inject attendee count and conditionally the full attendees list
     sanitized.attendeeCount = seenUserIds.size
@@ -343,5 +395,85 @@ export class EventsService {
   async getSubscription(eventId: string, userId: string): Promise<{ subscribed: boolean }> {
     const sub = await this.eventSubRepo.findOne({ where: { event_id: eventId, user_id: userId } })
     return { subscribed: !!sub }
+  }
+
+  // ── Comments ─────────────────────────────────────────────────────────────
+
+  async getComments(eventId: string, page: number, limit: number) {
+    const event = await this.eventsRepo.findOne({ where: { id: eventId } })
+    if (!event) throw new NotFoundException('Event not found')
+
+    const [items, total] = await this.eventCommentRepo.findAndCount({
+      where: { event_id: eventId },
+      relations: ['user'],
+      order: { created_at: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    })
+
+    const data = items.map((comment) => ({
+      id: comment.id,
+      content: comment.content,
+      created_at: comment.created_at,
+      event_id: comment.event_id,
+      user_id: comment.user_id,
+      user: comment.user
+        ? {
+            id: comment.user.id,
+            username: comment.user.username,
+            first_name: comment.user.first_name,
+            last_name: comment.user.last_name,
+            avatar: comment.user.avatar,
+          }
+        : null,
+    }))
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        total_pages: Math.ceil(total / limit),
+      },
+    }
+  }
+
+  async createComment(eventId: string, userId: string, content: string) {
+    const event = await this.eventsRepo.findOne({ where: { id: eventId } })
+    if (!event) throw new NotFoundException('Event not found')
+
+    const comment = this.eventCommentRepo.create({ event_id: eventId, user_id: userId, content })
+    const saved = await this.eventCommentRepo.save(comment)
+
+    const user = await this.usersRepo.findOne({
+      where: { id: userId },
+      select: ['id', 'username', 'first_name', 'last_name', 'avatar'],
+    })
+
+    return {
+      id: saved.id,
+      content: saved.content,
+      created_at: saved.created_at,
+      event_id: saved.event_id,
+      user_id: saved.user_id,
+      user: user
+        ? {
+            id: user.id,
+            username: user.username,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            avatar: user.avatar,
+          }
+        : null,
+    }
+  }
+
+  async deleteComment(commentId: string, userId: string) {
+    const comment = await this.eventCommentRepo.findOne({ where: { id: commentId } })
+    if (!comment) throw new NotFoundException('Comment not found')
+    if (comment.user_id !== userId) throw new ForbiddenException('You can only delete your own comments')
+    await this.eventCommentRepo.delete(commentId)
+    return { message: 'Comment deleted' }
   }
 }

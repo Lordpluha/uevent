@@ -1,1 +1,1 @@
-export { EventEdit } from './ui/EventEdit';
+export { EventEdit } from './ui/EventEdit'

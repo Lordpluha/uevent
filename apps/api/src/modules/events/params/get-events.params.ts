@@ -18,6 +18,8 @@ export const GetEventsParamsSchema = z.object({
   location_to: z.string().optional(),
   organization_id: z.string().uuid().optional(),
   user_id: z.string().uuid().optional(),
+  sort_by: z.enum(['date', 'name', 'attendees']).optional(),
+  sort_order: z.enum(['asc', 'desc']).optional(),
 })
 
 export type GetEventsParams = z.infer<typeof GetEventsParamsSchema>

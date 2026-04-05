@@ -1,1 +1,1 @@
-export { GoogleAuthHandler } from './ui/GoogleAuthHandler';
+export { GoogleAuthHandler } from './ui/GoogleAuthHandler'

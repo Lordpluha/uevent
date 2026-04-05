@@ -42,7 +42,10 @@ export function useCalendarSync(eventId?: string, ticketId?: string | null) {
         lower.includes('google calendar access denied')
       ) {
         toast.error(t.events.details.calendarAccessDenied, {
-          action: { label: t.events.details.calendarLinkGoogle, onClick: () => window.location.assign('/api/auth/google') },
+          action: {
+            label: t.events.details.calendarLinkGoogle,
+            onClick: () => window.location.assign('/api/auth/google'),
+          },
         })
       } else {
         toast.error(t.events.details.calendarFailed)

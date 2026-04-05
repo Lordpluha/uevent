@@ -1,5 +1,5 @@
-import { Entity, Column, Index, CreateDateColumn } from 'typeorm'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, CreateDateColumn, Entity, Index } from 'typeorm'
 import { UuidEntity } from '../../../common/uuid.entity'
 
 export enum OrganizationTransactionType {

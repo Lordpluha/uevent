@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 /* ── Raw backend shapes (as returned by the API) ─────────── */
 
@@ -21,7 +21,7 @@ export const backendOrganizationSchema = z.object({
   eventsCount: z.number().optional(),
   followers: z.number().optional(),
   href: z.string().optional(),
-});
+})
 
 export const backendOrgListResponseSchema = z.object({
   data: z.array(backendOrganizationSchema),
@@ -31,7 +31,7 @@ export const backendOrgListResponseSchema = z.object({
     limit: z.number(),
     total_pages: z.number(),
   }),
-});
+})
 
-export type BackendOrganization = z.infer<typeof backendOrganizationSchema>;
-export type BackendOrgListResponse = z.infer<typeof backendOrgListResponseSchema>;
+export type BackendOrganization = z.infer<typeof backendOrganizationSchema>
+export type BackendOrgListResponse = z.infer<typeof backendOrgListResponseSchema>

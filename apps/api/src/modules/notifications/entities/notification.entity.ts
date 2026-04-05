@@ -1,12 +1,11 @@
-import { Entity, Column, Index, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm'
-import { User } from '../../users/entities/user.entity'
-import { Organization } from '../../organizations/entities/organization.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
+import { Organization } from '../../organizations/entities/organization.entity'
+import { User } from '../../users/entities/user.entity'
 
 @Entity('notifications')
 export class Notification extends UuidEntity {
-
   @Column()
   @ApiProperty()
   name: string

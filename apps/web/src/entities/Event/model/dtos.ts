@@ -1,12 +1,12 @@
-import { z } from 'zod';
-import { eventFormatSchema } from './eventEntity';
+import { z } from 'zod'
+import { eventFormatSchema } from './eventEntity'
 
 const optionalUrlField = z
   .string()
   .trim()
   .optional()
   .transform((value) => (value ? value : undefined))
-  .pipe(z.string().url().optional());
+  .pipe(z.string().url().optional())
 
 export const createEventSchema = z.object({
   title: z.string().min(1),
@@ -24,7 +24,7 @@ export const createEventSchema = z.object({
   notifyNewAttendees: z.boolean().optional(),
   redirectUrl: optionalUrlField,
   publishAt: z.string().optional(),
-});
+})
 
 export const updateEventSchema = z.object({
   title: z.string().min(1).optional(),
@@ -37,7 +37,7 @@ export const updateEventSchema = z.object({
   onlineUrl: optionalUrlField,
   tags: z.array(z.string()).optional(),
   imageUrl: optionalUrlField,
-});
+})
 
 export const eventListParamsSchema = z.object({
   search: z.string().optional(),
@@ -52,8 +52,10 @@ export const eventListParamsSchema = z.object({
   page: z.number().int().positive().optional(),
   limit: z.number().int().positive().optional(),
   user_id: z.string().uuid().optional(),
-});
+  sort_by: z.enum(['date', 'name', 'attendees']).optional(),
+  sort_order: z.enum(['asc', 'desc']).optional(),
+})
 
-export type CreateEventDto = z.infer<typeof createEventSchema>;
-export type UpdateEventDto = z.infer<typeof updateEventSchema>;
-export type EventListParams = z.infer<typeof eventListParamsSchema>;
+export type CreateEventDto = z.infer<typeof createEventSchema>
+export type UpdateEventDto = z.infer<typeof updateEventSchema>
+export type EventListParams = z.infer<typeof eventListParamsSchema>

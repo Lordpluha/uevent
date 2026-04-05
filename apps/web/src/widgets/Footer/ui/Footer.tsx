@@ -1,14 +1,14 @@
-import { useAppContext } from '@shared/lib';
+import { useAppContext } from '@shared/lib'
 
 export const Footer = () => {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
 
   const footerSections = [
     t.footer.sections.account,
     t.footer.sections.discover,
     t.footer.sections.about,
     t.footer.sections.organizers,
-  ];
+  ]
 
   return (
     <footer className="mt-10 border-t border-border/60 bg-card text-card-foreground">
@@ -60,5 +60,5 @@ export const Footer = () => {
         </div>
       </div>
     </footer>
-  );
-};
+  )
+}

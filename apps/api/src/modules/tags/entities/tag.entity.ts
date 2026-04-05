@@ -1,10 +1,9 @@
-import { Entity, Column } from 'typeorm'
-import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, Entity } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
 
 @Entity('tags')
 export class Tag extends UuidEntity {
-
   @Column({ unique: true })
   @ApiProperty()
   name: string

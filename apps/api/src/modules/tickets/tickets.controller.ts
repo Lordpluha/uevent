@@ -1,16 +1,36 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseUUIDPipe, UseGuards, Headers } from '@nestjs/common'
-import { ZodValidationPipe } from 'nestjs-zod'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
-import { TicketsService } from './tickets.service'
+import { ZodValidationPipe } from 'nestjs-zod'
+import {
+  ApiAcceptLanguageHeader,
+  ApiAccessCookieAuth,
+  ApiUuidParam,
+  ApiZodBody,
+  messageSchema,
+  paginatedResponseSchema,
+  ticketResponseSchema,
+} from '../../common/swagger/openapi.util'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
+import { JwtGuard } from '../auth/guards/jwt.guard'
+import { JwtPayload } from '../auth/types/jwt-payload.interface'
+import { Event } from '../events/entities/event.entity'
 import { CreateTicketDto, CreateTicketDtoSchema } from './dto/create-ticket.dto'
 import { UpdateTicketDto, UpdateTicketDtoSchema } from './dto/update-ticket.dto'
-import { GetTicketsParams, GetTicketsParamsSchema } from './params/get-tickets.params'
-import { JwtGuard } from '../auth/guards/jwt.guard'
-import { CurrentUser } from '../auth/decorators/current-user.decorator'
-import { JwtPayload } from '../auth/types/jwt-payload.interface'
-import { ApiAcceptLanguageHeader, ApiAccessCookieAuth, ApiUuidParam, ApiZodBody, messageSchema, paginatedResponseSchema, ticketResponseSchema } from '../../common/swagger/openapi.util'
 import { Ticket } from './entities/ticket.entity'
-import { Event } from '../events/entities/event.entity'
+import { GetTicketsParams, GetTicketsParamsSchema } from './params/get-tickets.params'
+import { TicketsService } from './tickets.service'
 
 @Controller('tickets')
 @ApiTags('Tickets')
@@ -24,10 +44,7 @@ export class TicketsController {
   @ApiAccessCookieAuth()
   @ApiZodBody(CreateTicketDtoSchema)
   @ApiOkResponse({ description: 'Created ticket.', schema: ticketResponseSchema })
-  create(
-    @Body(new ZodValidationPipe(CreateTicketDtoSchema)) dto: CreateTicketDto,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  create(@Body(new ZodValidationPipe(CreateTicketDtoSchema)) dto: CreateTicketDto, @CurrentUser() user: JwtPayload) {
     return this.ticketsService.create(dto, user)
   }
 
@@ -52,10 +69,7 @@ export class TicketsController {
   @ApiUuidParam('id', 'Ticket id')
   @ApiAcceptLanguageHeader()
   @ApiOkResponse({ description: 'Ticket details.', schema: ticketResponseSchema })
-  findOne(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Headers('accept-language') acceptLanguage?: string,
-  ) {
+  findOne(@Param('id', ParseUUIDPipe) id: string, @Headers('accept-language') acceptLanguage?: string) {
     return this.ticketsService.findOne(id, acceptLanguage)
   }
 
@@ -80,10 +94,7 @@ export class TicketsController {
   @ApiAccessCookieAuth()
   @ApiUuidParam('id', 'Ticket id')
   @ApiOkResponse({ description: 'Ticket removed.', schema: messageSchema('Ticket removed') })
-  remove(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
     return this.ticketsService.remove(id, user)
   }
 }

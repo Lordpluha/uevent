@@ -1,11 +1,11 @@
-import type { Route } from './+types/organizations';
-import { OrgsPage } from '@pages/Organizations';
-import { SITE_NAME, SITE_URL } from '@shared/config/app';
+import { OrgsPage } from '@pages/Organizations'
+import { SITE_NAME, SITE_URL } from '@shared/config/app'
+import type { Route } from './+types/organizations'
 
 export function meta(_: Route.MetaArgs) {
-  const title = `Organizations — ${SITE_NAME}`;
-  const description = 'Discover communities and groups organizing events.';
-  const url = `${SITE_URL}/organizations`;
+  const title = `Organizations — ${SITE_NAME}`
+  const description = 'Discover communities and groups organizing events.'
+  const url = `${SITE_URL}/organizations`
   return [
     { title },
     { name: 'description', content: description },
@@ -17,7 +17,7 @@ export function meta(_: Route.MetaArgs) {
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
     { tagName: 'link', rel: 'canonical', href: url },
-  ];
+  ]
 }
 
-export default OrgsPage;
+export default OrgsPage

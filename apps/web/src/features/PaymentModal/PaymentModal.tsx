@@ -1,24 +1,24 @@
-import { useState, type FormEvent } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { isAxiosError } from 'axios';
-import { toast } from 'sonner';
-import { X, Loader2 } from 'lucide-react';
-import { api } from '@shared/api';
-import { Button } from '@shared/components';
-import { usePaymentConfig } from '@shared/hooks/usePaymentConfig';
-import { useAppContext } from '@shared/lib';
+import { api } from '@shared/api'
+import { Button } from '@shared/components'
+import { usePaymentConfig } from '@shared/hooks/usePaymentConfig'
+import { useAppContext } from '@shared/lib'
+import { useMutation } from '@tanstack/react-query'
+import { isAxiosError } from 'axios'
+import { Loader2, X } from 'lucide-react'
+import { type FormEvent, useState } from 'react'
+import { toast } from 'sonner'
 
 export interface PaymentModalProps {
-  ticketId: number;
-  ticketName: string;
-  price: number;
-  eventId: string;
-  eventTitle: string;
-  eventDate?: string;
-  eventLocation?: string;
-  organizationName?: string;
-  onClose: () => void;
-  onSuccess?: (paymentIntentId: string) => void;
+  ticketId: number
+  ticketName: string
+  price: number
+  eventId: string
+  eventTitle: string
+  eventDate?: string
+  eventLocation?: string
+  organizationName?: string
+  onClose: () => void
+  onSuccess?: (paymentIntentId: string) => void
 }
 
 export function PaymentModal({
@@ -33,22 +33,22 @@ export function PaymentModal({
   onClose,
   onSuccess,
 }: PaymentModalProps) {
-  const { t } = useAppContext();
-  const { data: paymentConfig } = usePaymentConfig();
-  const [email, setEmail] = useState('');
-  const [cardName, setCardName] = useState('');
+  const { t } = useAppContext()
+  const { data: paymentConfig } = usePaymentConfig()
+  const [email, setEmail] = useState('')
+  const [cardName, setCardName] = useState('')
 
   // convert price to cents
-  const amountInCents = Math.round(price * 100);
-  const stripeFee = price > 0 ? (paymentConfig?.platformFeeAmount ?? 0) : 0;
-  const totalPrice = price + stripeFee;
-  const currencySymbol = paymentConfig?.currencySymbol ?? '';
+  const amountInCents = Math.round(price * 100)
+  const stripeFee = price > 0 ? (paymentConfig?.platformFeeAmount ?? 0) : 0
+  const totalPrice = price + stripeFee
+  const currencySymbol = paymentConfig?.currencySymbol ?? ''
 
   const createPaymentMutation = useMutation({
     mutationFn: async () => {
       const response = await api.post<{
-        clientSecret: string;
-        paymentIntentId: string;
+        clientSecret: string
+        paymentIntentId: string
       }>('/payments/create-intent', {
         amount: amountInCents,
         orderId: `ticket-${ticketId}-event-${eventId}`,
@@ -59,44 +59,47 @@ export function PaymentModal({
         eventDate,
         eventLocation,
         organizationName,
-      });
-      return response.data;
+      })
+      return response.data
     },
     onSuccess: (data) => {
-      toast.success(t.paymentModal.intentCreated);
+      toast.success(t.paymentModal.intentCreated)
       // store payment details
-      localStorage.setItem('pendingPayment', JSON.stringify({
-        clientSecret: data.clientSecret,
-        paymentIntentId: data.paymentIntentId,
-        email,
-        fullName: cardName,
-        ticketId,
-        ticketName,
-        price,
-        eventId,
-        eventTitle,
-        eventDate,
-        eventLocation,
-        organizationName,
-      }));
-      onSuccess?.(data.paymentIntentId);
-      onClose();
-      window.location.href = `/checkout?paymentIntentId=${data.paymentIntentId}`;
+      localStorage.setItem(
+        'pendingPayment',
+        JSON.stringify({
+          clientSecret: data.clientSecret,
+          paymentIntentId: data.paymentIntentId,
+          email,
+          fullName: cardName,
+          ticketId,
+          ticketName,
+          price,
+          eventId,
+          eventTitle,
+          eventDate,
+          eventLocation,
+          organizationName,
+        }),
+      )
+      onSuccess?.(data.paymentIntentId)
+      onClose()
+      window.location.href = `/checkout?paymentIntentId=${data.paymentIntentId}`
     },
     onError: (error: unknown) => {
-      const message = isAxiosError(error) ? error.response?.data?.message : undefined;
-      toast.error(message || t.paymentModal.createFailed);
+      const message = isAxiosError(error) ? error.response?.data?.message : undefined
+      toast.error(message || t.paymentModal.createFailed)
     },
-  });
+  })
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if(!email || !cardName) {
-      toast.error(t.paymentModal.fillFields);
-      return;
+    e.preventDefault()
+    if (!email || !cardName) {
+      toast.error(t.paymentModal.fillFields)
+      return
     }
-    createPaymentMutation.mutate();
-  };
+    createPaymentMutation.mutate()
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -118,19 +121,22 @@ export function PaymentModal({
           <div className="flex justify-between text-sm">
             <span>{t.paymentModal.ticketPrice}</span>
             <span className="font-semibold">
-              {currencySymbol}{price.toFixed(2)}
+              {currencySymbol}
+              {price.toFixed(2)}
             </span>
           </div>
           <div className="mt-2 flex justify-between text-sm">
             <span>Stripe fee</span>
             <span className="font-semibold">
-              {currencySymbol}{stripeFee.toFixed(2)}
+              {currencySymbol}
+              {stripeFee.toFixed(2)}
             </span>
           </div>
           <div className="mt-2 border-t border-border pt-2 flex justify-between text-sm font-bold">
             <span>{t.paymentModal.total}</span>
             <span>
-              {currencySymbol}{totalPrice.toFixed(2)}
+              {currencySymbol}
+              {totalPrice.toFixed(2)}
             </span>
           </div>
         </div>
@@ -165,25 +171,14 @@ export function PaymentModal({
           </div>
 
           <div className="pt-2">
-            <p className="text-xs text-muted-foreground mb-4">
-              {t.paymentModal.secureNote}
-            </p>
+            <p className="text-xs text-muted-foreground mb-4">{t.paymentModal.secureNote}</p>
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={createPaymentMutation.isPending}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={createPaymentMutation.isPending}>
               {t.common.cancel}
             </Button>
-            <Button
-              type="submit"
-              disabled={createPaymentMutation.isPending}
-              className="flex-1"
-            >
+            <Button type="submit" disabled={createPaymentMutation.isPending} className="flex-1">
               {createPaymentMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -197,5 +192,5 @@ export function PaymentModal({
         </form>
       </div>
     </div>
-  );
+  )
 }

@@ -1,7 +1,4 @@
-import { useState } from 'react';
-import { Shield, ShieldCheck } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { authApi } from '@shared/api/auth.api'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,79 +12,93 @@ import {
   InputOTPGroup,
   InputOTPSlot,
   Switch,
-} from '@shared/components';
-import { authApi } from '@shared/api/auth.api';
-import { useAppContext } from '@shared/lib';
-import { useRequiredOrgAccountData } from './useOrgAccountData';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useMutation } from '@tanstack/react-query'
+import { Shield, ShieldCheck } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { useRequiredOrgAccountData } from './useOrgAccountData'
 
 export function OrgSecuritySection() {
-  const { t } = useAppContext();
-  const { org, isLoading, invalidateOrgQueries } = useRequiredOrgAccountData();
-  const [isEnableTwoFaDialogOpen, setIsEnableTwoFaDialogOpen] = useState(false);
-  const [isDisableTwoFaDialogOpen, setIsDisableTwoFaDialogOpen] = useState(false);
-  const [twoFaSetupData, setTwoFaSetupData] = useState<{ secret: string; qrCodeDataUrl: string } | null>(null);
-  const [twoFaCode, setTwoFaCode] = useState('');
-  const [disableTwoFaCode, setDisableTwoFaCode] = useState('');
+  const { t } = useAppContext()
+  const { org, isLoading, invalidateOrgQueries } = useRequiredOrgAccountData()
+  const [isEnableTwoFaDialogOpen, setIsEnableTwoFaDialogOpen] = useState(false)
+  const [isDisableTwoFaDialogOpen, setIsDisableTwoFaDialogOpen] = useState(false)
+  const [twoFaSetupData, setTwoFaSetupData] = useState<{ secret: string; qrCodeDataUrl: string } | null>(null)
+  const [twoFaCode, setTwoFaCode] = useState('')
+  const [disableTwoFaCode, setDisableTwoFaCode] = useState('')
 
   const twoFaSetupMutation = useMutation({
     mutationFn: () => authApi.setupOrg2fa(),
     onSuccess: (data) => {
-      setTwoFaSetupData(data);
-      setTwoFaCode('');
-      setIsEnableTwoFaDialogOpen(true);
+      setTwoFaSetupData(data)
+      setTwoFaCode('')
+      setIsEnableTwoFaDialogOpen(true)
     },
     onError: () => toast.error(t.orgAccount.security.setupFailed),
-  });
+  })
 
   const twoFaConfirmMutation = useMutation({
     mutationFn: (code: string) => authApi.confirmOrg2fa(code),
     onSuccess: async () => {
-      await invalidateOrgQueries();
-      setIsEnableTwoFaDialogOpen(false);
-      setTwoFaSetupData(null);
-      setTwoFaCode('');
-      toast.success(t.orgAccount.security.enabled);
+      await invalidateOrgQueries()
+      setIsEnableTwoFaDialogOpen(false)
+      setTwoFaSetupData(null)
+      setTwoFaCode('')
+      toast.success(t.orgAccount.security.enabled)
     },
-    onError: () => { toast.error(t.orgAccount.security.invalidCode); setTwoFaCode(''); },
-  });
+    onError: () => {
+      toast.error(t.orgAccount.security.invalidCode)
+      setTwoFaCode('')
+    },
+  })
 
   const twoFaDisableMutation = useMutation({
     mutationFn: (code: string) => authApi.disableOrg2fa(code),
     onSuccess: async () => {
-      await invalidateOrgQueries();
-      setIsDisableTwoFaDialogOpen(false);
-      setDisableTwoFaCode('');
-      toast.success(t.orgAccount.security.disabled);
+      await invalidateOrgQueries()
+      setIsDisableTwoFaDialogOpen(false)
+      setDisableTwoFaCode('')
+      toast.success(t.orgAccount.security.disabled)
     },
-    onError: () => { toast.error(t.orgAccount.security.invalidCode); setDisableTwoFaCode(''); },
-  });
+    onError: () => {
+      toast.error(t.orgAccount.security.invalidCode)
+      setDisableTwoFaCode('')
+    },
+  })
 
   const handleTwoFaChange = (enabled: boolean) => {
     if (!enabled) {
-      setDisableTwoFaCode('');
-      setIsDisableTwoFaDialogOpen(true);
-      return;
+      setDisableTwoFaCode('')
+      setIsDisableTwoFaDialogOpen(true)
+      return
     }
-    twoFaSetupMutation.mutate();
-  };
+    twoFaSetupMutation.mutate()
+  }
 
-  if (isLoading || !org) return <section className="mt-5 h-24 animate-pulse rounded-xl border border-border/60 bg-muted" />;
+  if (isLoading || !org)
+    return <section className="mt-5 h-24 animate-pulse rounded-xl border border-border/60 bg-muted" />
 
-  const twoFaEnabled = org.twoFactorEnabled ?? false;
+  const twoFaEnabled = org.twoFactorEnabled ?? false
 
   return (
     <>
       {/* Enable 2FA dialog */}
       <AlertDialog
         open={isEnableTwoFaDialogOpen}
-        onOpenChange={(o) => { if (!o) { setIsEnableTwoFaDialogOpen(false); setTwoFaSetupData(null); setTwoFaCode(''); } }}
+        onOpenChange={(o) => {
+          if (!o) {
+            setIsEnableTwoFaDialogOpen(false)
+            setTwoFaSetupData(null)
+            setTwoFaCode('')
+          }
+        }}
       >
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>{t.orgAccount.security.setupTitle}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t.orgAccount.security.setupDesc}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t.orgAccount.security.setupDesc}</AlertDialogDescription>
           </AlertDialogHeader>
           {twoFaSetupData && (
             <div className="flex flex-col items-center gap-4 py-2">
@@ -128,14 +139,17 @@ export function OrgSecuritySection() {
       {/* Disable 2FA dialog */}
       <AlertDialog
         open={isDisableTwoFaDialogOpen}
-        onOpenChange={(o) => { if (!o) { setIsDisableTwoFaDialogOpen(false); setDisableTwoFaCode(''); } }}
+        onOpenChange={(o) => {
+          if (!o) {
+            setIsDisableTwoFaDialogOpen(false)
+            setDisableTwoFaCode('')
+          }
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t.orgAccount.security.disableTitle}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t.orgAccount.security.disableDesc}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t.orgAccount.security.disableDesc}</AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex flex-col items-center gap-2 py-2">
             <InputOTP maxLength={6} value={disableTwoFaCode} onChange={setDisableTwoFaCode}>
@@ -186,6 +200,5 @@ export function OrgSecuritySection() {
         </div>
       </section>
     </>
-  );
+  )
 }
-

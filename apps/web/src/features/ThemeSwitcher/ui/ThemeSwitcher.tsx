@@ -1,17 +1,17 @@
-import { Moon, Sun } from 'lucide-react';
-import { useAppContext } from '@shared/lib';
+import { useAppContext } from '@shared/lib'
+import { Moon, Sun } from 'lucide-react'
 
 type Props = {
   /** 'pill'  – compact rounded button (desktop header)
    *  'block' – full-width rounded-md button (mobile menu) */
-  variant?: 'pill' | 'block';
-};
+  variant?: 'pill' | 'block'
+}
 
 export const ThemeSwitcher = ({ variant = 'pill' }: Props) => {
-  const { isLightTheme, applyTheme, t } = useAppContext();
+  const { isLightTheme, applyTheme, t } = useAppContext()
 
-  const label = isLightTheme ? t.header.actions.darkTheme : t.header.actions.lightTheme;
-  const icon = isLightTheme ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />;
+  const label = isLightTheme ? t.header.actions.darkTheme : t.header.actions.lightTheme
+  const icon = isLightTheme ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />
 
   if (variant === 'block') {
     return (
@@ -23,7 +23,7 @@ export const ThemeSwitcher = ({ variant = 'pill' }: Props) => {
         {icon}
         {label}
       </button>
-    );
+    )
   }
 
   return (
@@ -35,5 +35,5 @@ export const ThemeSwitcher = ({ variant = 'pill' }: Props) => {
       {icon}
       {isLightTheme ? t.header.actions.dark : t.header.actions.light}
     </button>
-  );
-};
+  )
+}

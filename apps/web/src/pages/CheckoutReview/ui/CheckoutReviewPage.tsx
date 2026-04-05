@@ -1,79 +1,83 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
-import { ChevronLeft, CreditCard, Minus, Plus, ShieldCheck, Ticket } from 'lucide-react';
-import { useEvent } from '@entities/Event';
-import { useMe } from '@entities/User';
-import { Badge, Button, PromoCodeSection } from '@shared/components';
-import { api } from '@shared/api';
-import { getCurrencySymbol } from '@shared/config/payment';
-import { usePaymentConfig } from '@shared/hooks/usePaymentConfig';
-import { useAppContext } from '@shared/lib';
-import { useAuth } from '@shared/lib/auth-context';
-import { useCheckoutPayment } from './useCheckoutPayment';
+import { useEvent } from '@entities/Event'
+import { useMe } from '@entities/User'
+import { api } from '@shared/api'
+import { Badge, Button, PromoCodeSection } from '@shared/components'
+import { getCurrencySymbol } from '@shared/config/payment'
+import { usePaymentConfig } from '@shared/hooks/usePaymentConfig'
+import { useAppContext } from '@shared/lib'
+import { useAuth } from '@shared/lib/auth-context'
+import { ChevronLeft, CreditCard, Minus, Plus, ShieldCheck, Ticket } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router'
+import { useCheckoutPayment } from './useCheckoutPayment'
 
 export function CheckoutReviewPage() {
-  const { t } = useAppContext();
-  const { eventId } = useParams<{ eventId: string }>();
-  const [searchParams] = useSearchParams();
-  const ticketType = searchParams.get('ticketType') ?? 'standard';
-  const ticketTypeLabel = ticketType === 'free' ? t.common.free : ticketType === 'vip' ? t.common.vip : t.common.standard;
-  const promoFromQuery = (searchParams.get('promo') ?? '').toUpperCase();
+  const { t } = useAppContext()
+  const { eventId } = useParams<{ eventId: string }>()
+  const [searchParams] = useSearchParams()
+  const ticketType = searchParams.get('ticketType') ?? 'standard'
+  const ticketTypeLabel =
+    ticketType === 'free' ? t.common.free : ticketType === 'vip' ? t.common.vip : t.common.standard
+  const promoFromQuery = (searchParams.get('promo') ?? '').toUpperCase()
 
-  const { data: event, isLoading } = useEvent(eventId ?? '');
-  const { data: me } = useMe();
-  const { data: paymentConfig } = usePaymentConfig();
-  const { accountType } = useAuth();
+  const { data: event, isLoading } = useEvent(eventId ?? '')
+  const { data: me } = useMe()
+  const { data: paymentConfig } = usePaymentConfig()
+  const { accountType } = useAuth()
 
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; id: string; discountPercent: number } | undefined>();
-  const [quantity, setQuantity] = useState(1);
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; id: string; discountPercent: number } | undefined>()
+  const [quantity, setQuantity] = useState(1)
 
   useEffect(() => {
-    if (!promoFromQuery) return;
-    let ignore = false;
+    if (!promoFromQuery) return
+    let ignore = false
     void (async () => {
       try {
-        const response = await api.post<{ id: string; code: string; discountPercent: number }>('/payments/promo-codes/validate', {
-          code: promoFromQuery,
-          eventId,
-        });
+        const response = await api.post<{ id: string; code: string; discountPercent: number }>(
+          '/payments/promo-codes/validate',
+          {
+            code: promoFromQuery,
+            eventId,
+          },
+        )
         if (!ignore) {
           setAppliedPromo({
             code: response.data.code,
             id: response.data.id,
             discountPercent: response.data.discountPercent,
-          });
+          })
         }
       } catch {
-        if (!ignore) setAppliedPromo(undefined);
+        if (!ignore) setAppliedPromo(undefined)
       }
-    })();
+    })()
 
     return () => {
-      ignore = true;
-    };
-  }, [promoFromQuery, eventId]);
+      ignore = true
+    }
+  }, [promoFromQuery, eventId])
 
   const selectedTicket = useMemo(() => {
-    if (!event) return null;
-    return event.tickets.find((ticket) => ticket.ticketType === ticketType) ?? event.tickets[0] ?? null;
-  }, [event, ticketType]);
+    if (!event) return null
+    return event.tickets.find((ticket) => ticket.ticketType === ticketType) ?? event.tickets[0] ?? null
+  }, [event, ticketType])
 
-  const subtotal = (selectedTicket?.price ?? 0) * quantity;
-  const discountRate = (appliedPromo?.discountPercent ?? 0) / 100;
-  const discount = subtotal * discountRate;
-  const total = Math.max(0, subtotal - discount);
-  const stripeFee = total > 0 ? (paymentConfig?.platformFeeAmount ?? 0) : 0;
-  const grandTotal = total + stripeFee;
+  const subtotal = (selectedTicket?.price ?? 0) * quantity
+  const discountRate = (appliedPromo?.discountPercent ?? 0) / 100
+  const discount = subtotal * discountRate
+  const total = Math.max(0, subtotal - discount)
+  const stripeFee = total > 0 ? (paymentConfig?.platformFeeAmount ?? 0) : 0
+  const grandTotal = total + stripeFee
 
-  const currency = getCurrencySymbol({ currency: selectedTicket?.currency, paymentConfig });
+  const currency = getCurrencySymbol({ currency: selectedTicket?.currency, paymentConfig })
   const remaining = selectedTicket?.quantityLimited
     ? Math.max(0, (selectedTicket?.quantityTotal ?? 0) - (selectedTicket?.quantitySold ?? 0))
-    : undefined;
-  const maxQuantity = selectedTicket?.quantityLimited ? Math.max(1, Math.min(remaining ?? 1, 50)) : 10;
+    : undefined
+  const maxQuantity = selectedTicket?.quantityLimited ? Math.max(1, Math.min(remaining ?? 1, 50)) : 10
 
   useEffect(() => {
-    setQuantity((q) => Math.max(1, Math.min(q, maxQuantity)));
-  }, [maxQuantity]);
+    setQuantity((q) => Math.max(1, Math.min(q, maxQuantity)))
+  }, [maxQuantity])
 
   const { isProcessingPayment, handleProceedToPayment } = useCheckoutPayment({
     eventId,
@@ -88,14 +92,14 @@ export function CheckoutReviewPage() {
     appliedPromoDiscount: appliedPromo?.discountPercent,
     me,
     event,
-  });
+  })
 
   if (isLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <p className="text-sm text-muted-foreground">{t.checkoutReview.loading}</p>
       </main>
-    );
+    )
   }
 
   return (
@@ -109,9 +113,7 @@ export function CheckoutReviewPage() {
       </Link>
 
       <h1 className="text-2xl font-extrabold tracking-tight">{t.checkoutReview.title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {t.checkoutReview.subtitle}
-      </p>
+      <p className="mt-2 text-sm text-muted-foreground">{t.checkoutReview.subtitle}</p>
 
       <section className="mt-6 space-y-5 rounded-xl border border-border/60 bg-card p-5">
         <div className="flex items-center gap-2 text-sm font-medium">
@@ -121,8 +123,12 @@ export function CheckoutReviewPage() {
 
         <div className="rounded-lg border border-border/60 bg-background/40 p-4">
           <p className="text-xs text-muted-foreground">{t.checkout.event}</p>
-          <p className="text-sm font-semibold text-foreground">{event?.title ?? `${t.checkout.event} #${eventId ?? ''}`}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{event?.date} • {event?.time}</p>
+          <p className="text-sm font-semibold text-foreground">
+            {event?.title ?? `${t.checkout.event} #${eventId ?? ''}`}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {event?.date} • {event?.time}
+          </p>
         </div>
 
         <div className="rounded-lg border border-border/60 bg-background/40 p-4">
@@ -132,8 +138,19 @@ export function CheckoutReviewPage() {
           </div>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold capitalize text-foreground">{selectedTicket?.ticketType === 'free' ? t.common.free : selectedTicket?.ticketType === 'vip' ? t.common.vip : selectedTicket?.ticketType === 'standard' ? t.common.standard : ticketTypeLabel}</p>
-              <p className="text-xs text-muted-foreground">{t.checkoutReview.unitPrice} {currency}{(selectedTicket?.price ?? 0).toFixed(2)}</p>
+              <p className="text-sm font-semibold capitalize text-foreground">
+                {selectedTicket?.ticketType === 'free'
+                  ? t.common.free
+                  : selectedTicket?.ticketType === 'vip'
+                    ? t.common.vip
+                    : selectedTicket?.ticketType === 'standard'
+                      ? t.common.standard
+                      : ticketTypeLabel}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t.checkoutReview.unitPrice} {currency}
+                {(selectedTicket?.price ?? 0).toFixed(2)}
+              </p>
               <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-border/60 px-2 py-1">
                 <button
                   type="button"
@@ -156,20 +173,24 @@ export function CheckoutReviewPage() {
                 </button>
               </div>
               {selectedTicket?.quantityLimited && (
-                <p className="mt-1 text-xs text-muted-foreground">{t.checkoutReview.available} {remaining ?? 0}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t.checkoutReview.available} {remaining ?? 0}
+                </p>
               )}
             </div>
-            <Badge variant="secondary">{t.checkoutReview.quantityShort}: {quantity}</Badge>
+            <Badge variant="secondary">
+              {t.checkoutReview.quantityShort}: {quantity}
+            </Badge>
           </div>
         </div>
 
         <PromoCodeSection
           eventId={eventId}
           onApplyPromo={(promo) => {
-            setAppliedPromo(promo);
+            setAppliedPromo(promo)
           }}
           onRemovePromo={() => {
-            setAppliedPromo(undefined);
+            setAppliedPromo(undefined)
           }}
           appliedCode={appliedPromo?.code}
           appliedDiscount={appliedPromo?.discountPercent}
@@ -177,20 +198,34 @@ export function CheckoutReviewPage() {
 
         <div className="rounded-lg border border-border/60 bg-background/40 p-4 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">{t.checkoutReview.subtotal.replace('{{qty}}', String(quantity))}</span>
-            <span>{currency}{subtotal.toFixed(2)}</span>
+            <span className="text-muted-foreground">
+              {t.checkoutReview.subtotal.replace('{{qty}}', String(quantity))}
+            </span>
+            <span>
+              {currency}
+              {subtotal.toFixed(2)}
+            </span>
           </div>
           <div className="mt-1 flex items-center justify-between">
             <span className="text-muted-foreground">{t.common.discount}</span>
-            <span>-{currency}{discount.toFixed(2)}</span>
+            <span>
+              -{currency}
+              {discount.toFixed(2)}
+            </span>
           </div>
           <div className="mt-1 flex items-center justify-between">
             <span className="text-muted-foreground">Stripe fee</span>
-            <span>{currency}{stripeFee.toFixed(2)}</span>
+            <span>
+              {currency}
+              {stripeFee.toFixed(2)}
+            </span>
           </div>
           <div className="mt-3 flex items-center justify-between border-t border-border pt-3 font-semibold">
             <span>{t.common.total}</span>
-            <span>{currency}{grandTotal.toFixed(2)}</span>
+            <span>
+              {currency}
+              {grandTotal.toFixed(2)}
+            </span>
           </div>
         </div>
 
@@ -209,5 +244,5 @@ export function CheckoutReviewPage() {
         </div>
       </section>
     </main>
-  );
+  )
 }

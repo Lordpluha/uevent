@@ -1,84 +1,85 @@
-import { useEffect } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
-import { CalendarCheck, CalendarPlus, CheckCircle2, Download, ExternalLink, Loader2, Ticket } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { Badge, Button } from '@shared/components';
-import { api } from '@shared/api';
-import { getCurrencySymbol } from '@shared/config/payment';
-import { usePaymentConfig } from '@shared/hooks/usePaymentConfig';
-import { useAppContext } from '@shared/lib';
-import { useAuth } from '@shared/lib/auth-context';
-import { useCalendarSync } from './useCalendarSync';
-import { toast } from 'sonner';
+import { api } from '@shared/api'
+import { Badge, Button } from '@shared/components'
+import { getCurrencySymbol } from '@shared/config/payment'
+import { usePaymentConfig } from '@shared/hooks/usePaymentConfig'
+import { useAppContext } from '@shared/lib'
+import { useAuth } from '@shared/lib/auth-context'
+import { useQuery } from '@tanstack/react-query'
+import { CalendarCheck, CalendarPlus, CheckCircle2, Download, ExternalLink, Loader2, Ticket } from 'lucide-react'
+import { useEffect } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router'
+import { toast } from 'sonner'
+import { useCalendarSync } from './useCalendarSync'
 
 export function CheckoutSuccessPage() {
-  const { t } = useAppContext();
-  const { eventId } = useParams<{ eventId: string }>();
-  const [searchParams] = useSearchParams();
-  const { isAuthenticated, accountType } = useAuth();
-  const { data: paymentConfig } = usePaymentConfig();
+  const { t } = useAppContext()
+  const { eventId } = useParams<{ eventId: string }>()
+  const [searchParams] = useSearchParams()
+  const { isAuthenticated, accountType } = useAuth()
+  const { data: paymentConfig } = usePaymentConfig()
 
-  const ticketType = searchParams.get('ticketType') ?? 'standard';
-  const ticketTypeLabel = ticketType === 'free' ? t.common.free : ticketType === 'vip' ? t.common.vip : t.common.standard;
-  const quantity = Number(searchParams.get('qty') ?? '1');
-  const promo = searchParams.get('promo') ?? '';
-  const total = Number(searchParams.get('total') ?? '0');
-  const currency = getCurrencySymbol({ currency: searchParams.get('currency'), paymentConfig });
-  const orderId = searchParams.get('order');
-  const ticketId = searchParams.get('ticketId');
+  const ticketType = searchParams.get('ticketType') ?? 'standard'
+  const ticketTypeLabel =
+    ticketType === 'free' ? t.common.free : ticketType === 'vip' ? t.common.vip : t.common.standard
+  const quantity = Number(searchParams.get('qty') ?? '1')
+  const promo = searchParams.get('promo') ?? ''
+  const total = Number(searchParams.get('total') ?? '0')
+  const currency = getCurrencySymbol({ currency: searchParams.get('currency'), paymentConfig })
+  const orderId = searchParams.get('order')
+  const ticketId = searchParams.get('ticketId')
 
   const { data: paymentData, isLoading: isPaymentLoading } = useQuery<{
-    status: string;
-    amount: number;
-    currency: string;
+    status: string
+    amount: number
+    currency: string
   }>({
     queryKey: ['payment-status', orderId],
     queryFn: async () => {
-      const res = await api.get(`/payments/${orderId}`);
-      return res.data;
+      const res = await api.get(`/payments/${orderId}`)
+      return res.data
     },
     enabled: !!orderId,
     retry: 3,
     refetchInterval: (query) => {
-      const status = query.state.data?.status;
-      if (status === 'succeeded' || status === 'canceled') return false;
-      return 3000;
+      const status = query.state.data?.status
+      if (status === 'succeeded' || status === 'canceled') return false
+      return 3000
     },
-  });
+  })
 
-  const paymentProcessing = isPaymentLoading || paymentData?.status === 'processing';
+  const paymentProcessing = isPaymentLoading || paymentData?.status === 'processing'
 
   useEffect(() => {
-    if (!orderId || !isAuthenticated || accountType !== 'user') return;
+    if (!orderId || !isAuthenticated || accountType !== 'user') return
 
     void api.post(`/payments/${orderId}/reconcile`).catch(() => {
       // Best-effort recovery for old orders where webhook didn't issue all user tickets.
-    });
-  }, [orderId, isAuthenticated, accountType]);
+    })
+  }, [orderId, isAuthenticated, accountType])
 
   const handleDownloadTicket = async () => {
     if (!orderId) {
-      toast.error('Missing order id');
-      return;
+      toast.error('Missing order id')
+      return
     }
 
     try {
       const response = await api.get<Blob>(`/payments/${orderId}/ticket-pdf`, {
         responseType: 'blob',
-      });
+      })
 
-      const url = URL.createObjectURL(response.data);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `uevent-ticket-${orderId}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
+      const url = URL.createObjectURL(response.data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `uevent-ticket-${orderId}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
     } catch {
-      toast.error('Failed to download ticket PDF');
+      toast.error('Failed to download ticket PDF')
     }
-  };
+  }
 
-  const { calendarMutation, calendarStatus } = useCalendarSync(eventId, ticketId);
+  const { calendarMutation, calendarStatus } = useCalendarSync(eventId, ticketId)
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
@@ -88,7 +89,9 @@ export function CheckoutSuccessPage() {
             <>
               <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
               <div>
-                <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{t.checkoutSuccess.confirming}</h1>
+                <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+                  {t.checkoutSuccess.confirming}
+                </h1>
                 <p className="text-sm text-muted-foreground">{t.checkoutSuccess.confirmingDesc}</p>
               </div>
             </>
@@ -122,11 +125,18 @@ export function CheckoutSuccessPage() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">{t.checkoutSuccess.totalPaid}</p>
-            <p className="font-semibold text-foreground">{currency}{Number.isFinite(total) ? total.toFixed(2) : '0.00'}</p>
+            <p className="font-semibold text-foreground">
+              {currency}
+              {Number.isFinite(total) ? total.toFixed(2) : '0.00'}
+            </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">{t.checkoutSuccess.promoCode}</p>
-            {promo ? <Badge variant="secondary">{promo}</Badge> : <p className="font-semibold text-foreground">{t.common.none}</p>}
+            {promo ? (
+              <Badge variant="secondary">{promo}</Badge>
+            ) : (
+              <p className="font-semibold text-foreground">{t.common.none}</p>
+            )}
           </div>
         </div>
 
@@ -145,7 +155,11 @@ export function CheckoutSuccessPage() {
                 <p className="text-sm font-medium text-foreground">{t.checkoutSuccess.calendarAdded}</p>
                 {(calendarMutation.data?.ticketResult?.htmlLink || calendarMutation.data?.eventResult?.htmlLink) && (
                   <a
-                    href={calendarMutation.data?.ticketResult?.htmlLink ?? calendarMutation.data?.eventResult?.htmlLink ?? '#'}
+                    href={
+                      calendarMutation.data?.ticketResult?.htmlLink ??
+                      calendarMutation.data?.eventResult?.htmlLink ??
+                      '#'
+                    }
                     target="_blank"
                     rel="noreferrer"
                     className="ml-auto flex items-center gap-1 text-xs text-primary hover:underline"
@@ -189,6 +203,5 @@ export function CheckoutSuccessPage() {
         </div>
       </section>
     </main>
-  );
+  )
 }
-

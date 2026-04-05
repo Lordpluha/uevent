@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { FindOptionsSelect, Repository } from 'typeorm'
-import { Organization } from './entities'
-import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
-import { GetOrganizationsParams } from './params'
 import { ContentLocalizationService } from '../../common/localization/content-localization.service'
-import { OrganizationsPrivateService } from './organizations-private.service'
+import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
+import { Organization } from './entities'
 import { OrganizationSession } from './entities/organization-session.entity'
+import { OrganizationsPrivateService } from './organizations-private.service'
+import { GetOrganizationsParams } from './params'
 
 const PUBLIC_ORG_SELECT: FindOptionsSelect<Organization> = {
   id: true,
@@ -119,8 +119,12 @@ export class OrganizationsService {
     return this.findOne(org.id)
   }
 
-  async findAll({ page, limit, category, verified, search, tags, city }: GetOrganizationsParams, acceptLanguage?: string) {
-    const qb = this.orgsRepo.createQueryBuilder('org')
+  async findAll(
+    { page, limit, category, verified, search, tags, city }: GetOrganizationsParams,
+    acceptLanguage?: string,
+  ) {
+    const qb = this.orgsRepo
+      .createQueryBuilder('org')
       .select([
         'org.id',
         'org.name',
@@ -232,5 +236,4 @@ export class OrganizationsService {
       await this.sessionsRepo.delete({ organization_id: id })
     }
   }
-
 }

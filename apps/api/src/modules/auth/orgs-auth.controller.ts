@@ -1,29 +1,36 @@
-import { Controller, Post, Delete, Get, Body, UseGuards, Res, Req, UnauthorizedException } from '@nestjs/common'
-import { ZodValidationPipe } from 'nestjs-zod'
-import { Request, Response } from 'express'
-import { z } from 'zod'
+import { Body, Controller, Delete, Get, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
+import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
-import { OrgsAuthService } from './orgs-auth.service'
+import { Request, Response } from 'express'
+import { ZodValidationPipe } from 'nestjs-zod'
+import { z } from 'zod'
+import { clearAuthCookies, setAuthCookies } from '../../common/auth-cookie.util'
+import { ApiAccessCookieAuth, ApiRefreshCookieAuth, ApiZodBody, messageSchema } from '../../common/swagger/openapi.util'
+import { ApiConfigService } from '../../config/api-config.service'
+import { CreateOrganizationDto, CreateOrganizationDtoSchema } from '../organizations/dto/create-organization.dto'
+import { Organization } from '../organizations/entities/organization.entity'
+import { CurrentUser } from './decorators/current-user.decorator'
+import {
+  ApiOrganizationAuthResultResponse,
+  ApiOrganizationMeResponse,
+  ApiTwoFaEnabledResponse,
+  ApiTwoFaSetupResponse,
+} from './decorators/swagger'
 import { LoginDto, LoginDtoSchema } from './dto/login.dto'
 import {
   ChangeOrgPasswordDto,
   ChangeOrgPasswordDtoSchema,
   UpdateOrgEmailDto,
   UpdateOrgEmailDtoSchema,
+  UpdateOrgNotificationsDto,
+  UpdateOrgNotificationsDtoSchema,
   UpdateOrgProfileDto,
   UpdateOrgProfileDtoSchema,
 } from './dto/org-settings.dto'
 import { JwtGuard } from './guards/jwt.guard'
-import { CurrentUser } from './decorators/current-user.decorator'
-import { JwtPayload } from './types/jwt-payload.interface'
-import { CreateOrganizationDto, CreateOrganizationDtoSchema } from '../organizations/dto/create-organization.dto'
-import { Organization } from '../organizations/entities/organization.entity'
 import { OrganizationAuthSuccessModel, TwoFaEnabledModel, TwoFaRequiredModel, TwoFaSetupModel } from './openapi.models'
-import { setAuthCookies, clearAuthCookies } from '../../common/auth-cookie.util'
-import { ApiConfigService } from '../../config/api-config.service'
-import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { ApiAccessCookieAuth, ApiRefreshCookieAuth, ApiZodBody, messageSchema } from '../../common/swagger/openapi.util'
-import { ApiOrganizationAuthResultResponse, ApiOrganizationMeResponse, ApiTwoFaEnabledResponse, ApiTwoFaSetupResponse } from './decorators/swagger'
+import { OrgsAuthService } from './orgs-auth.service'
+import { JwtPayload } from './types/jwt-payload.interface'
 
 const Verify2faSchema = z.object({ tempToken: z.string(), code: z.string().length(6) })
 const Confirm2faSchema = z.object({ code: z.string().length(6) })
@@ -57,10 +64,7 @@ export class OrgsAuthController {
   @ApiOperation({ summary: 'Login organization account' })
   @ApiZodBody(LoginDtoSchema)
   @ApiOrganizationAuthResultResponse('Logs in organization account or returns 2FA temp token.')
-  async login(
-    @Body(new ZodValidationPipe(LoginDtoSchema)) dto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async login(@Body(new ZodValidationPipe(LoginDtoSchema)) dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.orgsAuthService.login(dto)
 
     if ('requires2fa' in result) {
@@ -99,10 +103,7 @@ export class OrgsAuthController {
   @ApiAccessCookieAuth()
   @ApiZodBody(Confirm2faSchema)
   @ApiTwoFaEnabledResponse('2FA confirmation result.')
-  confirm2fa(
-    @CurrentUser() user: JwtPayload,
-    @Body(new ZodValidationPipe(Confirm2faSchema)) body: { code: string },
-  ) {
+  confirm2fa(@CurrentUser() user: JwtPayload, @Body(new ZodValidationPipe(Confirm2faSchema)) body: { code: string }) {
     return this.orgsAuthService.confirm2fa(user.sub as string, body.code)
   }
 
@@ -112,10 +113,7 @@ export class OrgsAuthController {
   @ApiAccessCookieAuth()
   @ApiZodBody(Disable2faSchema)
   @ApiTwoFaEnabledResponse('2FA disable result.')
-  disable2fa(
-    @CurrentUser() user: JwtPayload,
-    @Body(new ZodValidationPipe(Disable2faSchema)) body: { code: string },
-  ) {
+  disable2fa(@CurrentUser() user: JwtPayload, @Body(new ZodValidationPipe(Disable2faSchema)) body: { code: string }) {
     return this.orgsAuthService.disable2fa(user.sub as string, body.code)
   }
 
@@ -123,10 +121,7 @@ export class OrgsAuthController {
   @ApiOperation({ summary: 'Refresh organization auth session' })
   @ApiRefreshCookieAuth()
   @ApiOrganizationAuthResultResponse('Rotates tokens and resets HTTP-only auth cookies.')
-  async refresh(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token = (req.cookies as Record<string, string>)?.refresh_token
     if (!token) throw new UnauthorizedException('No refresh token')
     const tokens = await this.orgsAuthService.refresh(token)
@@ -139,10 +134,7 @@ export class OrgsAuthController {
   @ApiOperation({ summary: 'Logout organization account' })
   @ApiAccessCookieAuth()
   @ApiOkResponse({ description: 'Clears HTTP-only auth cookies.', schema: messageSchema('Logged out') })
-  async logout(
-    @CurrentUser() user: JwtPayload,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async logout(@CurrentUser() user: JwtPayload, @Res({ passthrough: true }) res: Response) {
     await this.orgsAuthService.logout(user.session_id as string)
     clearAuthCookies(res, this.apiConfig.isProd)
     return { message: 'Logged out' }
@@ -195,5 +187,17 @@ export class OrgsAuthController {
   ) {
     return this.orgsAuthService.changePassword(user.sub as string, dto)
   }
-}
 
+  @Post('settings/notifications')
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Update organization notification settings' })
+  @ApiAccessCookieAuth()
+  @ApiZodBody(UpdateOrgNotificationsDtoSchema)
+  @ApiOrganizationMeResponse('Updated organization notification settings.')
+  updateNotifications(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(UpdateOrgNotificationsDtoSchema)) dto: UpdateOrgNotificationsDto,
+  ) {
+    return this.orgsAuthService.updateNotifications(user.sub as string, dto)
+  }
+}

@@ -1,4 +1,4 @@
-import { type RouteConfig, index, route } from '@react-router/dev/routes';
+import { index, type RouteConfig, route } from '@react-router/dev/routes'
 
 export default [
   // Ignore Chrome DevTools probe in dev to avoid noisy "No route matches" logs
@@ -49,4 +49,4 @@ export default [
 
   // Org promo codes
   route('/promo-codes', 'app/promo-codes.tsx'),
-] satisfies RouteConfig;
+] satisfies RouteConfig

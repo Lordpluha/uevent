@@ -6,7 +6,10 @@ interface SessionLabels {
   daysAgo: string
 }
 
-export function parseUserAgent(ua: string | null, unknownLabel: string): { browser: string; os: string; isMobile: boolean } {
+export function parseUserAgent(
+  ua: string | null,
+  unknownLabel: string,
+): { browser: string; os: string; isMobile: boolean } {
   if (!ua) return { browser: unknownLabel, os: unknownLabel, isMobile: false }
   const isMobile = /Mobile|Android|iPhone|iPad/i.test(ua)
   let browser = unknownLabel

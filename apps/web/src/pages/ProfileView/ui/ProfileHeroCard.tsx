@@ -1,28 +1,16 @@
-import { Link } from 'react-router';
-import {
-  CalendarDays,
-  Clock,
-  Globe,
-  MapPin,
-  Pencil,
-  Settings,
-} from 'lucide-react';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  Button,
-} from '@shared/components';
-import { ShareButton } from '@shared/components/ShareButton/ShareButton';
-import { useAppContext } from '@shared/lib';
-import { useProfileViewData } from './useProfileViewData';
+import { Avatar, AvatarFallback, AvatarImage, Button } from '@shared/components'
+import { ShareButton } from '@shared/components/ShareButton/ShareButton'
+import { useAppContext } from '@shared/lib'
+import { CalendarDays, Clock, Globe, MapPin, Pencil, Settings } from 'lucide-react'
+import { Link } from 'react-router'
+import { useProfileViewData } from './useProfileViewData'
 
 export function ProfileHeroCard() {
-  const { t } = useAppContext();
-  const { user } = useProfileViewData();
+  const { t } = useAppContext()
+  const { user } = useProfileViewData()
 
   if (!user) {
-    return null;
+    return null
   }
 
   const initials = user.name
@@ -30,14 +18,11 @@ export function ProfileHeroCard() {
     .map((n) => n[0])
     .slice(0, 2)
     .join('')
-    .toUpperCase();
+    .toUpperCase()
 
   return (
     <div className="relative mb-8 overflow-hidden rounded-2xl border border-border/60 bg-card">
-      <div
-        className="h-28 w-full bg-linear-to-br from-primary/30 via-primary/10 to-transparent"
-        aria-hidden
-      />
+      <div className="h-28 w-full bg-linear-to-br from-primary/30 via-primary/10 to-transparent" aria-hidden />
       <div className="px-6 pb-6">
         <div className="-mt-14 mb-4 flex items-end justify-between">
           <Avatar className="h-24 w-24 shrink-0 border-4 border-card ring-2 ring-primary/20 shadow-md">
@@ -95,5 +80,5 @@ export function ProfileHeroCard() {
         </div>
       </div>
     </div>
-  );
+  )
 }

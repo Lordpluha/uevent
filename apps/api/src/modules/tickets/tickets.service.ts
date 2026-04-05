@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { FindOptionsSelect, Repository } from 'typeorm'
-import { Ticket } from './entities/ticket.entity'
+import { ContentLocalizationService } from '../../common/localization/content-localization.service'
+import { JwtPayload } from '../auth/types/jwt-payload.interface'
 import { CreateTicketDto } from './dto/create-ticket.dto'
 import { UpdateTicketDto } from './dto/update-ticket.dto'
+import { Ticket } from './entities/ticket.entity'
 import { GetTicketsParams } from './params/get-tickets.params'
-import { JwtPayload } from '../auth/types/jwt-payload.interface'
-import { ContentLocalizationService } from '../../common/localization/content-localization.service'
 import { TicketsPrivateService } from './tickets-private.service'
 
 const PUBLIC_EVENT_SELECT = {
@@ -101,13 +101,7 @@ export class TicketsService {
         'event.online_link',
         'event.organization_id',
       ])
-      .addSelect([
-        'user.id',
-        'user.username',
-        'user.first_name',
-        'user.last_name',
-        'user.avatar',
-      ])
+      .addSelect(['user.id', 'user.username', 'user.first_name', 'user.last_name', 'user.avatar'])
       .orderBy('ticket.created_at', 'DESC')
 
     if (event_id) qb.andWhere('ticket.event_id = :event_id', { event_id })
@@ -125,10 +119,7 @@ export class TicketsService {
       .getMany()
     const locale = this.contentLocalization.resolveRequestedLocale(acceptLanguage)
     const data = await Promise.all(
-      items.map((ticket) =>
-        this.contentLocalization
-          .localizeTicket(ticket, locale, { includeEvent: true }),
-      ),
+      items.map((ticket) => this.contentLocalization.localizeTicket(ticket, locale, { includeEvent: true })),
     )
 
     return {

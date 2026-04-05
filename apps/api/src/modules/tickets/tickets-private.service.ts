@@ -1,11 +1,11 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { Ticket, TicketStatus } from './entities/ticket.entity'
+import { JwtPayload } from '../auth/types/jwt-payload.interface'
+import { Event } from '../events/entities/event.entity'
 import { CreateTicketDto } from './dto/create-ticket.dto'
 import { UpdateTicketDto } from './dto/update-ticket.dto'
-import { Event } from '../events/entities/event.entity'
-import { JwtPayload } from '../auth/types/jwt-payload.interface'
+import { Ticket, TicketStatus } from './entities/ticket.entity'
 
 @Injectable()
 export class TicketsPrivateService {

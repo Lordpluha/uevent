@@ -1,7 +1,6 @@
-import type { ComponentProps } from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-
-import { cn } from '@shared/lib/utils';
+import { cn } from '@shared/lib/utils'
+import { cva, type VariantProps } from 'class-variance-authority'
+import type { ComponentProps } from 'react'
 
 function Empty({ className, ...props }: ComponentProps<'div'>) {
   return (
@@ -13,13 +12,13 @@ function Empty({ className, ...props }: ComponentProps<'div'>) {
       )}
       {...props}
     />
-  );
+  )
 }
 
 function EmptyHeader({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div data-slot="empty-header" className={cn('flex max-w-sm flex-col items-center gap-1', className)} {...props} />
-  );
+  )
 }
 
 const emptyMediaVariants = cva(
@@ -35,7 +34,7 @@ const emptyMediaVariants = cva(
       variant: 'default',
     },
   },
-);
+)
 
 function EmptyMedia({
   className,
@@ -49,11 +48,11 @@ function EmptyMedia({
       className={cn(emptyMediaVariants({ variant, className }))}
       {...props}
     />
-  );
+  )
 }
 
 function EmptyTitle({ className, ...props }: ComponentProps<'div'>) {
-  return <div data-slot="empty-title" className={cn('text-sm font-medium tracking-tight', className)} {...props} />;
+  return <div data-slot="empty-title" className={cn('text-sm font-medium tracking-tight', className)} {...props} />
 }
 
 function EmptyDescription({ className, ...props }: ComponentProps<'p'>) {
@@ -66,7 +65,7 @@ function EmptyDescription({ className, ...props }: ComponentProps<'p'>) {
       )}
       {...props}
     />
-  );
+  )
 }
 
 function EmptyContent({ className, ...props }: ComponentProps<'div'>) {
@@ -76,7 +75,7 @@ function EmptyContent({ className, ...props }: ComponentProps<'div'>) {
       className={cn('flex w-full max-w-sm min-w-0 flex-col items-center gap-2 text-xs/relaxed text-balance', className)}
       {...props}
     />
-  );
+  )
 }
 
-export { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, EmptyMedia };
+export { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle }

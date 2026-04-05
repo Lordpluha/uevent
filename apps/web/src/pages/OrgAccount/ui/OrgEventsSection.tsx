@@ -1,14 +1,14 @@
-import { Link } from 'react-router';
-import { Building2, Ticket } from 'lucide-react';
-import { Button, Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { useOrgAccountData } from './useOrgAccountData';
+import { Button, Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { Building2, Ticket } from 'lucide-react'
+import { Link } from 'react-router'
+import { useOrgAccountData } from './useOrgAccountData'
 
 export function OrgEventsSection() {
-  const { t } = useAppContext();
-  const { orgEvents, isLoading } = useOrgAccountData();
+  const { t } = useAppContext()
+  const { orgEvents, isLoading } = useOrgAccountData()
 
-  if (isLoading) return null;
+  if (isLoading) return null
 
   return (
     <section className="mt-5 space-y-3 rounded-xl border border-border/60 bg-card p-5">
@@ -31,7 +31,10 @@ export function OrgEventsSection() {
         ) : (
           <div className="space-y-2">
             {orgEvents.map((event) => (
-              <div key={event.id} className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">
+              <div
+                key={event.id}
+                className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2"
+              >
                 <div>
                   <p className="text-sm font-medium">{event.title}</p>
                   <Link to={`/events/${event.id}`} className="text-xs text-muted-foreground hover:underline">
@@ -52,5 +55,5 @@ export function OrgEventsSection() {
         )}
       </div>
     </section>
-  );
+  )
 }

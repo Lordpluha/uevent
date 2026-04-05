@@ -1,11 +1,11 @@
-import { Link } from 'react-router';
-import { Download, Ticket as TicketIcon } from 'lucide-react';
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, Skeleton } from '@shared/components';
-import { cn } from '@shared/lib/utils';
-import { useAppContext } from '@shared/lib';
-import { api } from '@shared/api';
-import { toast } from 'sonner';
-import { useProfileViewData } from './useProfileViewData';
+import { api } from '@shared/api'
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, Skeleton } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { cn } from '@shared/lib/utils'
+import { Download, Ticket as TicketIcon } from 'lucide-react'
+import { Link } from 'react-router'
+import { toast } from 'sonner'
+import { useProfileViewData } from './useProfileViewData'
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
@@ -13,29 +13,29 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
   expired: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
   pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-500',
-};
+}
 
 function statusStyle(status: string): string {
-  return STATUS_STYLES[status?.toLowerCase()] ?? 'bg-muted text-muted-foreground';
+  return STATUS_STYLES[status?.toLowerCase()] ?? 'bg-muted text-muted-foreground'
 }
 
 export function ProfileTicketsList() {
-  const { t } = useAppContext();
-  const { myTickets: tickets, ticketsLoading: isLoading } = useProfileViewData();
+  const { t } = useAppContext()
+  const { myTickets: tickets, ticketsLoading: isLoading } = useProfileViewData()
 
   const handleDownload = async (ticketId: string, ticketName: string) => {
     try {
-      const response = await api.get<Blob>(`/payments/ticket/${ticketId}/pdf`, { responseType: 'blob' });
-      const url = URL.createObjectURL(response.data);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `uevent-ticket-${ticketName.replace(/\s+/g, '-').toLowerCase()}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
+      const response = await api.get<Blob>(`/payments/ticket/${ticketId}/pdf`, { responseType: 'blob' })
+      const url = URL.createObjectURL(response.data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `uevent-ticket-${ticketName.replace(/\s+/g, '-').toLowerCase()}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
     } catch {
-      toast.error('Failed to download ticket');
+      toast.error('Failed to download ticket')
     }
-  };
+  }
 
   if (isLoading) {
     return (
@@ -44,7 +44,7 @@ export function ProfileTicketsList() {
         <Skeleton className="h-14 w-full rounded-lg" />
         <Skeleton className="h-14 w-full rounded-lg" />
       </div>
-    );
+    )
   }
 
   if (tickets.length === 0) {
@@ -57,17 +57,17 @@ export function ProfileTicketsList() {
           <EmptyDescription className="text-sm">{t.profile.noTickets}</EmptyDescription>
         </EmptyHeader>
       </Empty>
-    );
+    )
   }
 
   return (
     <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
       <ul className="divide-y divide-border/60">
         {tickets.map((ticket) => {
-          const eventName = ticket.event?.name ?? t.profile.eventFallback;
-          const eventId = ticket.event?.id;
-          const price = Number(ticket.price ?? 0);
-          const date = ticket.datetime_start ? new Date(ticket.datetime_start) : null;
+          const eventName = ticket.event?.name ?? t.profile.eventFallback
+          const eventId = ticket.event?.id
+          const price = Number(ticket.price ?? 0)
+          const date = ticket.datetime_start ? new Date(ticket.datetime_start) : null
 
           return (
             <li key={ticket.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
@@ -81,7 +81,9 @@ export function ProfileTicketsList() {
                   ) : (
                     eventName
                   )}
-                  {date ? ` • ${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                  {date
+                    ? ` • ${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                    : ''}
                 </p>
               </div>
 
@@ -110,9 +112,9 @@ export function ProfileTicketsList() {
                 </div>
               </div>
             </li>
-          );
+          )
         })}
       </ul>
     </div>
-  );
+  )
 }

@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository, In } from 'typeorm'
-import { Tag } from './entities/tag.entity'
+import { In, Repository } from 'typeorm'
 import { CreateTagDto } from './dto/create-tag.dto'
 import { UpdateTagDto } from './dto/update-tag.dto'
+import { Tag } from './entities/tag.entity'
 import { GetTagsParams } from './params'
 
 @Injectable()
@@ -67,9 +67,7 @@ export class TagsService {
     const uniqueNames = [...new Set(names.map((n) => n.trim()).filter(Boolean))]
     const existing = await this.tagsRepo.findBy({ name: In(uniqueNames) })
     const existingNamesSet = new Set(existing.map((t) => t.name))
-    const toCreate = uniqueNames
-      .filter((n) => !existingNamesSet.has(n))
-      .map((n) => this.tagsRepo.create({ name: n }))
+    const toCreate = uniqueNames.filter((n) => !existingNamesSet.has(n)).map((n) => this.tagsRepo.create({ name: n }))
     const created = toCreate.length ? await this.tagsRepo.save(toCreate) : []
     return [...existing, ...created]
   }

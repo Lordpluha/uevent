@@ -1,3 +1,7 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
+import type { PropsWithChildren } from 'react'
+import { useCallback, useState } from 'react'
 import {
   isRouteErrorResponse,
   Links,
@@ -8,26 +12,20 @@ import {
   useLoaderData,
   useRouteLoaderData,
 } from 'react-router'
-
 import type { Route } from './+types/root'
-import type { PropsWithChildren } from 'react'
-import { useCallback, useState } from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
 
 import '@app/styles/global.css'
-import { Header } from '@widgets/Header'
-import { Footer } from '@widgets/Footer'
-import { NotFound } from '@widgets/NotFound'
-import { ErrorBoundary as ErrorBoundaryWidget } from '@widgets/Error'
-import { TooltipProvider } from '@shared/components'
-import { JsonLd } from '@shared/components'
-import { Toaster } from 'sonner'
+import { GoogleAuthHandler } from '@features/GoogleAuth'
+import { JsonLd, TooltipProvider } from '@shared/components'
+import { GOOGLE_FONTS_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@shared/config/app'
+import type { Dictionary, Locale } from '@shared/lib'
 import { AppContext, type AppContextValue, fetchLocale } from '@shared/lib'
 import { AuthProvider } from '@shared/lib/auth-context'
-import type { Dictionary, Locale } from '@shared/lib'
-import { GoogleAuthHandler } from '@features/GoogleAuth'
-import { GOOGLE_FONTS_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@shared/config/app'
+import { ErrorBoundary as ErrorBoundaryWidget } from '@widgets/Error'
+import { Footer } from '@widgets/Footer'
+import { Header } from '@widgets/Header'
+import { NotFound } from '@widgets/NotFound'
+import { Toaster } from 'sonner'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -131,7 +129,9 @@ export default function App() {
     // biome-ignore lint: intentional cookie-based locale for SSR
     document.cookie = `locale=${next}; path=/; max-age=31536000`
     // Fetch updated dictionary from public assets (no page reload needed)
-    fetchLocale(next).then(setT).catch(() => undefined)
+    fetchLocale(next)
+      .then(setT)
+      .catch(() => undefined)
   }, [])
 
   const applyTheme = useCallback((isLight: boolean) => {
@@ -150,13 +150,13 @@ export default function App() {
         <AuthProvider>
           <GoogleAuthHandler />
           <AppContext.Provider value={ctx}>
-          <TooltipProvider>
-            <JsonLd schema={websiteJsonLd} />
-            <Header />
-            <Outlet />
-            <Toaster />
-            <Footer />
-          </TooltipProvider>
+            <TooltipProvider>
+              <JsonLd schema={websiteJsonLd} />
+              <Header />
+              <Outlet />
+              <Toaster />
+              <Footer />
+            </TooltipProvider>
           </AppContext.Provider>
         </AuthProvider>
       </NuqsAdapter>

@@ -1,44 +1,39 @@
-import { useState, useEffect, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
-import { toast } from 'sonner';
-import {
-  useStripe,
-  useElements,
-  PaymentElement,
-  LinkAuthenticationElement,
-} from '@stripe/react-stripe-js';
-import type { StripePaymentElementOptions } from '@stripe/stripe-js';
-import { Loader2, ArrowLeft } from 'lucide-react';
-import { Button } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { CheckoutOrderSummary } from './CheckoutOrderSummary';
-import { useConfirmPayment } from './useConfirmPayment';
+import { Button } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { LinkAuthenticationElement, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
+import type { StripePaymentElementOptions } from '@stripe/stripe-js'
+import { ArrowLeft, Loader2 } from 'lucide-react'
+import { type FormEvent, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
+import { CheckoutOrderSummary } from './CheckoutOrderSummary'
+import { useConfirmPayment } from './useConfirmPayment'
 
 type PendingPayment = {
-  eventId?: string;
-  ticketId?: string | number;
-  ticketName?: string;
-  eventTitle?: string;
-  quantity?: number;
-  price?: number;
-  currency?: string;
-  paymentIntentId?: string;
-  email?: string;
-};
+  eventId?: string
+  ticketId?: string | number
+  ticketName?: string
+  eventTitle?: string
+  quantity?: number
+  price?: number
+  currency?: string
+  paymentIntentId?: string
+  email?: string
+}
 
 export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
-  const { t } = useAppContext();
-  const navigate = useNavigate();
-  const stripe = useStripe();
-  const elements = useElements();
-  const [message, setMessage] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(null);
-  const [email, setEmail] = useState('');
+  const { t } = useAppContext()
+  const navigate = useNavigate()
+  const stripe = useStripe()
+  const elements = useElements()
+  const [message, setMessage] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(null)
+  const [email, setEmail] = useState('')
 
   const buildSuccessUrl = (paymentIntentId?: string) => {
-    const eventId = pendingPayment?.eventId;
-    if (!eventId) return `/payment-success?paymentIntentId=${paymentIntentId ?? clientSecret}`;
+    const eventId = pendingPayment?.eventId
+    if (!eventId) return `/payment-success?paymentIntentId=${paymentIntentId ?? clientSecret}`
 
     const params = new URLSearchParams({
       ticketId: String(pendingPayment?.ticketId ?? ''),
@@ -47,28 +42,28 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
       total: String(Number(pendingPayment?.price ?? 0).toFixed(2)),
       currency: pendingPayment?.currency ?? '$',
       order: pendingPayment?.paymentIntentId ?? paymentIntentId ?? clientSecret,
-    });
+    })
 
-    return `/checkout/${eventId}/success?${params.toString()}`;
-  };
+    return `/checkout/${eventId}/success?${params.toString()}`
+  }
 
   // load pending payment details
   useEffect(() => {
-    const saved = localStorage.getItem('pendingPayment');
-    if(saved) {
+    const saved = localStorage.getItem('pendingPayment')
+    if (saved) {
       try {
-        const payment = JSON.parse(saved);
-        setPendingPayment(payment);
-        setEmail(payment.email);
+        const payment = JSON.parse(saved)
+        setPendingPayment(payment)
+        setEmail(payment.email)
       } catch {
-        toast.error(t.checkout.loadFailed);
-        navigate('/');
+        toast.error(t.checkout.loadFailed)
+        navigate('/')
       }
-    }else {
-      toast.error(t.checkout.noPayment);
-      navigate('/');
+    } else {
+      toast.error(t.checkout.noPayment)
+      navigate('/')
     }
-  }, [navigate, t.checkout.loadFailed, t.checkout.noPayment]);
+  }, [navigate, t.checkout.loadFailed, t.checkout.noPayment])
 
   const confirmPaymentMutation = useConfirmPayment({
     stripe,
@@ -78,30 +73,29 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
     buildSuccessUrl,
     setMessage,
     setIsProcessing,
-  });
+  })
 
-  if(!pendingPayment) {
+  if (!pendingPayment) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
-    );
+    )
   }
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if(!stripe || !elements) {
-      toast.error(t.checkout.stripeNotReady);
-      return;
+    e.preventDefault()
+    if (!stripe || !elements) {
+      toast.error(t.checkout.stripeNotReady)
+      return
     }
-    setIsProcessing(true);
-    confirmPaymentMutation.mutate();
-  };
+    setIsProcessing(true)
+    confirmPaymentMutation.mutate()
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/50 py-12 px-4">
       <div className="max-w-md mx-auto">
-
         {/* Header */}
         <button
           type="button"
@@ -116,9 +110,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
         <div className="bg-card rounded-lg shadow-lg p-6 border border-border">
           {/* Title */}
           <h1 className="text-2xl font-bold mb-2">{t.checkout.title}</h1>
-          <p className="text-sm text-muted-foreground mb-6">
-            {t.checkout.subtitle}
-          </p>
+          <p className="text-sm text-muted-foreground mb-6">{t.checkout.subtitle}</p>
 
           <CheckoutOrderSummary
             eventTitle={pendingPayment?.eventTitle}
@@ -132,30 +124,32 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
             {/* Email */}
             <LinkAuthenticationElement
               onChange={(e) => {
-                if(e.value?.email) setEmail(e.value.email);
+                if (e.value?.email) setEmail(e.value.email)
               }}
             />
 
             {/* Payment Element */}
             <PaymentElement
-              options={{
-                layout: 'tabs',
-                wallets: {
-                  googlePay: 'auto',
-                  applePay: 'auto',
-                },
-                business: {
-                  name: 'UEVENT',
-                },
-                paymentMethodOrder: ['card', 'apple_pay', 'google_pay', 'cashapp', 'paypal', 'klarna', 'affirm'],
-                terms: {
-                  bancontact: 'auto',
-                  card: 'auto',
-                  ideal: 'auto',
-                  sepa_debit: 'auto',
-                  sofort: 'auto',
-                },
-              } as StripePaymentElementOptions}
+              options={
+                {
+                  layout: 'tabs',
+                  wallets: {
+                    googlePay: 'auto',
+                    applePay: 'auto',
+                  },
+                  business: {
+                    name: 'UEVENT',
+                  },
+                  paymentMethodOrder: ['card', 'apple_pay', 'google_pay', 'cashapp', 'paypal', 'klarna', 'affirm'],
+                  terms: {
+                    bancontact: 'auto',
+                    card: 'auto',
+                    ideal: 'auto',
+                    sepa_debit: 'auto',
+                    sofort: 'auto',
+                  },
+                } as StripePaymentElementOptions
+              }
             />
 
             {/* Errors */}
@@ -167,12 +161,8 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
 
             {/* Security */}
             <div className="pt-2 pb-4 space-y-2">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                🔒 {t.checkout.secureNote}
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                💳 {t.checkout.redirectNote}
-              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">🔒 {t.checkout.secureNote}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">💳 {t.checkout.redirectNote}</p>
             </div>
 
             {/* Btns */}
@@ -181,8 +171,8 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  localStorage.removeItem('pendingPayment');
-                  navigate(-1);
+                  localStorage.removeItem('pendingPayment')
+                  navigate(-1)
                 }}
                 disabled={isProcessing || confirmPaymentMutation.isPending}
               >
@@ -190,9 +180,7 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
               </Button>
               <Button
                 type="submit"
-                disabled={
-                  !stripe || !elements || isProcessing || confirmPaymentMutation.isPending
-                }
+                disabled={!stripe || !elements || isProcessing || confirmPaymentMutation.isPending}
                 className="flex-1"
               >
                 {isProcessing || confirmPaymentMutation.isPending ? (
@@ -201,7 +189,10 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
                     {t.common.processing}
                   </>
                 ) : (
-                  t.checkout.pay.replace('{{amount}}', `${pendingPayment.currency ?? '$'}${(pendingPayment.price || 0).toFixed(2)}`)
+                  t.checkout.pay.replace(
+                    '{{amount}}',
+                    `${pendingPayment.currency ?? '$'}${(pendingPayment.price || 0).toFixed(2)}`,
+                  )
                 )}
               </Button>
             </div>
@@ -209,5 +200,5 @@ export function CheckoutForm({ clientSecret }: { clientSecret: string }) {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,8 +1,7 @@
-import { mergeProps } from '@base-ui/react/merge-props';
-import { useRender } from '@base-ui/react/use-render';
-import { cva, type VariantProps } from 'class-variance-authority';
-
-import { cn } from '@shared/lib/utils';
+import { mergeProps } from '@base-ui/react/merge-props'
+import { useRender } from '@base-ui/react/use-render'
+import { cn } from '@shared/lib/utils'
+import { cva, type VariantProps } from 'class-variance-authority'
 
 const badgeVariants = cva(
   'group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-[0.625rem] font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 [&>svg]:pointer-events-none [&>svg]:size-2.5!',
@@ -21,7 +20,7 @@ const badgeVariants = cva(
       variant: 'default',
     },
   },
-);
+)
 
 function Badge({
   className,
@@ -42,7 +41,7 @@ function Badge({
       slot: 'badge',
       variant,
     },
-  });
+  })
 }
 
-export { Badge, badgeVariants };
+export { Badge, badgeVariants }

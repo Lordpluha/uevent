@@ -1,1 +1,1 @@
-export { PaymentSuccessPage } from './PaymentSuccessPage';
+export { PaymentSuccessPage } from './PaymentSuccessPage'

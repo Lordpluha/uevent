@@ -1,18 +1,6 @@
-import { useState } from 'react';
-import { Link, Navigate } from 'react-router';
-import {
-  Bell,
-  CalendarDays,
-  ExternalLink,
-  LayoutDashboard,
-  Settings,
-  Star,
-  Ticket,
-  Users,
-} from 'lucide-react';
-import { OrgProfilePage } from '@pages/OrgProfile';
-import { EventCard } from '@entities/Event';
-import { useMyNotifications, useMarkNotificationRead } from '@entities/Notification';
+import { EventCard } from '@entities/Event'
+import { useMarkNotificationRead, useMyNotifications } from '@entities/Notification'
+import { OrgProfilePage } from '@pages/OrgProfile'
 import {
   Badge,
   Button,
@@ -23,19 +11,22 @@ import {
   EmptyMedia,
   EmptyTitle,
   Skeleton,
-} from '@shared/components';
-import { cn } from '@shared/lib/utils';
-import { useAppContext } from '@shared/lib';
-import { ProfileHeroCard } from './ProfileHeroCard';
-import { ProfileTicketsList } from './ProfileTicketsList';
-import { useProfileViewData } from './useProfileViewData';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { cn } from '@shared/lib/utils'
+import { Bell, CalendarDays, ExternalLink, LayoutDashboard, Settings, Star, Ticket, Users } from 'lucide-react'
+import { useState } from 'react'
+import { Link, Navigate } from 'react-router'
+import { ProfileHeroCard } from './ProfileHeroCard'
+import { ProfileTicketsList } from './ProfileTicketsList'
+import { useProfileViewData } from './useProfileViewData'
 
 const STAT_ITEMS = [
   { key: 'eventsAttended', icon: CalendarDays, color: 'text-blue-500' },
   { key: 'ticketsCount', icon: Ticket, color: 'text-violet-500' },
   { key: 'followers', icon: Users, color: 'text-pink-500' },
   { key: 'following', icon: Users, color: 'text-emerald-500' },
-] as const;
+] as const
 
 function ProfileSkeleton() {
   return (
@@ -58,22 +49,23 @@ function ProfileSkeleton() {
         ))}
       </div>
     </main>
-  );
+  )
 }
 
 export function ProfileViewPage() {
-  const { t } = useAppContext();
-  const { isAuthenticated, accountType, isReady, myOrg, myOrgLoading, user, isLoading, isError, myEvents } = useProfileViewData();
-  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'tickets' | 'notifications'>('overview');
-  const { data: notifications = [] } = useMyNotifications(isAuthenticated && accountType === 'user', 50);
-  const markRead = useMarkNotificationRead();
+  const { t } = useAppContext()
+  const { isAuthenticated, accountType, isReady, myOrg, myOrgLoading, user, isLoading, isError, myEvents } =
+    useProfileViewData()
+  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'tickets' | 'notifications'>('overview')
+  const { data: notifications = [] } = useMyNotifications(isAuthenticated && accountType === 'user', 50)
+  const markRead = useMarkNotificationRead()
 
-  if (!isReady) return <ProfileSkeleton />;
+  if (!isReady) return <ProfileSkeleton />
 
-  if (!isAuthenticated) return <Navigate to="/" replace />;
+  if (!isAuthenticated) return <Navigate to="/" replace />
 
   if (isAuthenticated && accountType === 'organization') {
-    if (myOrgLoading) return <ProfileSkeleton />;
+    if (myOrgLoading) return <ProfileSkeleton />
     return (
       <>
         <OrgProfilePage overrideId={myOrg?.id} />
@@ -109,10 +101,10 @@ export function ProfileViewPage() {
         {/* Spacer so page content clears the fixed bar */}
         <div className="h-16" />
       </>
-    );
+    )
   }
 
-  if (isLoading) return <ProfileSkeleton />;
+  if (isLoading) return <ProfileSkeleton />
 
   if (!user || isError) {
     return (
@@ -125,11 +117,13 @@ export function ProfileViewPage() {
             <EmptyTitle className="text-base">{t.profile.unavailable}</EmptyTitle>
           </EmptyHeader>
           <EmptyContent>
-            <Link to="/" className="text-sm text-primary hover:underline">{t.common.backToHome}</Link>
+            <Link to="/" className="text-sm text-primary hover:underline">
+              {t.common.backToHome}
+            </Link>
           </EmptyContent>
         </Empty>
       </main>
-    );
+    )
   }
 
   const STAT_LABELS: Record<string, string> = {
@@ -137,18 +131,17 @@ export function ProfileViewPage() {
     ticketsCount: t.profile.tickets,
     followers: t.common.followers,
     following: t.common.following,
-  };
+  }
 
   const tabs = [
     { id: 'overview' as const, label: t.profile.overview, icon: Users },
     { id: 'events' as const, label: t.profile.myEvents, icon: CalendarDays },
     { id: 'tickets' as const, label: t.profile.tickets, icon: Ticket },
     { id: 'notifications' as const, label: t.notificationsBell.title, icon: Bell },
-  ];
+  ]
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
-
       <ProfileHeroCard />
 
       {/* ── Tab bar ───────────────────────────────────────────────── */}
@@ -225,7 +218,9 @@ export function ProfileViewPage() {
               </EmptyHeader>
               <EmptyContent>
                 <Link to="/events">
-                  <Button variant="outline" size="sm">{t.profile.browseEvents}</Button>
+                  <Button variant="outline" size="sm">
+                    {t.profile.browseEvents}
+                  </Button>
                 </Link>
               </EmptyContent>
             </Empty>
@@ -258,7 +253,9 @@ export function ProfileViewPage() {
           {notifications.length === 0 ? (
             <Empty className="border border-border/60">
               <EmptyHeader>
-                <EmptyMedia variant="icon"><Bell className="size-4" /></EmptyMedia>
+                <EmptyMedia variant="icon">
+                  <Bell className="size-4" />
+                </EmptyMedia>
                 <EmptyTitle className="text-base">{t.notificationsBell.noNotifications}</EmptyTitle>
               </EmptyHeader>
             </Empty>
@@ -299,5 +296,5 @@ export function ProfileViewPage() {
         </section>
       )}
     </main>
-  );
+  )
 }

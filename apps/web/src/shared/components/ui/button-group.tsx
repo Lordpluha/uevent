@@ -1,10 +1,9 @@
-import type { ComponentProps } from 'react';
-import { mergeProps } from '@base-ui/react/merge-props';
-import { useRender } from '@base-ui/react/use-render';
-import { cva, type VariantProps } from 'class-variance-authority';
-
-import { cn } from '@shared/lib/utils';
-import { Separator } from '@shared/components/ui/separator';
+import { mergeProps } from '@base-ui/react/merge-props'
+import { useRender } from '@base-ui/react/use-render'
+import { Separator } from '@shared/components/ui/separator'
+import { cn } from '@shared/lib/utils'
+import { cva, type VariantProps } from 'class-variance-authority'
+import type { ComponentProps } from 'react'
 
 const buttonGroupVariants = cva(
   "flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 has-[>[data-slot=button-group]]:gap-2 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-md [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
@@ -21,7 +20,7 @@ const buttonGroupVariants = cva(
       orientation: 'horizontal',
     },
   },
-);
+)
 
 function ButtonGroup({
   className,
@@ -35,7 +34,7 @@ function ButtonGroup({
       className={cn(buttonGroupVariants({ orientation }), className)}
       {...props}
     />
-  );
+  )
 }
 
 function ButtonGroupText({ className, render, ...props }: useRender.ComponentProps<'div'>) {
@@ -54,14 +53,10 @@ function ButtonGroupText({ className, render, ...props }: useRender.ComponentPro
     state: {
       slot: 'button-group-text',
     },
-  });
+  })
 }
 
-function ButtonGroupSeparator({
-  className,
-  orientation = 'vertical',
-  ...props
-}: ComponentProps<typeof Separator>) {
+function ButtonGroupSeparator({ className, orientation = 'vertical', ...props }: ComponentProps<typeof Separator>) {
   return (
     <Separator
       data-slot="button-group-separator"
@@ -72,7 +67,7 @@ function ButtonGroupSeparator({
       )}
       {...props}
     />
-  );
+  )
 }
 
-export { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, buttonGroupVariants };
+export { ButtonGroup, ButtonGroupSeparator, ButtonGroupText, buttonGroupVariants }

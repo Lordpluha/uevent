@@ -1,11 +1,10 @@
-import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-import { Organization } from './organization.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, UpdateDateColumn } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
+import { Organization } from './organization.entity'
 
 @Entity('organization_sessions')
 export class OrganizationSession extends UuidEntity {
-
   @Column()
   @ApiHideProperty()
   access: string

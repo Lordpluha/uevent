@@ -1,8 +1,5 @@
-import type { FormEvent } from 'react';
-import { useState } from 'react';
-import { Check, Clock, Save, Tag, X } from 'lucide-react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { usersApi } from '@entities/User'
+import { tagsApi } from '@shared/api'
 import {
   Badge,
   Button,
@@ -16,35 +13,47 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@shared/components';
-import { usersApi } from '@entities/User';
-import { tagsApi } from '@shared/api';
-import { useAppContext } from '@shared/lib';
-import { useProfileSettingsData } from './useProfileSettingsData';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Check, Clock, Save, Tag, X } from 'lucide-react'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { useProfileSettingsData } from './useProfileSettingsData'
 
-let TZ_LIST: string[] = [];
+let TZ_LIST: string[] = []
 try {
-  TZ_LIST = Intl.supportedValuesOf('timeZone');
+  TZ_LIST = Intl.supportedValuesOf('timeZone')
 } catch {
   TZ_LIST = [
-    'UTC', 'America/New_York', 'America/Chicago', 'America/Denver',
-    'America/Los_Angeles', 'Europe/London', 'Europe/Paris',
-    'Europe/Berlin', 'Europe/Kyiv', 'Asia/Tokyo', 'Asia/Shanghai',
-    'Asia/Kolkata', 'Australia/Sydney',
-  ];
+    'UTC',
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'Europe/London',
+    'Europe/Paris',
+    'Europe/Berlin',
+    'Europe/Kyiv',
+    'Asia/Tokyo',
+    'Asia/Shanghai',
+    'Asia/Kolkata',
+    'Australia/Sydney',
+  ]
 }
 
 export function PreferencesSection() {
-  const { t } = useAppContext();
-  const { userProfile: user, invalidateUser } = useProfileSettingsData();
-  const [timezone, setTimezone] = useState(user.timezone ?? '');
-  const [selectedTags, setSelectedTags] = useState<string[]>(user.interests ?? []);
+  const { t } = useAppContext()
+  const { userProfile: user, invalidateUser } = useProfileSettingsData()
+  const [timezone, setTimezone] = useState(user.timezone ?? '')
+  const [selectedTags, setSelectedTags] = useState<string[]>(user.interests ?? [])
 
   const { data: tagsResult } = useQuery({
     queryKey: ['tags'],
     queryFn: () => tagsApi.getAll({ limit: 100 }),
-  });
-  const allTags = tagsResult?.data ?? [];
+  })
+  const allTags = tagsResult?.data ?? []
 
   const preferencesMutation = useMutation({
     mutationFn: () =>
@@ -52,20 +61,21 @@ export function PreferencesSection() {
         timezone: timezone || undefined,
         interests: selectedTags,
       }),
-    onSuccess: async () => { await invalidateUser(); toast.success(t.profileSettings.preferences.saved); },
+    onSuccess: async () => {
+      await invalidateUser()
+      toast.success(t.profileSettings.preferences.saved)
+    },
     onError: () => toast.error(t.profileSettings.preferences.saveFailed),
-  });
+  })
 
   const toggleTag = (name: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(name) ? prev.filter((t) => t !== name) : [...prev, name],
-    );
-  };
+    setSelectedTags((prev) => (prev.includes(name) ? prev.filter((t) => t !== name) : [...prev, name]))
+  }
 
   const handlePreferencesSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    preferencesMutation.mutate();
-  };
+    e.preventDefault()
+    preferencesMutation.mutate()
+  }
 
   return (
     <form onSubmit={handlePreferencesSubmit} className="space-y-6">
@@ -82,7 +92,9 @@ export function PreferencesSection() {
             <SelectGroup>
               <SelectLabel>{t.profileSettings.preferences.timezones}</SelectLabel>
               {TZ_LIST.map((tz) => (
-                <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                <SelectItem key={tz} value={tz}>
+                  {tz}
+                </SelectItem>
               ))}
             </SelectGroup>
           </SelectContent>
@@ -95,15 +107,13 @@ export function PreferencesSection() {
         <FieldLabel>
           <Tag className="inline h-3.5 w-3.5" /> {t.profileSettings.preferences.favoriteTopics}
         </FieldLabel>
-        <FieldDescription className="mb-3">
-          {t.profileSettings.preferences.topicsHint}
-        </FieldDescription>
+        <FieldDescription className="mb-3">{t.profileSettings.preferences.topicsHint}</FieldDescription>
         <div className="flex flex-wrap gap-2">
           {allTags.length === 0 && (
             <p className="text-xs text-muted-foreground">{t.profileSettings.preferences.noTags}</p>
           )}
           {allTags.map((tag) => {
-            const selected = selectedTags.includes(tag.name);
+            const selected = selectedTags.includes(tag.name)
             return (
               <button
                 key={tag.id}
@@ -119,19 +129,14 @@ export function PreferencesSection() {
                 {selected ? <Check className="h-3 w-3" /> : null}
                 {tag.name}
               </button>
-            );
+            )
           })}
         </div>
         {selectedTags.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">{t.profileSettings.preferences.selected}</span>
             {selectedTags.map((t) => (
-              <Badge
-                key={t}
-                variant="secondary"
-                className="gap-1 pr-1 cursor-pointer"
-                onClick={() => toggleTag(t)}
-              >
+              <Badge key={t} variant="secondary" className="gap-1 pr-1 cursor-pointer" onClick={() => toggleTag(t)}>
                 {t}
                 <X className="h-3 w-3" />
               </Badge>
@@ -147,5 +152,5 @@ export function PreferencesSection() {
         </Button>
       </div>
     </form>
-  );
+  )
 }

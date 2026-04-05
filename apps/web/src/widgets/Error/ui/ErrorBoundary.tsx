@@ -1,16 +1,16 @@
-import { useNavigate } from 'react-router';
-import { useAppContext } from '@shared/lib';
+import { useAppContext } from '@shared/lib'
+import { useNavigate } from 'react-router'
 
 type Props = {
-  status?: number | null;
-  message?: string;
-  stack?: string;
-};
+  status?: number | null
+  message?: string
+  stack?: string
+}
 
 export const ErrorBoundary = ({ status, message, stack }: Props) => {
-  const navigate = useNavigate();
-  const { t } = useAppContext();
-  const displayMessage = message ?? t?.errors?.unexpectedError ?? 'An unexpected error occurred.';
+  const navigate = useNavigate()
+  const { t } = useAppContext()
+  const displayMessage = message ?? t?.errors?.unexpectedError ?? 'An unexpected error occurred.'
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 bg-background px-6 text-center">
@@ -36,7 +36,7 @@ export const ErrorBoundary = ({ status, message, stack }: Props) => {
         <h1 className="text-2xl font-semibold text-foreground">
           {status
             ? (t?.errors?.error ?? 'Error {{status}}').replace('{{status}}', String(status))
-            : t?.errors?.somethingWrong ?? 'Something went wrong'}
+            : (t?.errors?.somethingWrong ?? 'Something went wrong')}
         </h1>
         <p className="max-w-sm text-sm text-muted-foreground">{displayMessage}</p>
       </div>
@@ -68,5 +68,5 @@ export const ErrorBoundary = ({ status, message, stack }: Props) => {
         </a>
       </div>
     </div>
-  );
-};
+  )
+}

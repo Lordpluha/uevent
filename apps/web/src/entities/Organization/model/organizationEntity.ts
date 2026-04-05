@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export const organizationSchema = z.object({
   id: z.string(),
@@ -20,43 +20,47 @@ export const organizationSchema = z.object({
   isFollowing: z.boolean().optional(),
   verified: z.boolean(),
   twoFactorEnabled: z.boolean(),
-});
+  notificationsEnabled: z.boolean(),
+  pushNotificationsEnabled: z.boolean(),
+})
 
-export const organizationListSchema = z.array(organizationSchema);
+export const organizationListSchema = z.array(organizationSchema)
 
-export type Organization = z.infer<typeof organizationSchema>;
-export type OrganizationList = z.infer<typeof organizationListSchema>;
+export type Organization = z.infer<typeof organizationSchema>
+export type OrganizationList = z.infer<typeof organizationListSchema>
 
 // ── Raw backend shapes ─────────────────────────────────────
 
 export type ApiOrganization = {
-  id: string;
-  name?: string | null;
-  slogan?: string | null;
-  description?: string | null;
-  avatar?: string | null;
-  phone?: string | null;
-  email?: string;
-  category?: string | null;
-  verified?: boolean;
-  two_factor_enabled?: boolean;
-  tags?: string[] | null;
-  city?: string | null;
-  website?: string | null;
-  coverUrl?: string | null;
-  foundedAt?: string;
-  created_at?: string;
-  membersCount?: number;
-  eventsCount?: number;
-  followers?: number;
-  is_following?: boolean;
-  href?: string;
-};
+  id: string
+  name?: string | null
+  slogan?: string | null
+  description?: string | null
+  avatar?: string | null
+  phone?: string | null
+  email?: string
+  category?: string | null
+  verified?: boolean
+  two_factor_enabled?: boolean
+  notifications_enabled?: boolean
+  push_notifications_enabled?: boolean
+  tags?: string[] | null
+  city?: string | null
+  website?: string | null
+  coverUrl?: string | null
+  foundedAt?: string
+  created_at?: string
+  membersCount?: number
+  eventsCount?: number
+  followers?: number
+  is_following?: boolean
+  href?: string
+}
 
 export type ApiOrganizationListResponse = {
-  data: ApiOrganization[];
-  meta: { total: number; page: number; limit: number; total_pages: number };
-};
+  data: ApiOrganization[]
+  meta: { total: number; page: number; limit: number; total_pages: number }
+}
 
 // ── Mapper ─────────────────────────────────────────────────
 
@@ -80,5 +84,6 @@ export const mapApiOrganization = (raw: ApiOrganization): Organization => ({
   isFollowing: raw.is_following,
   verified: raw.verified ?? false,
   twoFactorEnabled: raw.two_factor_enabled ?? false,
-});
-
+  notificationsEnabled: raw.notifications_enabled ?? true,
+  pushNotificationsEnabled: raw.push_notifications_enabled ?? false,
+})

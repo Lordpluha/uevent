@@ -1,7 +1,3 @@
-import type { RefObject } from 'react';
-import { format as formatDate } from 'date-fns';
-import type { DateRange } from 'react-day-picker';
-import { CalendarDays, MapPin, Tag, X } from 'lucide-react';
 import {
   Calendar,
   Combobox,
@@ -14,17 +10,21 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@shared/components';
-import { FORMAT_OPTIONS, type Format } from '../model/types';
-import { useAppContext } from '@shared/lib';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { format as formatDate } from 'date-fns'
+import { CalendarDays, MapPin, Tag, X } from 'lucide-react'
+import type { RefObject } from 'react'
+import type { DateRange } from 'react-day-picker'
+import { FORMAT_OPTIONS, type Format } from '../model/types'
 
 export function FilterFormatField({ format, onFormatChange }: { format: Format; onFormatChange: (v: Format) => void }) {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
   const FORMAT_LABELS: Record<string, string> = {
     all: t.filters.all,
     online: t.common.online,
     offline: t.common.offline,
-  };
+  }
   return (
     <div className="flex gap-1.5">
       {FORMAT_OPTIONS.map((option) => (
@@ -42,18 +42,18 @@ export function FilterFormatField({ format, onFormatChange }: { format: Format; 
         </button>
       ))}
     </div>
-  );
+  )
 }
 
 interface FilterTagsFieldProps {
-  selectedTags: string[];
-  onTagsChange: (v: string[]) => void;
-  tagsAnchor: RefObject<HTMLDivElement | null>;
-  tags: string[];
+  selectedTags: string[]
+  onTagsChange: (v: string[]) => void
+  tagsAnchor: RefObject<HTMLDivElement | null>
+  tags: string[]
 }
 
 export function FilterTagsField({ selectedTags, onTagsChange, tagsAnchor, tags }: FilterTagsFieldProps) {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
   return (
     <Combobox value={selectedTags} onValueChange={onTagsChange} multiple>
       <div ref={tagsAnchor} className="w-full">
@@ -76,8 +76,8 @@ export function FilterTagsField({ selectedTags, onTagsChange, tagsAnchor, tags }
                     <X
                       className="h-3 w-3 cursor-pointer opacity-60 hover:opacity-100"
                       onClick={(e) => {
-                        e.stopPropagation();
-                        onTagsChange(selectedTags.filter((t) => t !== tag));
+                        e.stopPropagation()
+                        onTagsChange(selectedTags.filter((t) => t !== tag))
                       }}
                     />
                   </span>
@@ -99,14 +99,14 @@ export function FilterTagsField({ selectedTags, onTagsChange, tagsAnchor, tags }
         </ComboboxList>
       </ComboboxContent>
     </Combobox>
-  );
+  )
 }
 
 interface FilterDateRangeFieldProps {
-  dateRange: DateRange | undefined;
-  onDateRangeChange: (v: DateRange | undefined) => void;
-  numberOfMonths?: number;
-  placeholder?: string;
+  dateRange: DateRange | undefined
+  onDateRangeChange: (v: DateRange | undefined) => void
+  numberOfMonths?: number
+  placeholder?: string
 }
 
 export function FilterDateRangeField({
@@ -115,8 +115,8 @@ export function FilterDateRangeField({
   numberOfMonths = 1,
   placeholder = 'Pick a date range',
 }: FilterDateRangeFieldProps) {
-  const { t } = useAppContext();
-  const displayPlaceholder = placeholder === 'Pick a date range' ? t.filters.pickDateRange : placeholder;
+  const { t } = useAppContext()
+  const displayPlaceholder = placeholder === 'Pick a date range' ? t.filters.pickDateRange : placeholder
   return (
     <Popover>
       <PopoverTrigger
@@ -138,7 +138,10 @@ export function FilterDateRangeField({
         {dateRange?.from && (
           <X
             className="ml-auto h-3.5 w-3.5 opacity-60 hover:opacity-100"
-            onClick={(e) => { e.stopPropagation(); onDateRangeChange(undefined); }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onDateRangeChange(undefined)
+            }}
           />
         )}
       </PopoverTrigger>
@@ -152,18 +155,18 @@ export function FilterDateRangeField({
         />
       </PopoverContent>
     </Popover>
-  );
+  )
 }
 
 interface FilterLocationFieldProps {
-  location: string;
-  onLocationChange: (v: string) => void;
-  locationAnchor: RefObject<HTMLDivElement | null>;
-  cities: string[];
+  location: string
+  onLocationChange: (v: string) => void
+  locationAnchor: RefObject<HTMLDivElement | null>
+  cities: string[]
 }
 
 export function FilterLocationField({ location, onLocationChange, locationAnchor, cities }: FilterLocationFieldProps) {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
   return (
     <div className="flex items-center gap-2 rounded-md border border-input bg-background px-2 text-sm">
       <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -183,12 +186,14 @@ export function FilterLocationField({ location, onLocationChange, locationAnchor
         <ComboboxContent anchor={locationAnchor} align="start">
           <ComboboxList>
             {cities.map((city) => (
-              <ComboboxItem key={city} value={city}>{city}</ComboboxItem>
+              <ComboboxItem key={city} value={city}>
+                {city}
+              </ComboboxItem>
             ))}
             <ComboboxEmpty>{t.filters.noLocations}</ComboboxEmpty>
           </ComboboxList>
         </ComboboxContent>
       </Combobox>
     </div>
-  );
+  )
 }

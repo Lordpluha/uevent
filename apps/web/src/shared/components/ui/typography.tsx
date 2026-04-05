@@ -1,6 +1,6 @@
-import { type VariantProps, cva } from 'class-variance-authority';
-import type { ElementType, HTMLAttributes } from 'react';
-import { cn } from '@shared/lib/utils';
+import { cn } from '@shared/lib/utils'
+import { cva, type VariantProps } from 'class-variance-authority'
+import type { ElementType, HTMLAttributes } from 'react'
 
 /* ── variants ─────────────────────────────────────────────── */
 
@@ -24,7 +24,7 @@ const typographyVariants = cva('', {
   defaultVariants: {
     variant: 'p',
   },
-});
+})
 
 /* ── default tag map ──────────────────────────────────────── */
 
@@ -41,21 +41,21 @@ const DEFAULT_TAG: Record<NonNullable<TypographyVariant>, ElementType> = {
   blockquote: 'blockquote',
   code: 'code',
   label: 'span',
-};
+}
 
 /* ── types ────────────────────────────────────────────────── */
 
-type TypographyVariant = VariantProps<typeof typographyVariants>['variant'];
+type TypographyVariant = VariantProps<typeof typographyVariants>['variant']
 
 export type TypographyProps = HTMLAttributes<HTMLElement> &
   VariantProps<typeof typographyVariants> & {
     /** Override the rendered HTML element */
-    as?: ElementType;
-  };
+    as?: ElementType
+  }
 
 /* ── component ────────────────────────────────────────────── */
 
 export function Typography({ variant = 'p', as, className, ...props }: TypographyProps) {
-  const Tag = as ?? DEFAULT_TAG[variant ?? 'p'];
-  return <Tag className={cn(typographyVariants({ variant }), className)} {...props} />;
+  const Tag = as ?? DEFAULT_TAG[variant ?? 'p']
+  return <Tag className={cn(typographyVariants({ variant }), className)} {...props} />
 }

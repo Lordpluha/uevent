@@ -1,59 +1,62 @@
-import { useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
-import { CheckCircle, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
-import { Button } from '@shared/components';
-import { api } from '@shared/api';
-import { getCurrencySymbol } from '@shared/config/payment';
-import { usePaymentConfig } from '@shared/hooks/usePaymentConfig';
-import { useAppContext } from '@shared/lib';
-import { toast } from 'sonner';
+import { api } from '@shared/api'
+import { Button } from '@shared/components'
+import { getCurrencySymbol } from '@shared/config/payment'
+import { usePaymentConfig } from '@shared/hooks/usePaymentConfig'
+import { useAppContext } from '@shared/lib'
+import { useQuery } from '@tanstack/react-query'
+import { AlertCircle, ArrowRight, CheckCircle, Loader2 } from 'lucide-react'
+import { useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router'
+import { toast } from 'sonner'
 
 interface PaymentStatus {
-  status: string;
-  amount: number;
-  currency: string;
+  status: string
+  amount: number
+  currency: string
 }
 
 export function PaymentSuccessPage() {
-  const { t } = useAppContext();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const paymentIntentId = searchParams.get('paymentIntentId');
-  const { data: paymentConfig } = usePaymentConfig();
+  const { t } = useAppContext()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const paymentIntentId = searchParams.get('paymentIntentId')
+  const { data: paymentConfig } = usePaymentConfig()
 
-  const { data: payment, isLoading, isError } = useQuery<PaymentStatus>({
+  const {
+    data: payment,
+    isLoading,
+    isError,
+  } = useQuery<PaymentStatus>({
     queryKey: ['payment-status', paymentIntentId],
     queryFn: async () => {
-      const res = await api.get<PaymentStatus>(`/payments/${paymentIntentId}`);
-      return res.data;
+      const res = await api.get<PaymentStatus>(`/payments/${paymentIntentId}`)
+      return res.data
     },
     enabled: !!paymentIntentId,
     retry: 3,
     refetchInterval: (query) => {
-      const status = query.state.data?.status;
-      if (status === 'succeeded' || status === 'canceled') return false;
-      return 3000;
+      const status = query.state.data?.status
+      if (status === 'succeeded' || status === 'canceled') return false
+      return 3000
     },
-  });
+  })
 
   useEffect(() => {
-    if(!paymentIntentId) {
-      toast.error(t.paymentSuccess.invalidLink);
-      navigate('/');
+    if (!paymentIntentId) {
+      toast.error(t.paymentSuccess.invalidLink)
+      navigate('/')
     }
-  }, [paymentIntentId, navigate, t.paymentSuccess.invalidLink]);
+  }, [paymentIntentId, navigate, t.paymentSuccess.invalidLink])
 
-  const isConfirmed = payment?.status === 'succeeded';
-  const isProcessing = isLoading || payment?.status === 'processing';
-  const isFailed = isError || payment?.status === 'canceled';
+  const isConfirmed = payment?.status === 'succeeded'
+  const isProcessing = isLoading || payment?.status === 'processing'
+  const isFailed = isError || payment?.status === 'canceled'
 
-  const currencySymbol = getCurrencySymbol({ currency: payment?.currency, paymentConfig });
+  const currencySymbol = getCurrencySymbol({ currency: payment?.currency, paymentConfig })
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/50 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
-
         {/* Status Icon */}
         <div className="mb-6">
           {isProcessing ? (
@@ -75,23 +78,17 @@ export function PaymentSuccessPage() {
         {isProcessing ? (
           <>
             <h1 className="text-3xl font-bold mb-2">{t.paymentSuccess.confirming}</h1>
-            <p className="text-muted-foreground mb-6">
-              {t.paymentSuccess.confirmingDesc}
-            </p>
+            <p className="text-muted-foreground mb-6">{t.paymentSuccess.confirmingDesc}</p>
           </>
         ) : isFailed ? (
           <>
             <h1 className="text-3xl font-bold mb-2">{t.paymentSuccess.failed}</h1>
-            <p className="text-muted-foreground mb-6">
-              {t.paymentSuccess.failedDesc}
-            </p>
+            <p className="text-muted-foreground mb-6">{t.paymentSuccess.failedDesc}</p>
           </>
         ) : (
           <>
             <h1 className="text-3xl font-bold mb-2">{t.paymentSuccess.success}</h1>
-            <p className="text-muted-foreground mb-6">
-              {t.paymentSuccess.successDesc}
-            </p>
+            <p className="text-muted-foreground mb-6">{t.paymentSuccess.successDesc}</p>
           </>
         )}
 
@@ -99,40 +96,31 @@ export function PaymentSuccessPage() {
         <div className="mb-8 p-4 bg-card rounded-lg border border-border">
           {isConfirmed && payment && (
             <div className="mb-3 flex items-center justify-center gap-2 text-lg font-semibold text-foreground">
-              <span>{currencySymbol}{payment.amount.toFixed(2)}</span>
-              <span className="text-sm font-normal text-emerald-600 dark:text-emerald-400">{t.paymentSuccess.paid}</span>
+              <span>
+                {currencySymbol}
+                {payment.amount.toFixed(2)}
+              </span>
+              <span className="text-sm font-normal text-emerald-600 dark:text-emerald-400">
+                {t.paymentSuccess.paid}
+              </span>
             </div>
           )}
           <div className="text-sm text-muted-foreground mb-1">{t.paymentSuccess.paymentIntentId}</div>
-          <code className="block text-xs bg-muted p-2 rounded mb-2 break-all font-mono">
-            {paymentIntentId}
-          </code>
-          {isConfirmed && (
-            <p className="text-xs text-muted-foreground">
-              {t.paymentSuccess.keepRecords}
-            </p>
-          )}
+          <code className="block text-xs bg-muted p-2 rounded mb-2 break-all font-mono">{paymentIntentId}</code>
+          {isConfirmed && <p className="text-xs text-muted-foreground">{t.paymentSuccess.keepRecords}</p>}
         </div>
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          <Button
-            onClick={() => navigate('/profile')}
-            className="w-full"
-            disabled={isProcessing}
-          >
+          <Button onClick={() => navigate('/profile')} className="w-full" disabled={isProcessing}>
             <ArrowRight className="mr-2 h-4 w-4" />
             {t.paymentSuccess.viewTickets}
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/events')}
-            className="w-full"
-          >
+          <Button variant="outline" onClick={() => navigate('/events')} className="w-full">
             {t.paymentSuccess.browseMore}
           </Button>
         </div>
       </div>
     </div>
-  );
+  )
 }

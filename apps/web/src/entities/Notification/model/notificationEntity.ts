@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export const notificationSchema = z.object({
   id: z.string(),
@@ -7,20 +7,20 @@ export const notificationSchema = z.object({
   createdAt: z.string(),
   read: z.boolean(),
   link: z.string().nullable().optional(),
-});
+})
 
-export const notificationListSchema = z.array(notificationSchema);
+export const notificationListSchema = z.array(notificationSchema)
 
-export type Notification = z.infer<typeof notificationSchema>;
+export type Notification = z.infer<typeof notificationSchema>
 
 export type ApiNotification = {
-  id: string;
-  name?: string | null;
-  content?: string | null;
-  created_at?: string | null;
-  is_read?: boolean | null;
-  link?: string | null;
-};
+  id: string
+  name?: string | null
+  content?: string | null
+  created_at?: string | null
+  is_read?: boolean | null
+  link?: string | null
+}
 
 export const mapApiNotification = (raw: ApiNotification): Notification => ({
   id: raw.id,
@@ -29,4 +29,4 @@ export const mapApiNotification = (raw: ApiNotification): Notification => ({
   createdAt: raw.created_at ?? new Date().toISOString(),
   read: raw.is_read ?? false,
   link: raw.link ?? null,
-});
+})

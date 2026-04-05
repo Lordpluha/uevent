@@ -1,2 +1,2 @@
-export { PaymentModal } from './PaymentModal';
-export type { PaymentModalProps } from './PaymentModal';
+export type { PaymentModalProps } from './PaymentModal'
+export { PaymentModal } from './PaymentModal'

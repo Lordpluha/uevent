@@ -1,11 +1,10 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
-import { Ticket } from '../../tickets/entities/ticket.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
+import { Ticket } from '../../tickets/entities/ticket.entity'
 
 @Entity('files')
 export class File extends UuidEntity {
-
   @Column()
   @ApiProperty()
   name: string

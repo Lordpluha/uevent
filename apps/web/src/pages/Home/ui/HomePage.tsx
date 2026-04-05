@@ -1,37 +1,36 @@
-import { Link } from 'react-router';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { EventCard } from '@entities/Event';
-import { useEvents } from '@entities/Event';
-import { useOrgs, OrgCard } from '@entities/Organization';
-import { api } from '@shared/api';
-import { useAppContext } from '@shared/lib';
-import { Badge, Empty, EmptyDescription, EmptyHeader, EmptyMedia, buttonVariants } from '@shared/components';
-import { cn } from '@shared/lib/utils';
-import { getHomeCategories, HOW_ICONS, StatCounter } from './HomeConstants';
+import { EventCard, useEvents } from '@entities/Event'
+import { OrgCard, useOrgs } from '@entities/Organization'
+import { api } from '@shared/api'
+import { Badge, buttonVariants, Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { cn } from '@shared/lib/utils'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Link } from 'react-router'
+import { getHomeCategories, HOW_ICONS, StatCounter } from './HomeConstants'
 
-export { HomePage };
+export { HomePage }
 
 function HomePage() {
-  const { t } = useAppContext();
-  const h = t.home;
-  const categories = getHomeCategories(t);
-  const { data: eventsResult, isLoading: eventsLoading } = useEvents({ page: 1, limit: 5 });
-  const events = eventsResult?.data ?? [];
+  const { t } = useAppContext()
+  const h = t.home
+  const categories = getHomeCategories(t)
+  const { data: eventsResult, isLoading: eventsLoading } = useEvents({ page: 1, limit: 5 })
+  const events = eventsResult?.data ?? []
 
-  const { data: orgsResult, isLoading: orgsLoading } = useOrgs({ page: 1, limit: 6 });
-  const orgs = orgsResult?.data ?? [];
+  const { data: orgsResult, isLoading: orgsLoading } = useOrgs({ page: 1, limit: 6 })
+  const orgs = orgsResult?.data ?? []
 
   const { data: usersResult, isLoading: usersLoading } = useQuery({
     queryKey: ['users-total'],
     queryFn: () => api.get<{ count: number }>('/users/count').then((r) => r.data.count),
-  });
+  })
 
   const stats = {
     events: eventsResult?.total ?? 0,
     organizations: orgsResult?.total ?? 0,
     members: usersResult ?? 0,
-  };
+  }
 
   return (
     <main className="flex flex-col">
@@ -153,7 +152,7 @@ function HomePage() {
           <h2 className="mb-12 text-center text-2xl font-bold tracking-tight">{h.howItWorks.title}</h2>
           <div className="grid gap-8 sm:grid-cols-3">
             {h.howItWorks.steps.map((step, i) => {
-              const Icon = HOW_ICONS[i];
+              const Icon = HOW_ICONS[i]
               return (
                 <div key={step.title} className="flex flex-col items-center gap-4 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
@@ -164,7 +163,7 @@ function HomePage() {
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
@@ -206,6 +205,5 @@ function HomePage() {
         </div>
       </section>
     </main>
-  );
+  )
 }
-

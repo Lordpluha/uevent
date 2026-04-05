@@ -1,6 +1,6 @@
-import { Progress as ProgressPrimitive } from '@base-ui/react/progress';
+import { Progress as ProgressPrimitive } from '@base-ui/react/progress'
 
-import { cn } from '@shared/lib/utils';
+import { cn } from '@shared/lib/utils'
 
 function Progress({ className, children, value, ...props }: ProgressPrimitive.Root.Props) {
   return (
@@ -15,7 +15,7 @@ function Progress({ className, children, value, ...props }: ProgressPrimitive.Ro
         <ProgressIndicator />
       </ProgressTrack>
     </ProgressPrimitive.Root>
-  );
+  )
 }
 
 function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
@@ -25,7 +25,7 @@ function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
       data-slot="progress-track"
       {...props}
     />
-  );
+  )
 }
 
 function ProgressIndicator({ className, ...props }: ProgressPrimitive.Indicator.Props) {
@@ -35,7 +35,7 @@ function ProgressIndicator({ className, ...props }: ProgressPrimitive.Indicator.
       className={cn('h-full bg-primary transition-all', className)}
       {...props}
     />
-  );
+  )
 }
 
 function ProgressLabel({ className, ...props }: ProgressPrimitive.Label.Props) {
@@ -45,7 +45,7 @@ function ProgressLabel({ className, ...props }: ProgressPrimitive.Label.Props) {
       data-slot="progress-label"
       {...props}
     />
-  );
+  )
 }
 
 function ProgressValue({ className, ...props }: ProgressPrimitive.Value.Props) {
@@ -55,7 +55,7 @@ function ProgressValue({ className, ...props }: ProgressPrimitive.Value.Props) {
       data-slot="progress-value"
       {...props}
     />
-  );
+  )
 }
 
-export { Progress, ProgressTrack, ProgressIndicator, ProgressLabel, ProgressValue };
+export { Progress, ProgressIndicator, ProgressLabel, ProgressTrack, ProgressValue }

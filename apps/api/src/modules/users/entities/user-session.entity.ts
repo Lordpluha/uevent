@@ -1,11 +1,10 @@
-import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-import { User } from './user.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, UpdateDateColumn } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
+import { User } from './user.entity'
 
 @Entity('user_sessions')
 export class UserSession extends UuidEntity {
-
   @Column()
   @ApiHideProperty()
   access: string

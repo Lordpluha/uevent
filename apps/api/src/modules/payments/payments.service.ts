@@ -1,21 +1,25 @@
-import { Injectable, BadRequestException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
-import Stripe from 'stripe'
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import { toBuffer } from 'qrcode'
-import { Payment, PaymentStatus } from './entities/payment.entity'
-import { EmailService } from '../notifications/email.service'
+import Stripe from 'stripe'
+import { Repository } from 'typeorm'
 import { uuidv7 } from 'uuidv7'
-import { Ticket, TicketStatus } from '../tickets/entities/ticket.entity'
-import { Notification } from '../notifications/entities/notification.entity'
-import { User } from '../users/entities/user.entity'
 import { ApiConfigService } from '../../config/api-config.service'
-import { OrganizationTransaction, OrganizationTransactionType } from './entities/organization-transaction.entity'
-import { OrganizationWithdrawalRequest, OrganizationWithdrawalStatus } from './entities/organization-withdrawal-request.entity'
-import { PromoCode } from './entities/promo-code.entity'
 import { Event } from '../events/entities/event.entity'
+import { EmailService } from '../notifications/email.service'
+import { NotificationsService } from '../notifications/notifications.service'
+import { Organization } from '../organizations/entities/organization.entity'
+import { Ticket, TicketStatus } from '../tickets/entities/ticket.entity'
+import { User } from '../users/entities/user.entity'
+import { OrganizationTransaction, OrganizationTransactionType } from './entities/organization-transaction.entity'
 import { OrganizationVerification, OrganizationVerificationStatus } from './entities/organization-verification.entity'
+import {
+  OrganizationWithdrawalRequest,
+  OrganizationWithdrawalStatus,
+} from './entities/organization-withdrawal-request.entity'
+import { Payment, PaymentStatus } from './entities/payment.entity'
+import { PromoCode } from './entities/promo-code.entity'
 
 @Injectable()
 export class PaymentsService {
@@ -28,9 +32,6 @@ export class PaymentsService {
 
     @InjectRepository(Ticket)
     private readonly ticketsRepository: Repository<Ticket>,
-
-    @InjectRepository(Notification)
-    private readonly notificationsRepository: Repository<Notification>,
 
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -50,7 +51,11 @@ export class PaymentsService {
     @InjectRepository(OrganizationVerification)
     private readonly organizationVerificationRepository: Repository<OrganizationVerification>,
 
+    @InjectRepository(Organization)
+    private readonly organizationsRepository: Repository<Organization>,
+
     private readonly emailService: EmailService,
+    private readonly notificationsService: NotificationsService,
     private readonly apiConfig: ApiConfigService,
   ) {}
 
@@ -66,12 +71,7 @@ export class PaymentsService {
     return true
   }
 
-  async resolveCheckoutPricing(input: {
-    ticketId: string
-    quantity?: number
-    promoCode?: string
-    eventId?: string
-  }) {
+  async resolveCheckoutPricing(input: { ticketId: string; quantity?: number; promoCode?: string; eventId?: string }) {
     const ticket = await this.ticketsRepository.findOne({ where: { id: input.ticketId } })
     if (!ticket) {
       throw new NotFoundException('Ticket not found')
@@ -147,15 +147,18 @@ export class PaymentsService {
     })
   }
 
-  async createOrganizationPromoCode(organizationId: string, dto: {
-    code: string
-    discountPercent: number
-    eventId?: string
-    maxUses?: number | null
-    startsAt?: string | null
-    endsAt?: string | null
-    isActive?: boolean
-  }) {
+  async createOrganizationPromoCode(
+    organizationId: string,
+    dto: {
+      code: string
+      discountPercent: number
+      eventId?: string
+      maxUses?: number | null
+      startsAt?: string | null
+      endsAt?: string | null
+      isActive?: boolean
+    },
+  ) {
     const code = this.normalizePromoCode(dto.code)
     if (!code) throw new BadRequestException('Code is required')
 
@@ -207,13 +210,17 @@ export class PaymentsService {
     return this.promoCodeRepository.save(promo)
   }
 
-  async updateOrganizationPromoCode(organizationId: string, promoId: string, dto: {
-    discountPercent?: number
-    maxUses?: number | null
-    startsAt?: string | null
-    endsAt?: string | null
-    isActive?: boolean
-  }) {
+  async updateOrganizationPromoCode(
+    organizationId: string,
+    promoId: string,
+    dto: {
+      discountPercent?: number
+      maxUses?: number | null
+      startsAt?: string | null
+      endsAt?: string | null
+      isActive?: boolean
+    },
+  ) {
     const promo = await this.promoCodeRepository.findOne({ where: { id: promoId, organizationId } })
     if (!promo) throw new NotFoundException('Promo code not found')
 
@@ -324,7 +331,8 @@ export class PaymentsService {
   }
 
   private async createOrganizationRefundTransaction(payment: Payment) {
-    const organizationId = payment.organizationId || (await this.resolveOrganizationContextFromTicket(payment.metadata))?.organizationId
+    const organizationId =
+      payment.organizationId || (await this.resolveOrganizationContextFromTicket(payment.metadata))?.organizationId
     if (!organizationId) return
 
     const existing = await this.organizationTransactionsRepository.findOne({
@@ -438,10 +446,13 @@ export class PaymentsService {
     return verification
   }
 
-  async submitOrganizationVerification(organizationId: string, payload: {
-    additionalInformation?: string
-    documentUrls: string[]
-  }) {
+  async submitOrganizationVerification(
+    organizationId: string,
+    payload: {
+      additionalInformation?: string
+      documentUrls: string[]
+    },
+  ) {
     if (!payload.documentUrls?.length) {
       throw new BadRequestException('At least one verification document is required')
     }
@@ -476,15 +487,20 @@ export class PaymentsService {
     return this.organizationVerificationRepository.save(verification)
   }
 
-  async createOrganizationWithdrawalRequest(organizationId: string, dto: {
-    amount: number
-    destination: string
-    comment?: string
-    currency?: string
-  }) {
+  async createOrganizationWithdrawalRequest(
+    organizationId: string,
+    dto: {
+      amount: number
+      destination: string
+      comment?: string
+      currency?: string
+    },
+  ) {
     const verification = await this.getOrganizationVerification(organizationId)
     if (verification.status !== OrganizationVerificationStatus.APPROVED) {
-      throw new ForbiddenException('Organization verification is required and must be approved before requesting withdrawals')
+      throw new ForbiddenException(
+        'Organization verification is required and must be approved before requesting withdrawals',
+      )
     }
 
     const amount = Number(dto.amount)
@@ -549,10 +565,9 @@ export class PaymentsService {
       .update()
       .set({ quantity_sold: () => `quantity_sold + ${quantity}` })
       .where('id = :id', { id: ticketId })
-      .andWhere(
-        '(quantity_limited = false OR quantity_total IS NULL OR quantity_sold + :qty <= quantity_total)',
-        { qty: quantity },
-      )
+      .andWhere('(quantity_limited = false OR quantity_total IS NULL OR quantity_sold + :qty <= quantity_total)', {
+        qty: quantity,
+      })
       .execute()
 
     if (result.affected === 0) {
@@ -560,7 +575,7 @@ export class PaymentsService {
     }
   }
 
-  private async createOrganizationPurchaseNotification(metadata?: Record<string, string>) {
+  private async createOrganizationPurchaseNotification(metadata?: Record<string, string>, paymentIntentId?: string) {
     const ticketId = metadata?.ticketId
     if (!ticketId) return
 
@@ -578,15 +593,37 @@ export class PaymentsService {
 
     const eventTitle = metadata?.eventTitle || ticket?.event?.name || 'your event'
     const ticketName = metadata?.ticketName || ticket?.name || 'ticket'
+    const buyerName = metadata?.userName || 'A customer'
 
-    const notification = this.notificationsRepository.create({
+    // Create in-app notification via service (which also fires push for org if enabled)
+    await this.notificationsService.create({
       name: 'New ticket purchase',
-      content: `A customer bought ${quantity} × ${ticketName} for ${eventTitle}.`,
+      content: `${buyerName} bought ${quantity} × ${ticketName} for ${eventTitle}.`,
       user_id: null,
       organization_id: organizationId,
+      link: null,
     })
 
-    await this.notificationsRepository.save(notification)
+    // Send org email if org has email notifications enabled
+    const org = await this.organizationsRepository.findOne({
+      where: { id: organizationId },
+      select: ['id', 'email', 'name', 'notifications_enabled'],
+    })
+    if (org?.notifications_enabled && org.email) {
+      this.emailService
+        .sendNewAttendeeEmail(
+          org.email,
+          org.name ?? 'Organization',
+          buyerName,
+          eventTitle,
+          ticketName,
+          quantity,
+          paymentIntentId || 'N/A',
+        )
+        .catch((e: Error) =>
+          this.logger.warn(`Failed to send new attendee email to org ${organizationId}: ${e.message}`),
+        )
+    }
   }
 
   private buildTicketPaymentMarker(paymentIntentId: string): string {
@@ -625,7 +662,9 @@ export class PaymentsService {
         : null
 
     if (!user) {
-      this.logger.warn(`Could not resolve user for payment ${paymentIntentId}; purchased tickets were not attached to a profile`)
+      this.logger.warn(
+        `Could not resolve user for payment ${paymentIntentId}; purchased tickets were not attached to a profile`,
+      )
       return
     }
 
@@ -664,7 +703,7 @@ export class PaymentsService {
     await this.ticketsRepository.save(purchasedTickets)
   }
 
-  private async hasSaleTransaction(paymentIntentId: string): Promise<boolean> {
+  private hasSaleTransaction(paymentIntentId: string): Promise<boolean> {
     return this.organizationTransactionsRepository.exists({
       where: {
         sourcePaymentIntentId: paymentIntentId,
@@ -709,7 +748,7 @@ export class PaymentsService {
     }
 
     if (!this.isPaymentEffectApplied(payment, 'orgNotificationSideEffectApplied')) {
-      await this.createOrganizationPurchaseNotification(payment.metadata)
+      await this.createOrganizationPurchaseNotification(payment.metadata, paymentIntentId)
       await this.markPaymentEffectApplied(payment, 'orgNotificationSideEffectApplied')
     }
 
@@ -774,10 +813,38 @@ export class PaymentsService {
     await this.applySucceededPaymentSideEffects(payment, paymentIntentId)
 
     await this.issuePurchasedTickets(payment.metadata, paymentIntentId, userId)
+
+    // Send confirmation email unless the user has opted out.
+    // The webhook path handles the same email; guard with a idempotency flag so it
+    // is sent exactly once even if both paths execute for the same payment.
+    if (!this.isPaymentEffectApplied(payment, 'confirmationEmailSent') && user.payment_email_enabled) {
+      const meta = payment.metadata ?? {}
+      if (meta.userEmail && meta.userName) {
+        this.emailService
+          .sendPaymentConfirmation({
+            userEmail: meta.userEmail,
+            userName: meta.userName,
+            eventTitle: meta.eventTitle || 'Ticket Purchase',
+            ticketName: meta.ticketName || 'Ticket',
+            price: Number(payment.amount),
+            eventDate: meta.eventDate || '',
+            eventLocation: meta.eventLocation || '',
+            organizationName: meta.organizationName || '',
+            paymentIntentId,
+          })
+          .then(() => this.markPaymentEffectApplied(payment, 'confirmationEmailSent'))
+          .catch((e: Error) =>
+            this.logger.warn(
+              `Failed to send confirmation email for reconciled payment ${paymentIntentId}: ${e.message}`,
+            ),
+          )
+      }
+    }
+
     return { success: true, walletUpdated: true }
   }
 
-  async findStoredPaymentByIntentId(paymentIntentId: string) {
+  findStoredPaymentByIntentId(paymentIntentId: string) {
     return this.paymentRepository.findOne({ where: { stripePaymentIntentId: paymentIntentId } })
   }
 
@@ -937,17 +1004,19 @@ export class PaymentsService {
     if (freeMetadata.userEmail && freeMetadata.userName) {
       const freeUser = await this.usersRepository.findOne({ where: { email: freeMetadata.userEmail } })
       if (!freeUser || freeUser.payment_email_enabled) {
-        this.emailService.sendPaymentConfirmation({
-          userEmail: freeMetadata.userEmail,
-          userName: freeMetadata.userName,
-          eventTitle: freeMetadata.eventTitle || 'Ticket Purchase',
-          ticketName: freeMetadata.ticketName || 'Ticket',
-          price: 0,
-          eventDate: freeMetadata.eventDate || '',
-          eventLocation: freeMetadata.eventLocation || '',
-          organizationName: freeMetadata.organizationName || '',
-          paymentIntentId,
-        }).catch((e) => this.logger.warn(`Failed to send free checkout confirmation email: ${e.message}`))
+        this.emailService
+          .sendPaymentConfirmation({
+            userEmail: freeMetadata.userEmail,
+            userName: freeMetadata.userName,
+            eventTitle: freeMetadata.eventTitle || 'Ticket Purchase',
+            ticketName: freeMetadata.ticketName || 'Ticket',
+            price: 0,
+            eventDate: freeMetadata.eventDate || '',
+            eventLocation: freeMetadata.eventLocation || '',
+            organizationName: freeMetadata.organizationName || '',
+            paymentIntentId,
+          })
+          .catch((e) => this.logger.warn(`Failed to send free checkout confirmation email: ${e.message}`))
       }
     }
 
@@ -958,10 +1027,10 @@ export class PaymentsService {
   }
 
   private getStripe(): Stripe {
-    if(!this.stripeInstance) {
+    if (!this.stripeInstance) {
       const apiKey = this.apiConfig.stripeConfig.secretKey
 
-      if(!apiKey) throw new BadRequestException('STRIPE_SECRET_KEY is not set in environment variables')
+      if (!apiKey) throw new BadRequestException('STRIPE_SECRET_KEY is not set in environment variables')
 
       this.stripeInstance = new Stripe(apiKey)
     }
@@ -1004,34 +1073,36 @@ export class PaymentsService {
 
       this.logger.log(`Payment Intent created: ${paymentIntent.id}`)
       return paymentIntent
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Failed to create payment intent: ${error.message}`)
       throw new BadRequestException('Failed to create payment intent')
     }
   }
 
-
   async getPaymentIntent(paymentIntentId: string) {
     try {
       return await this.getStripe().paymentIntents.retrieve(paymentIntentId)
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Failed to retrieve payment intent: ${error.message}`)
       throw new BadRequestException('Payment intent not found')
     }
   }
 
-
   handleWebhookEvent(event: Stripe.Event) {
     this.logger.log(`Received event: ${event.type}`)
 
-    switch(event.type) {
-      case 'payment_intent.succeeded': return this.handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent)
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        return this.handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent)
 
-      case 'payment_intent.payment_failed': return this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent)
+      case 'payment_intent.payment_failed':
+        return this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent)
 
-      case 'charge.refunded': return this.handleChargeRefunded(event.data.object as Stripe.Charge)
+      case 'charge.refunded':
+        return this.handleChargeRefunded(event.data.object as Stripe.Charge)
 
-      default: this.logger.warn(`Unhandled event type: ${event.type}`)
+      default:
+        this.logger.warn(`Unhandled event type: ${event.type}`)
     }
   }
 
@@ -1045,7 +1116,7 @@ export class PaymentsService {
 
     const alreadySucceeded = payment?.status === PaymentStatus.SUCCEEDED
 
-    if(!payment) {
+    if (!payment) {
       payment = this.paymentRepository.create({
         id: uuidv7(),
         stripePaymentIntentId: paymentIntent.id,
@@ -1054,7 +1125,7 @@ export class PaymentsService {
         status: PaymentStatus.SUCCEEDED,
         metadata: paymentIntent.metadata,
       })
-    }else {
+    } else {
       payment.status = PaymentStatus.SUCCEEDED
       payment.metadata = paymentIntent.metadata
     }
@@ -1073,11 +1144,11 @@ export class PaymentsService {
     this.logger.log(`Payment ${paymentIntent.id} processed`)
 
     // payment confirmation email (failures must not bubble — email is non-critical)
-    if(paymentIntent.metadata) {
+    if (paymentIntent.metadata) {
       await this.sendPaymentConfirmationEmail(paymentIntent).catch((e: Error) =>
         this.logger.error(`Failed to send payment confirmation email for ${paymentIntent.id}: ${e.message}`),
       )
-    }else {
+    } else {
       this.logger.warn(`No metadata found - skipping email`)
     }
   }
@@ -1086,14 +1157,14 @@ export class PaymentsService {
     try {
       const metadata = paymentIntent.metadata
 
-      if(!metadata?.userEmail || !metadata?.userName) {
+      if (!metadata?.userEmail || !metadata?.userName) {
         this.logger.warn(`Missing required email data for payment ${paymentIntent.id}`)
         return
       }
 
       // Check user preference for payment emails
       const user = await this.usersRepository.findOne({ where: { email: metadata.userEmail } })
-      if(user && !user.payment_email_enabled) {
+      if (user && !user.payment_email_enabled) {
         this.logger.log(`Payment email disabled — skipping confirmation`)
         return
       }
@@ -1111,7 +1182,7 @@ export class PaymentsService {
       })
 
       this.logger.log(`Payment confirmation email sent for payment ${paymentIntent.id}`)
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Failed to send payment confirmation email: ${error.message}`)
     }
   }
@@ -1126,7 +1197,7 @@ export class PaymentsService {
 
       const failureReason = paymentIntent.last_payment_error?.message || 'No details available'
 
-      if(!payment) {
+      if (!payment) {
         payment = this.paymentRepository.create({
           id: uuidv7(),
           stripePaymentIntentId: paymentIntent.id,
@@ -1136,7 +1207,7 @@ export class PaymentsService {
           failureReason,
           metadata: paymentIntent.metadata,
         })
-      }else {
+      } else {
         payment.status = PaymentStatus.FAILED
         payment.failureReason = failureReason
       }
@@ -1150,7 +1221,7 @@ export class PaymentsService {
       if (failedUserEmail) {
         const failedUser = await this.usersRepository.findOne({ where: { email: failedUserEmail } })
         if (!failedUser || failedUser.payment_email_enabled) {
-          const meta = paymentIntent.metadata?.userEmail ? paymentIntent.metadata : payment?.metadata ?? {}
+          const meta = paymentIntent.metadata?.userEmail ? paymentIntent.metadata : (payment?.metadata ?? {})
           this.logger.log(`Sending failed payment email for payment ${paymentIntent.id}`)
           await this.emailService.sendPaymentFailedEmail(
             failedUserEmail,
@@ -1166,7 +1237,7 @@ export class PaymentsService {
       } else {
         this.logger.warn(`No email found in webhook metadata or database - skipping failed payment email`)
       }
-    } catch(error: unknown) {
+    } catch (error: unknown) {
       this.logger.error(`Error handling payment failure: ${(error as Error).message}`)
       throw error
     }
@@ -1178,12 +1249,12 @@ export class PaymentsService {
 
       const paymentIntentId = charge.payment_intent?.toString()
 
-      if(paymentIntentId) {
+      if (paymentIntentId) {
         const payment = await this.paymentRepository.findOne({
           where: { stripePaymentIntentId: paymentIntentId },
         })
 
-        if(payment) {
+        if (payment) {
           payment.status = PaymentStatus.REFUNDED
           payment.metadata = {
             ...payment.metadata,
@@ -1217,10 +1288,10 @@ export class PaymentsService {
             this.logger.warn(`No metadata found - skipping refund email`)
           }
         }
-      }else {
+      } else {
         this.logger.warn(`Could not find payment for charge ${charge.id}`)
       }
-    } catch(error: unknown) {
+    } catch (error: unknown) {
       this.logger.error(`Error handling charge refund: ${(error as Error).message}`)
       throw error
     }
@@ -1245,7 +1316,7 @@ export class PaymentsService {
     try {
       const bodyToUse = typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body)
       return this.getStripe().webhooks.constructEvent(bodyToUse, signature, secret)
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Webhook signature verification failed: ${error.message}`)
       throw new BadRequestException('Webhook signature verification failed')
     }

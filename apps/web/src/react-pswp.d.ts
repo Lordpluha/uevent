@@ -1,41 +1,41 @@
 declare module 'react-pswp' {
-  import type { ComponentType } from 'react';
+  import type { ComponentType } from 'react'
 
   export interface PswpItem {
-    uid: number;
-    src: string;
-    msrc?: string;
-    w: number;
-    h: number;
-    title?: string;
+    uid: number
+    src: string
+    msrc?: string
+    w: number
+    h: number
+    title?: string
   }
 
   export interface GalleryProps {
-    container: PswpItem[];
-    onClick?: (index: number) => void;
-    wrapperClass?: string;
-    itemClass?: string;
-    imgClass?: string;
+    container: PswpItem[]
+    onClick?: (index: number) => void
+    wrapperClass?: string
+    itemClass?: string
+    imgClass?: string
   }
 
   export interface PhotoSwipeProps {
-    container: PswpItem[];
-    index: number | null;
-    open: boolean;
-    onIndexChange?: (index: number) => void;
-    onOpenChange?: (open: boolean) => void;
+    container: PswpItem[]
+    index: number | null
+    open: boolean
+    onIndexChange?: (index: number) => void
+    onOpenChange?: (open: boolean) => void
     theme?: {
-      foreground?: string;
-      background?: string;
-    };
+      foreground?: string
+      background?: string
+    }
   }
 
-  export const Gallery: ComponentType<GalleryProps>;
-  export const PhotoSwipe: ComponentType<PhotoSwipeProps>;
+  export const Gallery: ComponentType<GalleryProps>
+  export const PhotoSwipe: ComponentType<PhotoSwipeProps>
 }
 
 declare module 'react-pswp/dist/index.css' {
-  const content: unknown;
+  const content: unknown
   // biome-ignore lint/style/noDefaultExport: dts
-  export default content;
+  export default content
 }

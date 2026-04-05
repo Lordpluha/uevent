@@ -1,11 +1,10 @@
-import { Entity, Column, OneToMany } from 'typeorm'
-import { Override } from './override.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, Entity, OneToMany } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
+import { Override } from './override.entity'
 
 @Entity('recurrences')
 export class Recurrence extends UuidEntity {
-
   @Column()
   @ApiProperty()
   rule: string

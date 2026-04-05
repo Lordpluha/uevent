@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export const userSchema = z.object({
   id: z.string(),
@@ -24,65 +24,65 @@ export const userSchema = z.object({
   eventsAttended: z.number(),
   followers: z.number(),
   following: z.number(),
-});
+})
 
-export const userListSchema = z.array(userSchema);
+export const userListSchema = z.array(userSchema)
 
-export type User = z.infer<typeof userSchema>;
-export type UserList = z.infer<typeof userListSchema>;
+export type User = z.infer<typeof userSchema>
+export type UserList = z.infer<typeof userListSchema>
 
 export type ApiUser = {
-  id: string | number;
-  name?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  username?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  avatar?: string | null;
-  avatarUrl?: string | null;
-  bio?: string | null;
-  location?: string | null;
-  website?: string | null;
-  timezone?: string | null;
-  interests?: string[] | null;
-  notifications_enabled?: boolean | null;
-  push_notifications_enabled?: boolean | null;
-  payment_email_enabled?: boolean | null;
-  subscription_notifications_enabled?: boolean | null;
-  login_notifications_enabled?: boolean | null;
-  hidden_from_attendees?: boolean | null;
-  two_fa?: boolean | null;
-  joinedAt?: string | null;
-  createdAt?: string | null;
-  created_at?: string | null;
-  ticketsCount?: number | null;
-  eventsAttended?: number | null;
-  followers?: number | null;
-  following?: number | null;
-};
+  id: string | number
+  name?: string | null
+  email?: string | null
+  phone?: string | null
+  username?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  avatar?: string | null
+  avatarUrl?: string | null
+  bio?: string | null
+  location?: string | null
+  website?: string | null
+  timezone?: string | null
+  interests?: string[] | null
+  notifications_enabled?: boolean | null
+  push_notifications_enabled?: boolean | null
+  payment_email_enabled?: boolean | null
+  subscription_notifications_enabled?: boolean | null
+  login_notifications_enabled?: boolean | null
+  hidden_from_attendees?: boolean | null
+  two_fa?: boolean | null
+  joinedAt?: string | null
+  createdAt?: string | null
+  created_at?: string | null
+  ticketsCount?: number | null
+  eventsAttended?: number | null
+  followers?: number | null
+  following?: number | null
+}
 
 export type ApiUserListResponse = {
-  data: ApiUser[];
-  meta: { total: number; page: number; limit: number; total_pages: number };
-};
+  data: ApiUser[]
+  meta: { total: number; page: number; limit: number; total_pages: number }
+}
 
 export const formatJoinedAt = (value?: string | null): string => {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  });
-};
+  })
+}
 
 export const mapApiUser = (raw: ApiUser): User => {
-  const id = String(raw.id);
-  const composedName = [raw.first_name, raw.last_name].filter(Boolean).join(' ').trim();
-  const name = raw.name?.trim() || composedName || id;
-  const username = raw.username?.trim() || id;
+  const id = String(raw.id)
+  const composedName = [raw.first_name, raw.last_name].filter(Boolean).join(' ').trim()
+  const name = raw.name?.trim() || composedName || id
+  const username = raw.username?.trim() || id
 
   return {
     id,
@@ -108,6 +108,5 @@ export const mapApiUser = (raw: ApiUser): User => {
     eventsAttended: raw.eventsAttended ?? 0,
     followers: raw.followers ?? 0,
     following: raw.following ?? 0,
-  };
-};
-
+  }
+}

@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { tagsApi, type TagsListParams } from '@shared/api/tags.api';
+import { type TagsListParams, tagsApi } from '@shared/api/tags.api'
+import { useQuery } from '@tanstack/react-query'
 
 export function useTags(params?: TagsListParams) {
   return useQuery({
@@ -12,5 +12,5 @@ export function useTags(params?: TagsListParams) {
       limit: raw.meta.limit,
       totalPages: raw.meta.total_pages,
     }),
-  });
+  })
 }

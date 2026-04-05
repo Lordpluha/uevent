@@ -1,20 +1,22 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
-import * as speakeasy from 'speakeasy'
 import { toDataURL } from 'qrcode'
+import * as speakeasy from 'speakeasy'
+import { Repository } from 'typeorm'
+import { hashPassword, verifyPassword } from '../../common/password.util'
+import { CreateOrganizationDto } from '../organizations/dto/create-organization.dto'
 import { Organization } from '../organizations/entities/organization.entity'
 import { OrganizationSession } from '../organizations/entities/organization-session.entity'
 import { LoginDto } from './dto/login.dto'
+import { ChangeOrgPasswordDto, UpdateOrgEmailDto, UpdateOrgNotificationsDto, UpdateOrgProfileDto } from './dto/org-settings.dto'
 import { JwtPayload } from './types/jwt-payload.interface'
-import { hashPassword, verifyPassword } from '../../common/password.util'
-import { CreateOrganizationDto } from '../organizations/dto/create-organization.dto'
-import {
-  ChangeOrgPasswordDto,
-  UpdateOrgEmailDto,
-  UpdateOrgProfileDto,
-} from './dto/org-settings.dto'
 
 const ACCESS_EXPIRES = '15m'
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -54,10 +56,7 @@ export class OrgsAuthService {
 
     // If 2FA is enabled, return a temporary token instead of full auth
     if (org.two_factor_enabled && org.two_fa_secret) {
-      const tempToken = await this.jwtService.signAsync(
-        { sub: org.id, type: '2fa_pending' },
-        { expiresIn: '5m' },
-      )
+      const tempToken = await this.jwtService.signAsync({ sub: org.id, type: '2fa_pending' }, { expiresIn: '5m' })
       return { requires2fa: true, tempToken }
     }
 
@@ -173,6 +172,16 @@ export class OrgsAuthService {
     return { message: 'Password updated' }
   }
 
+  async updateNotifications(id: string, dto: UpdateOrgNotificationsDto) {
+    const org = await this.orgsRepo.findOneBy({ id })
+    if (!org) throw new NotFoundException('Organization not found')
+
+    if (dto.notifications_enabled !== undefined) org.notifications_enabled = dto.notifications_enabled
+    if (dto.push_notifications_enabled !== undefined) org.push_notifications_enabled = dto.push_notifications_enabled
+    const updated = await this.orgsRepo.save(org)
+    return this.toSafeOrganization(updated)
+  }
+
   async logout(sessionId: string) {
     await this.sessionsRepo.delete(sessionId)
   }
@@ -239,4 +248,3 @@ export class OrgsAuthService {
     return safe
   }
 }
-

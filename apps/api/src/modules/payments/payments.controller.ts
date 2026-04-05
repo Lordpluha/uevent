@@ -1,21 +1,50 @@
-import { Controller, Post, Patch, Get, Delete, Body, Param, Headers, RawBodyRequest, Req, Res, HttpCode, Logger, BadRequestException, ForbiddenException, InternalServerErrorException, Query, UploadedFiles, UseGuards, UseInterceptors, ParseUUIDPipe } from '@nestjs/common'
-import { Request, Response } from 'express'
-import { PaymentsService } from './payments.service'
-import Stripe from 'stripe'
-import { ApiConfigService } from '../../config/api-config.service'
-import { JwtGuard } from '../auth/guards/jwt.guard'
-import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard'
+import { randomUUID } from 'node:crypto'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Headers,
+  HttpCode,
+  InternalServerErrorException,
+  Logger,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  RawBodyRequest,
+  Req,
+  Res,
+  UnauthorizedException,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common'
+import { FilesInterceptor } from '@nestjs/platform-express'
 import { ApiBody, ApiExtraModels, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
-import { ApiAccessCookieAuth, createPaymentIntentResponseSchema, paymentConfigResponseSchema, paymentIntentStatusResponseSchema } from '../../common/swagger/openapi.util'
-import { Payment } from './entities/payment.entity'
+import { Request, Response } from 'express'
+import { memoryStorage } from 'multer'
+import Stripe from 'stripe'
+import { ALLOWED_DOCUMENT_MIMES, mimeToExt } from '../../common/file-upload.util'
+import {
+  ApiAccessCookieAuth,
+  createPaymentIntentResponseSchema,
+  paymentConfigResponseSchema,
+  paymentIntentStatusResponseSchema,
+} from '../../common/swagger/openapi.util'
+import { ApiConfigService } from '../../config/api-config.service'
 import { DEFAULT_PAYMENT_CURRENCY } from '../../config/env.schema'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
+import { JwtGuard } from '../auth/guards/jwt.guard'
+import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard'
 import { JwtPayload } from '../auth/types/jwt-payload.interface'
-import { FilesInterceptor } from '@nestjs/platform-express'
-import { memoryStorage } from 'multer'
-import { writeFileSync, mkdirSync } from 'node:fs'
-import { extname, join } from 'node:path'
-import { randomUUID } from 'node:crypto'
+import { Payment } from './entities/payment.entity'
+import { PaymentsService } from './payments.service'
 
 const STORAGE_ROOT = process.env.VERCEL ? '/tmp/storage' : join(process.cwd(), 'storage')
 
@@ -73,26 +102,29 @@ export class PaymentsController {
   @ApiOkResponse({ description: 'Stripe payment intent created.', schema: createPaymentIntentResponseSchema })
   async createPaymentIntent(
     @Body() body: {
-    amount?: number
-    currency?: string
-    orderId?: string
-    ticketId?: string
-    quantity?: number
-    userEmail?: string
-    userName?: string
-    eventTitle?: string
-    ticketName?: string
-    eventDate?: string
-    eventLocation?: string
-    organizationName?: string
-    promoCode?: string
-    promoCodeId?: string
-    promoDiscountPercent?: number
-    eventId?: string
-  },
+      amount?: number
+      currency?: string
+      orderId?: string
+      ticketId?: string
+      quantity?: number
+      userEmail?: string
+      userName?: string
+      eventTitle?: string
+      ticketName?: string
+      eventDate?: string
+      eventLocation?: string
+      organizationName?: string
+      promoCode?: string
+      promoCodeId?: string
+      promoDiscountPercent?: number
+      eventId?: string
+    },
     @CurrentUser() user?: JwtPayload,
   ) {
-    if (user?.type === 'organization') {
+    if (!user) {
+      throw new UnauthorizedException('You must be logged in to purchase tickets')
+    }
+    if (user.type === 'organization') {
       throw new ForbiddenException('Organization accounts cannot purchase tickets')
     }
 
@@ -135,8 +167,8 @@ export class PaymentsController {
 
     const metadata: Record<string, string> = {}
 
-    if(orderId) metadata.orderId = orderId
-    if(ticketId) metadata.ticketId = ticketId
+    if (orderId) metadata.orderId = orderId
+    if (ticketId) metadata.ticketId = ticketId
     metadata.quantity = String(pricing.quantity)
     // For authenticated users, pin identity from server-side DB to prevent client spoofing
     if (user?.type === 'user') {
@@ -145,14 +177,14 @@ export class PaymentsController {
       if (identity.email) metadata.userEmail = identity.email
       if (identity.name) metadata.userName = identity.name
     } else {
-      if(userEmail) metadata.userEmail = userEmail
-      if(userName) metadata.userName = userName
+      if (userEmail) metadata.userEmail = userEmail
+      if (userName) metadata.userName = userName
     }
-    if(eventTitle) metadata.eventTitle = eventTitle
-    if(ticketName) metadata.ticketName = ticketName
-    if(eventDate) metadata.eventDate = eventDate
-    if(eventLocation) metadata.eventLocation = eventLocation
-    if(organizationName) metadata.organizationName = organizationName
+    if (eventTitle) metadata.eventTitle = eventTitle
+    if (ticketName) metadata.ticketName = ticketName
+    if (eventDate) metadata.eventDate = eventDate
+    if (eventLocation) metadata.eventLocation = eventLocation
+    if (organizationName) metadata.organizationName = organizationName
     if (promoCode) {
       const validatedPromo = pricing.promo
       if (!validatedPromo) {
@@ -170,9 +202,10 @@ export class PaymentsController {
       metadata.promoDiscountPercent = String(validatedPromo.discountPercent)
     }
 
-    const paymentIntent = pricing.baseAmountCents > 0
-      ? await this.paymentsService.createPaymentIntent(pricing.baseAmountCents, currency, metadata)
-      : await this.paymentsService.createFreeCheckout(metadata, currency)
+    const paymentIntent =
+      pricing.baseAmountCents > 0
+        ? await this.paymentsService.createPaymentIntent(pricing.baseAmountCents, currency, metadata)
+        : await this.paymentsService.createFreeCheckout(metadata, currency)
 
     const platformFee = pricing.baseAmountCents > 0 ? this.paymentsService.getPlatformFeeCents() : 0
     return {
@@ -198,7 +231,7 @@ export class PaymentsController {
       required: ['code'],
     },
   })
-  async validatePromoCode(@Body() body: { code: string; eventId?: string }) {
+  validatePromoCode(@Body() body: { code: string; eventId?: string }) {
     return this.paymentsService.validatePromoCode(body.code, body.eventId)
   }
 
@@ -206,7 +239,7 @@ export class PaymentsController {
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Get promo codes created by current organization' })
   @ApiAccessCookieAuth()
-  async getMyPromoCodes(@CurrentUser() user: JwtPayload) {
+  getMyPromoCodes(@CurrentUser() user: JwtPayload) {
     if (user.type !== 'organization') {
       throw new ForbiddenException('Only organization accounts can access promo codes')
     }
@@ -232,7 +265,7 @@ export class PaymentsController {
       required: ['code', 'discountPercent'],
     },
   })
-  async createPromoCode(
+  createPromoCode(
     @CurrentUser() user: JwtPayload,
     @Body() body: {
       code: string
@@ -254,7 +287,7 @@ export class PaymentsController {
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Update promo code for organization' })
   @ApiAccessCookieAuth()
-  async updatePromoCode(
+  updatePromoCode(
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: {
@@ -275,11 +308,7 @@ export class PaymentsController {
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Get organization internal wallet summary and transactions' })
   @ApiAccessCookieAuth()
-  async getOrganizationWallet(
-    @CurrentUser() user: JwtPayload,
-    @Query('page') page = '1',
-    @Query('limit') limit = '20',
-  ) {
+  getOrganizationWallet(@CurrentUser() user: JwtPayload, @Query('page') page = '1', @Query('limit') limit = '20') {
     if (user.type !== 'organization') {
       throw new ForbiddenException('Only organization accounts can access wallet data')
     }
@@ -291,7 +320,7 @@ export class PaymentsController {
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Get current organization verification status' })
   @ApiAccessCookieAuth()
-  async getOrganizationVerification(@CurrentUser() user: JwtPayload) {
+  getOrganizationVerification(@CurrentUser() user: JwtPayload) {
     if (user.type !== 'organization') {
       throw new ForbiddenException('Only organization accounts can access verification')
     }
@@ -307,13 +336,7 @@ export class PaymentsController {
     FilesInterceptor('documents', 10, {
       storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
-        const allowedMimePrefixes = ['image/']
-        const allowedMimeExact = [
-          'application/pdf',
-          'application/msword',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ]
-        if (!allowedMimePrefixes.some((p) => file.mimetype.startsWith(p)) && !allowedMimeExact.includes(file.mimetype)) {
+        if (!ALLOWED_DOCUMENT_MIMES.has(file.mimetype)) {
           return cb(new BadRequestException('Only images, PDF, DOC and DOCX files are allowed'), false)
         }
         cb(null, true)
@@ -334,7 +357,7 @@ export class PaymentsController {
       required: ['documents'],
     },
   })
-  async submitOrganizationVerification(
+  submitOrganizationVerification(
     @CurrentUser() user: JwtPayload,
     @UploadedFiles() files: Express.Multer.File[],
     @Body() body: { additionalInformation?: string },
@@ -349,7 +372,7 @@ export class PaymentsController {
     const dir = join(STORAGE_ROOT, 'verifications')
     mkdirSync(dir, { recursive: true })
     const documentUrls = files.map((file) => {
-      const filename = `${randomUUID()}${extname(file.originalname)}`
+      const filename = `${randomUUID()}${mimeToExt(file.mimetype)}`
       writeFileSync(join(dir, filename), file.buffer)
       return `${this.apiConfig.apiUrl}/storage/verifications/${filename}`
     })
@@ -364,7 +387,7 @@ export class PaymentsController {
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Cancel a pending organization verification request' })
   @ApiAccessCookieAuth()
-  async cancelOrganizationVerification(@CurrentUser() user: JwtPayload) {
+  cancelOrganizationVerification(@CurrentUser() user: JwtPayload) {
     if (user.type !== 'organization') {
       throw new ForbiddenException('Only organization accounts can cancel verification')
     }
@@ -375,7 +398,7 @@ export class PaymentsController {
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Get organization transaction history' })
   @ApiAccessCookieAuth()
-  async getOrganizationTransactions(
+  getOrganizationTransactions(
     @CurrentUser() user: JwtPayload,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
@@ -449,10 +472,7 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Reconcile purchased tickets for current user and payment intent' })
   @ApiAccessCookieAuth()
   @ApiParam({ name: 'paymentIntentId', description: 'Stripe payment intent id', schema: { type: 'string' } })
-  async reconcilePaymentTickets(
-    @Param('paymentIntentId') paymentIntentId: string,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  reconcilePaymentTickets(@Param('paymentIntentId') paymentIntentId: string, @CurrentUser() user: JwtPayload) {
     if (user.type !== 'user') {
       throw new ForbiddenException('Only user accounts can reconcile purchased tickets')
     }
@@ -510,10 +530,12 @@ export class PaymentsController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Stripe webhook endpoint' })
   @ApiHeader({ name: 'stripe-signature', required: true, description: 'Stripe webhook signature header.' })
-  @ApiOkResponse({ description: 'Webhook accepted.', schema: { type: 'object', properties: { received: { type: 'boolean' } }, required: ['received'] } })
+  @ApiOkResponse({
+    description: 'Webhook accepted.',
+    schema: { type: 'object', properties: { received: { type: 'boolean' } }, required: ['received'] },
+  })
   async handleWebhook(@Req() req: RawBodyRequest<Request>, @Headers('stripe-signature') signature: string) {
-
-    if(!signature) {
+    if (!signature) {
       this.logger.error('Missing stripe-signature header')
       throw new BadRequestException('Missing stripe-signature header')
     }
@@ -528,7 +550,7 @@ export class PaymentsController {
       await this.paymentsService.handleWebhookEvent(event)
 
       return { received: true }
-    } catch(error) {
+    } catch (error) {
       this.logger.error(`Webhook error: ${error.message}`)
       throw new InternalServerErrorException('Webhook handling failed')
     }

@@ -1,28 +1,31 @@
-import { Link } from 'react-router';
+import { EventCard } from '@entities/Event'
 import {
-  CalendarDays,
-  Building2,
-  Heart,
-  Users,
-} from 'lucide-react';
-
-import { EventCard } from '@entities/Event';
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle, JsonLd, Separator } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { SITE_URL } from '@shared/config/app';
-import { OrgProfileHero } from './OrgProfileHero';
-import { useOrgProfileData } from './useOrgProfileData';
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  JsonLd,
+  Separator,
+} from '@shared/components'
+import { SITE_URL } from '@shared/config/app'
+import { useAppContext } from '@shared/lib'
+import { Building2, CalendarDays, Heart, Users } from 'lucide-react'
+import { Link } from 'react-router'
+import { OrgProfileHero } from './OrgProfileHero'
+import { useOrgProfileData } from './useOrgProfileData'
 
 export function OrgProfilePage({ overrideId }: { overrideId?: string } = {}) {
-  const { t } = useAppContext();
-  const { org, isLoading, displayEvents, isOwner } = useOrgProfileData(overrideId);
+  const { t } = useAppContext()
+  const { org, isLoading, displayEvents, isOwner } = useOrgProfileData(overrideId)
 
   if (isLoading) {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </main>
-    );
+    )
   }
 
   if (!org) {
@@ -42,24 +45,26 @@ export function OrgProfilePage({ overrideId }: { overrideId?: string } = {}) {
           </EmptyContent>
         </Empty>
       </main>
-    );
+    )
   }
 
   return (
     <main className="w-full pb-16">
-      <JsonLd schema={{
-        '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: org.title,
-        description: org.description,
-        url: org.website ?? `${SITE_URL}/organizations/${org.id}`,
-        logo: org.avatarUrl,
-        image: org.coverUrl ?? org.avatarUrl,
-        ...(org.location && { address: { '@type': 'PostalAddress', addressLocality: org.location } }),
-        ...(org.email && { email: org.email }),
-        ...(org.phone && { telephone: org.phone }),
-        numberOfEmployees: { '@type': 'QuantitativeValue', value: org.membersCount },
-      }} />
+      <JsonLd
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: org.title,
+          description: org.description,
+          url: org.website ?? `${SITE_URL}/organizations/${org.id}`,
+          logo: org.avatarUrl,
+          image: org.coverUrl ?? org.avatarUrl,
+          ...(org.location && { address: { '@type': 'PostalAddress', addressLocality: org.location } }),
+          ...(org.email && { email: org.email }),
+          ...(org.phone && { telephone: org.phone }),
+          numberOfEmployees: { '@type': 'QuantitativeValue', value: org.membersCount },
+        }}
+      />
       <OrgProfileHero overrideId={overrideId} />
 
       <div className="relative z-10 mx-auto w-full max-w-5xl px-4 sm:px-6">
@@ -90,10 +95,7 @@ export function OrgProfilePage({ overrideId }: { overrideId?: string } = {}) {
               {t.organizations.eventsBy.replace('{{name}}', org.title)}
             </h2>
             {displayEvents.length > 0 && (
-              <Link
-                to={`/events?organizationId=${org.id}`}
-                className="text-xs text-primary hover:underline"
-              >
+              <Link to={`/events?organizationId=${org.id}`} className="text-xs text-primary hover:underline">
                 {t.common.seeAll}
               </Link>
             )}
@@ -130,6 +132,5 @@ export function OrgProfilePage({ overrideId }: { overrideId?: string } = {}) {
         </section>
       </div>
     </main>
-  );
+  )
 }
-

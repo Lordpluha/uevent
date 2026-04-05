@@ -1,11 +1,8 @@
-import { PaymentSuccessPage } from '../pages/PaymentSuccess';
-import { SITE_NAME } from '@shared/config/app';
+import { SITE_NAME } from '@shared/config/app'
+import { PaymentSuccessPage } from '../pages/PaymentSuccess'
 
 export function meta() {
-  return [
-    { title: `Payment — ${SITE_NAME}` },
-    { name: 'robots', content: 'noindex, nofollow' },
-  ];
+  return [{ title: `Payment — ${SITE_NAME}` }, { name: 'robots', content: 'noindex, nofollow' }]
 }
 
-export default PaymentSuccessPage;
+export default PaymentSuccessPage

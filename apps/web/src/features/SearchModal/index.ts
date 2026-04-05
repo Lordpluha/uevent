@@ -1,1 +1,1 @@
-export { SearchModal } from './ui/SearchModal';
+export { SearchModal } from './ui/SearchModal'

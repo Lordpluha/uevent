@@ -1,14 +1,13 @@
-import { Entity, Column, OneToMany, CreateDateColumn, ManyToMany, JoinTable } from 'typeorm'
-import { OrganizationSession } from './organization-session.entity'
-import { OrganizationOtp } from './organization-otp.entity'
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm'
+import { UuidEntity } from '../../../common/uuid.entity'
 import { Event } from '../../events/entities/event.entity'
 import { User } from '../../users/entities/user.entity'
-import { UuidEntity } from '../../../common/uuid.entity'
-import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { OrganizationOtp } from './organization-otp.entity'
+import { OrganizationSession } from './organization-session.entity'
 
 @Entity('organizations')
 export class Organization extends UuidEntity {
-
   @Column()
   @ApiProperty()
   name: string
@@ -20,7 +19,6 @@ export class Organization extends UuidEntity {
   @Column({ type: 'text', nullable: true })
   @ApiPropertyOptional({ nullable: true })
   description: string
-
 
   @Column({ nullable: true })
   @ApiPropertyOptional({ nullable: true })
@@ -42,7 +40,6 @@ export class Organization extends UuidEntity {
   @ApiHideProperty()
   password: string
 
-
   @Column({ nullable: true })
   @ApiPropertyOptional({ nullable: true })
   category: string
@@ -58,6 +55,10 @@ export class Organization extends UuidEntity {
   @Column({ default: true })
   @ApiProperty()
   notifications_enabled: boolean
+
+  @Column({ default: false })
+  @ApiProperty()
+  push_notifications_enabled: boolean
 
   @Column({ default: false })
   @ApiProperty()

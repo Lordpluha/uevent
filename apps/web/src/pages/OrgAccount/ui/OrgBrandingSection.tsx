@@ -1,46 +1,52 @@
-import type { ChangeEvent } from 'react';
-import { useRef } from 'react';
-import { Camera, ImagePlus } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { Avatar, AvatarFallback, AvatarImage } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { organizationsApi } from '@entities/Organization';
-import { useRequiredOrgAccountData } from './useOrgAccountData';
+import { organizationsApi } from '@entities/Organization'
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useMutation } from '@tanstack/react-query'
+import { Camera, ImagePlus } from 'lucide-react'
+import type { ChangeEvent } from 'react'
+import { useRef } from 'react'
+import { toast } from 'sonner'
+import { useRequiredOrgAccountData } from './useOrgAccountData'
 
 export function OrgBrandingSection() {
-  const { t } = useAppContext();
-  const { org, isLoading, invalidateOrgQueries } = useRequiredOrgAccountData();
-  const logoInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useAppContext()
+  const { org, isLoading, invalidateOrgQueries } = useRequiredOrgAccountData()
+  const logoInputRef = useRef<HTMLInputElement>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
 
   const uploadLogoMutation = useMutation({
     mutationFn: (file: File) => organizationsApi.uploadLogo(org?.id ?? '', file),
-    onSuccess: async () => { await invalidateOrgQueries(); toast.success(t.orgAccount.branding.logoUpdated); },
+    onSuccess: async () => {
+      await invalidateOrgQueries()
+      toast.success(t.orgAccount.branding.logoUpdated)
+    },
     onError: () => toast.error(t.orgAccount.branding.logoFailed),
-  });
+  })
 
   const uploadCoverMutation = useMutation({
     mutationFn: (file: File) => organizationsApi.uploadCover(org?.id ?? '', file),
-    onSuccess: async () => { await invalidateOrgQueries(); toast.success(t.orgAccount.branding.coverUpdated); },
+    onSuccess: async () => {
+      await invalidateOrgQueries()
+      toast.success(t.orgAccount.branding.coverUpdated)
+    },
     onError: () => toast.error(t.orgAccount.branding.coverFailed),
-  });
+  })
 
   if (isLoading || !org) {
-    return <section className="mt-5 h-40 animate-pulse rounded-xl border border-border/60 bg-muted" />;
+    return <section className="mt-5 h-40 animate-pulse rounded-xl border border-border/60 bg-muted" />
   }
 
   const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) uploadLogoMutation.mutate(file);
-    e.target.value = '';
-  };
+    const file = e.target.files?.[0]
+    if (file) uploadLogoMutation.mutate(file)
+    e.target.value = ''
+  }
 
   const handleCoverChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) uploadCoverMutation.mutate(file);
-    e.target.value = '';
-  };
+    const file = e.target.files?.[0]
+    if (file) uploadCoverMutation.mutate(file)
+    e.target.value = ''
+  }
 
   return (
     <section className="mt-5 rounded-xl border border-border/60 bg-card p-5">
@@ -94,5 +100,5 @@ export function OrgBrandingSection() {
         </div>
       </div>
     </section>
-  );
+  )
 }

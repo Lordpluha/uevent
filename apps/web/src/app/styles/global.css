@@ -126,4 +126,19 @@
   html {
     @apply font-sans;
   }
+  button,
+  [role="button"],
+  a,
+  label[for],
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"],
+  input[type="range"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="button"],
+  [tabindex]:not([tabindex="-1"]) {
+    cursor: pointer;
+  }
 }

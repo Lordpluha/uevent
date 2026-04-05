@@ -1,1 +1,1 @@
-export { PromoCodeSection } from './PromoCodeSection';
+export { PromoCodeSection } from './PromoCodeSection'

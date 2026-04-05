@@ -1,16 +1,16 @@
-import { cva } from 'class-variance-authority';
-import { Building2, User } from 'lucide-react';
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogTrigger } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { cn } from '@shared/lib/utils';
-import { LoginForm } from './LoginForm';
-import { RegisterForm } from './RegisterForm';
-import { OrgLoginForm } from './OrgLoginForm';
-import { OrgRegisterForm } from './OrgRegisterForm';
-import { TwoFaChallengeForm } from './TwoFaChallengeForm';
-import { ForgotPasswordForm } from './ForgotPasswordForm';
-import { ResetPasswordForm } from './ResetPasswordForm';
+import { Dialog, DialogContent, DialogTrigger } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { cn } from '@shared/lib/utils'
+import { cva } from 'class-variance-authority'
+import { Building2, User } from 'lucide-react'
+import { useState } from 'react'
+import { ForgotPasswordForm } from './ForgotPasswordForm'
+import { LoginForm } from './LoginForm'
+import { OrgLoginForm } from './OrgLoginForm'
+import { OrgRegisterForm } from './OrgRegisterForm'
+import { RegisterForm } from './RegisterForm'
+import { ResetPasswordForm } from './ResetPasswordForm'
+import { TwoFaChallengeForm } from './TwoFaChallengeForm'
 
 const triggerVariants = cva(
   'inline-flex items-center font-medium transition-colors border border-border hover:bg-accent',
@@ -23,44 +23,50 @@ const triggerVariants = cva(
     },
     defaultVariants: { variant: 'pill' },
   },
-);
+)
 
-type AccountType = 'user' | 'organization';
-type AuthTab = 'login' | 'register';
-type AuthView = 'main' | '2fa' | 'forgot-password' | 'reset-password';
+type AccountType = 'user' | 'organization'
+type AuthTab = 'login' | 'register'
+type AuthView = 'main' | '2fa' | 'forgot-password' | 'reset-password'
 
 type Props = {
-  defaultTab?: AuthTab;
-  variant?: 'pill' | 'block';
-  triggerLabel?: string;
-  triggerClassName?: string;
-};
+  defaultTab?: AuthTab
+  variant?: 'pill' | 'block'
+  triggerLabel?: string
+  triggerClassName?: string
+}
 
 export const AuthModal = ({ defaultTab = 'login', variant = 'pill', triggerLabel, triggerClassName }: Props) => {
-  const { t } = useAppContext();
-  const [accountType, setAccountType] = useState<AccountType>('user');
-  const [tab, setTab] = useState<AuthTab>(defaultTab);
-  const [open, setOpen] = useState(false);
-  const [view, setView] = useState<AuthView>('main');
-  const [tempToken, setTempToken] = useState('');
-  const [twoFaAccountType, setTwoFaAccountType] = useState<AccountType>('user');
-  const [resetEmail, setResetEmail] = useState('');
+  const { t } = useAppContext()
+  const [accountType, setAccountType] = useState<AccountType>('user')
+  const [tab, setTab] = useState<AuthTab>(defaultTab)
+  const [open, setOpen] = useState(false)
+  const [view, setView] = useState<AuthView>('main')
+  const [tempToken, setTempToken] = useState('')
+  const [twoFaAccountType, setTwoFaAccountType] = useState<AccountType>('user')
+  const [resetEmail, setResetEmail] = useState('')
 
   const handleClose = () => {
-    setOpen(false);
-    setView('main');
-    setTempToken('');
-    setResetEmail('');
-  };
+    setOpen(false)
+    setView('main')
+    setTempToken('')
+    setResetEmail('')
+  }
 
   const handle2faRequired = (token: string, type: AccountType = 'user') => {
-    setTempToken(token);
-    setTwoFaAccountType(type);
-    setView('2fa');
-  };
+    setTempToken(token)
+    setTwoFaAccountType(type)
+    setView('2fa')
+  }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); else setOpen(true); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) handleClose()
+        else setOpen(true)
+      }}
+    >
       <DialogTrigger render={<button type="button" className={cn(triggerVariants({ variant }), triggerClassName)} />}>
         {triggerLabel ?? t.header.actions.login}
       </DialogTrigger>
@@ -71,17 +77,26 @@ export const AuthModal = ({ defaultTab = 'login', variant = 'pill', triggerLabel
             tempToken={tempToken}
             accountType={twoFaAccountType}
             onSuccess={handleClose}
-            onBack={() => { setView('main'); setTempToken(''); }}
+            onBack={() => {
+              setView('main')
+              setTempToken('')
+            }}
           />
         ) : view === 'forgot-password' ? (
           <ForgotPasswordForm
-            onCodeSent={(email) => { setResetEmail(email); setView('reset-password'); }}
+            onCodeSent={(email) => {
+              setResetEmail(email)
+              setView('reset-password')
+            }}
             onBack={() => setView('main')}
           />
         ) : view === 'reset-password' ? (
           <ResetPasswordForm
             email={resetEmail}
-            onSuccess={() => { setView('main'); setTab('login'); }}
+            onSuccess={() => {
+              setView('main')
+              setTab('login')
+            }}
             onBack={() => setView('forgot-password')}
           />
         ) : (
@@ -156,5 +171,5 @@ export const AuthModal = ({ defaultTab = 'login', variant = 'pill', triggerLabel
         )}
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}

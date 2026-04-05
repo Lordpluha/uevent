@@ -1,12 +1,12 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common'
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { DataSource } from 'typeorm'
 import { Request } from 'express'
-import { JwtPayload } from '../types/jwt-payload.interface'
-import { UserSession } from '../../users/entities/user-session.entity'
+import { DataSource } from 'typeorm'
+import { Organization } from '../../organizations/entities/organization.entity'
 import { OrganizationSession } from '../../organizations/entities/organization-session.entity'
 import { User } from '../../users/entities/user.entity'
-import { Organization } from '../../organizations/entities/organization.entity'
+import { UserSession } from '../../users/entities/user-session.entity'
+import { JwtPayload } from '../types/jwt-payload.interface'
 
 @Injectable()
 export class JwtGuard implements CanActivate {

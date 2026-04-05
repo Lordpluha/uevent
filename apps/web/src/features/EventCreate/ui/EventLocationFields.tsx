@@ -1,36 +1,41 @@
-import { useMemo, useState, useCallback } from 'react';
-import type { UseFormReturn } from 'react-hook-form';
-import { Button, Field, FieldError, FieldTitle, Input } from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import type { CreateEventDto } from '@entities/Event';
-import { LeafletMapPicker } from './LeafletMapPicker';
-import { DEFAULT_CENTER, buildGoogleMapsLink, parseCoordsFromMapsUrl } from './helpers';
+import type { CreateEventDto } from '@entities/Event'
+import { Button, Field, FieldError, FieldTitle, Input } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useCallback, useMemo, useState } from 'react'
+import type { UseFormReturn } from 'react-hook-form'
+import { buildGoogleMapsLink, DEFAULT_CENTER, parseCoordsFromMapsUrl } from './helpers'
+import { LeafletMapPicker } from './LeafletMapPicker'
 
 interface Props {
-  form: UseFormReturn<CreateEventDto>;
+  form: UseFormReturn<CreateEventDto>
 }
 
 export function EventLocationFields({ form }: Props) {
-  const { t } = useAppContext();
-  const { register, watch, setValue, formState: { errors } } = form;
-  const [mapPickerVisible, setMapPickerVisible] = useState(false);
+  const { t } = useAppContext()
+  const {
+    register,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form
+  const [mapPickerVisible, setMapPickerVisible] = useState(false)
 
-  const locationValue = watch('location') ?? '';
-  const googleMapsUrlValue = watch('googleMapsUrl') ?? '';
+  const locationValue = watch('location') ?? ''
+  const googleMapsUrlValue = watch('googleMapsUrl') ?? ''
 
-  const normalizedLocation = locationValue.trim();
+  const normalizedLocation = locationValue.trim()
   const fallbackGoogleMapsUrl = normalizedLocation
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizedLocation)}`
-    : '';
-  const effectiveGoogleMapsUrl = googleMapsUrlValue.trim() || fallbackGoogleMapsUrl;
-  const selectedCoords = useMemo(() => parseCoordsFromMapsUrl(googleMapsUrlValue.trim()), [googleMapsUrlValue]);
+    : ''
+  const effectiveGoogleMapsUrl = googleMapsUrlValue.trim() || fallbackGoogleMapsUrl
+  const selectedCoords = useMemo(() => parseCoordsFromMapsUrl(googleMapsUrlValue.trim()), [googleMapsUrlValue])
 
   const handleMapSelect = useCallback(
     (coords: { lat: number; lng: number }) => {
-      setValue('googleMapsUrl', buildGoogleMapsLink(coords.lat, coords.lng), { shouldValidate: true });
+      setValue('googleMapsUrl', buildGoogleMapsLink(coords.lat, coords.lng), { shouldValidate: true })
     },
     [setValue],
-  );
+  )
 
   return (
     <>
@@ -60,19 +65,14 @@ export function EventLocationFields({ form }: Props) {
             size="sm"
             disabled={!normalizedLocation}
             onClick={() => {
-              if (!normalizedLocation) return;
-              setValue('googleMapsUrl', fallbackGoogleMapsUrl, { shouldValidate: true });
+              if (!normalizedLocation) return
+              setValue('googleMapsUrl', fallbackGoogleMapsUrl, { shouldValidate: true })
             }}
           >
             {t.eventCreate.locationFields.useCurrentLocation}
           </Button>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setMapPickerVisible((prev) => !prev)}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={() => setMapPickerVisible((prev) => !prev)}>
             {mapPickerVisible ? t.eventCreate.locationFields.hideMap : t.eventCreate.locationFields.chooseOnMap}
           </Button>
 
@@ -90,20 +90,17 @@ export function EventLocationFields({ form }: Props) {
 
         {selectedCoords && (
           <p className="mt-2 text-xs text-muted-foreground">
-            {t.eventCreate.locationFields.selectedCoords} {selectedCoords.lat.toFixed(6)}, {selectedCoords.lng.toFixed(6)}
+            {t.eventCreate.locationFields.selectedCoords} {selectedCoords.lat.toFixed(6)},{' '}
+            {selectedCoords.lng.toFixed(6)}
           </p>
         )}
 
         {mapPickerVisible && (
           <div className="mt-3 overflow-hidden rounded-lg border border-border/60">
-            <LeafletMapPicker
-              initialCenter={DEFAULT_CENTER}
-              selected={selectedCoords}
-              onSelect={handleMapSelect}
-            />
+            <LeafletMapPicker initialCenter={DEFAULT_CENTER} selected={selectedCoords} onSelect={handleMapSelect} />
           </div>
         )}
       </Field>
     </>
-  );
+  )
 }

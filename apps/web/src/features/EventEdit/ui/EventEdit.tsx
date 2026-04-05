@@ -1,5 +1,5 @@
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { type EventModel, eventsApi, type UpdateEventDto, updateEventSchema } from '@entities/Event'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 import {
   Button,
@@ -14,23 +14,23 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { eventsApi, updateEventSchema, type EventModel, type UpdateEventDto } from '@entities/Event';
-import { EventEditTagsField } from './EventEditTagsField';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { Controller, useForm } from 'react-hook-form'
+import { EventEditTagsField } from './EventEditTagsField'
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
 interface EventEditProps {
-  event: EventModel;
+  event: EventModel
   /** Called after successful save */
-  onSuccess?: () => void;
+  onSuccess?: () => void
 }
 
 /* ── Component ────────────────────────────────────────────────────────── */
 
 export function EventEdit({ event, onSuccess }: EventEditProps) {
-  const { t } = useAppContext();
+  const { t } = useAppContext()
   const {
     register,
     control,
@@ -50,9 +50,9 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
       tags: event.tags ?? [],
       imageUrl: event.imageUrl ?? '',
     },
-  });
+  })
 
-  const selectedFormat = watch('format');
+  const selectedFormat = watch('format')
 
   const onSubmit = async (data: UpdateEventDto) => {
     const dto: UpdateEventDto = {
@@ -60,10 +60,10 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
       location: data.format === 'online' ? undefined : data.location || undefined,
       tags: data.tags?.length ? data.tags : undefined,
       imageUrl: data.imageUrl || undefined,
-    };
-    await eventsApi.update(event.id, dto);
-    onSuccess?.();
-  };
+    }
+    await eventsApi.update(event.id, dto)
+    onSuccess?.()
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
@@ -71,11 +71,7 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
         {/* Title */}
         <Field>
           <FieldTitle>{t.common.title}</FieldTitle>
-          <Input
-            {...register('title')}
-            placeholder={t.eventEdit.titlePlaceholder}
-            aria-invalid={!!errors.title}
-          />
+          <Input {...register('title')} placeholder={t.eventEdit.titlePlaceholder} aria-invalid={!!errors.title} />
           <FieldError errors={errors.title ? [errors.title] : undefined} />
         </Field>
 
@@ -101,20 +97,12 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
         <div className="grid grid-cols-2 gap-4">
           <Field>
             <FieldTitle>{t.common.date}</FieldTitle>
-            <Input
-              {...register('date')}
-              type="date"
-              aria-invalid={!!errors.date}
-            />
+            <Input {...register('date')} type="date" aria-invalid={!!errors.date} />
             <FieldError errors={errors.date ? [errors.date] : undefined} />
           </Field>
           <Field>
             <FieldTitle>{t.common.time}</FieldTitle>
-            <Input
-              {...register('time')}
-              type="time"
-              aria-invalid={!!errors.time}
-            />
+            <Input {...register('time')} type="time" aria-invalid={!!errors.time} />
             <FieldError errors={errors.time ? [errors.time] : undefined} />
           </Field>
         </div>
@@ -171,5 +159,5 @@ export function EventEdit({ event, onSuccess }: EventEditProps) {
         {isSubmitting ? t.common.saving : t.common.saveChanges}
       </Button>
     </form>
-  );
+  )
 }

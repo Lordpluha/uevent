@@ -1,6 +1,10 @@
-import { Banknote, CalendarPlus, LayoutDashboard, LogOut, Menu, Settings, Tag, User, X } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router';
+import { useMyOrg } from '@entities/Organization'
+import { useMe } from '@entities/User'
+import { AuthModal } from '@features/AuthModal'
+import { LocaleSwitcher } from '@features/LocaleSwitcher'
+import { SearchModal } from '@features/SearchModal'
+import { ThemeSwitcher } from '@features/ThemeSwitcher'
+import { authApi } from '@shared/api/auth.api'
 import {
   Avatar,
   AvatarFallback,
@@ -14,45 +18,40 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-} from '@shared/components';
-import { useAppContext } from '@shared/lib';
-import { useAuth } from '@shared/lib/auth-context';
-import { authApi } from '@shared/api/auth.api';
-import { useMe } from '@entities/User';
-import { useMyOrg } from '@entities/Organization';
-import { AuthModal } from '@features/AuthModal';
-import { LocaleSwitcher } from '@features/LocaleSwitcher';
-import { ThemeSwitcher } from '@features/ThemeSwitcher';
-import { SearchModal } from '@features/SearchModal';
-import { NotificationsBell } from './NotificationsBell';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useAuth } from '@shared/lib/auth-context'
+import { Banknote, CalendarPlus, LayoutDashboard, LogOut, Menu, Settings, Tag, User, X } from 'lucide-react'
+import { useState } from 'react'
+import { Link } from 'react-router'
+import { NotificationsBell } from './NotificationsBell'
 
 export const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { t } = useAppContext();
-  const { isAuthenticated, accountType, logout } = useAuth();
-  const { data: me } = useMe();
-  const { data: myOrg } = useMyOrg();
-  const currentAccount = accountType === 'organization' ? myOrg : me;
-  const displayName = accountType === 'organization' ? myOrg?.title : me?.name;
-  const displayAvatar = currentAccount?.avatarUrl;
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { t } = useAppContext()
+  const { isAuthenticated, accountType, logout } = useAuth()
+  const { data: me } = useMe()
+  const { data: myOrg } = useMyOrg()
+  const currentAccount = accountType === 'organization' ? myOrg : me
+  const displayName = accountType === 'organization' ? myOrg?.title : me?.name
+  const displayAvatar = currentAccount?.avatarUrl
 
-  const closeMenu = () => setIsMenuOpen(false);
+  const closeMenu = () => setIsMenuOpen(false)
 
   const handleLogout = async () => {
     try {
-      if (accountType === 'organization') await authApi.logoutOrg();
-      else await authApi.logoutUser();
+      if (accountType === 'organization') await authApi.logoutOrg()
+      else await authApi.logoutUser()
     } catch {
       // ignore — token may be expired; logout locally regardless
     }
-    logout();
-  };
+    logout()
+  }
 
   const navigationLinks = [
     { label: t.header.nav.events, href: '/events' },
     { label: t.header.nav.organizations, href: '/organizations' },
-  ];
-
+  ]
 
   return (
     <header className="sticky top-0 z-40 overflow-x-clip border-b border-border/60 bg-background/95 backdrop-blur">
@@ -80,7 +79,9 @@ export const Header = () => {
           <LocaleSwitcher />
           <ThemeSwitcher variant="pill" />
           <SearchModal variant="pill" />
-          {isAuthenticated && accountType === 'user' && <NotificationsBell enabled />}
+          {isAuthenticated && (accountType === 'user' || accountType === 'organization') && (
+            <NotificationsBell enabled />
+          )}
           {isAuthenticated && currentAccount ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="rounded-full transition-opacity hover:opacity-80 focus:outline-none">
@@ -125,10 +126,7 @@ export const Header = () => {
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  variant="destructive"
-                >
+                <DropdownMenuItem onClick={handleLogout} variant="destructive">
                   <LogOut className="h-4 w-4" />
                   {t.header.actions.logout}
                 </DropdownMenuItem>
@@ -182,7 +180,7 @@ export const Header = () => {
               <LocaleSwitcher />
               <ThemeSwitcher variant="block" />
               <SearchModal variant="block" />
-              {isAuthenticated && accountType === 'user' && (
+              {isAuthenticated && (accountType === 'user' || accountType === 'organization') && (
                 <div className="self-start">
                   <NotificationsBell enabled />
                 </div>
@@ -256,7 +254,10 @@ export const Header = () => {
                   )}
                   <button
                     type="button"
-                    onClick={() => { closeMenu(); handleLogout(); }}
+                    onClick={() => {
+                      closeMenu()
+                      handleLogout()
+                    }}
                     className="flex w-full items-center gap-2 rounded-md border border-border px-3 py-3 text-base font-medium text-destructive transition-colors hover:bg-accent"
                   >
                     <LogOut className="h-4 w-4" />
@@ -270,5 +271,5 @@ export const Header = () => {
         </div>
       )}
     </header>
-  );
-};
+  )
+}

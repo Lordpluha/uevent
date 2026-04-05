@@ -1,37 +1,37 @@
-import { Share2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@shared/components';
-import { useAppContext } from '@shared/lib';
+import { Button } from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { Share2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface ShareButtonProps {
-  url?: string;
-  title?: string;
-  text?: string;
-  variant?: 'circle' | 'default';
-  className?: string;
+  url?: string
+  title?: string
+  text?: string
+  variant?: 'circle' | 'default'
+  className?: string
 }
 
 export function ShareButton({ url, title, text, variant = 'circle', className }: ShareButtonProps) {
-  const { t } = useAppContext();
-  const shareUrl = url ?? (typeof window !== 'undefined' ? window.location.href : '');
+  const { t } = useAppContext()
+  const shareUrl = url ?? (typeof window !== 'undefined' ? window.location.href : '')
 
   const handleShare = async () => {
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title, text, url: shareUrl });
-        return;
+        await navigator.share({ title, text, url: shareUrl })
+        return
       } catch (err) {
-        if ((err as DOMException)?.name === 'AbortError') return;
+        if ((err as DOMException)?.name === 'AbortError') return
       }
     }
 
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success(t.common.linkCopied);
+      await navigator.clipboard.writeText(shareUrl)
+      toast.success(t.common.linkCopied)
     } catch {
-      toast.error(t.common.copyFailed);
+      toast.error(t.common.copyFailed)
     }
-  };
+  }
 
   if (variant === 'circle') {
     return (
@@ -43,7 +43,7 @@ export function ShareButton({ url, title, text, variant = 'circle', className }:
       >
         <Share2 className="h-4 w-4" />
       </button>
-    );
+    )
   }
 
   return (
@@ -51,5 +51,5 @@ export function ShareButton({ url, title, text, variant = 'circle', className }:
       <Share2 className="h-4 w-4" />
       {t.common.share}
     </Button>
-  );
+  )
 }

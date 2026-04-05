@@ -1,7 +1,5 @@
-import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-
+import { type CreateEventDto, createEventSchema } from '@entities/Event'
+import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Button,
   Field,
@@ -17,23 +15,22 @@ import {
   SelectTrigger,
   SelectValue,
   Switch,
-} from '@shared/components';
-import { useAppContext } from '@shared/lib';
-
-import { createEventSchema, type CreateEventDto } from '@entities/Event';
-
-import type { EventCreateProps } from './helpers';
-import { getInitialDateTime } from './helpers';
-import { EventLocationFields } from './EventLocationFields';
-import { EventTagsField } from './EventTagsField';
-import { EventImagesField, type CoverFileEntry } from './EventImagesField';
-import { submitCreateEvent } from './submitCreateEvent';
+} from '@shared/components'
+import { useAppContext } from '@shared/lib'
+import { useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { type CoverFileEntry, EventImagesField } from './EventImagesField'
+import { EventLocationFields } from './EventLocationFields'
+import { EventTagsField } from './EventTagsField'
+import type { EventCreateProps } from './helpers'
+import { getInitialDateTime } from './helpers'
+import { submitCreateEvent } from './submitCreateEvent'
 
 export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreateProps) {
-  const { t } = useAppContext();
-  const [durationHours, setDurationHours] = useState<'1' | '2' | '3' | '4'>('2');
-  const [coverFiles, setCoverFiles] = useState<CoverFileEntry[]>([]);
-  const startsAt = getInitialDateTime();
+  const { t } = useAppContext()
+  const [durationHours, setDurationHours] = useState<'1' | '2' | '3' | '4'>('2')
+  const [coverFiles, setCoverFiles] = useState<CoverFileEntry[]>([])
+  const startsAt = getInitialDateTime()
 
   const form = useForm<CreateEventDto>({
     resolver: zodResolver(createEventSchema),
@@ -51,14 +48,21 @@ export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreatePro
       imageUrl: '',
       attendeesPublic: false,
     },
-  });
+  })
 
-  const { register, control, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = form;
-  const selectedFormat = watch('format');
-  const tags = watch('tags') ?? [];
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = form
+  const selectedFormat = watch('format')
+  const tags = watch('tags') ?? []
 
   const onSubmit = (data: CreateEventDto) =>
-    submitCreateEvent({ data, durationHours, coverFiles, onSuccess, errorMessage: t.eventCreate.createFailed });
+    submitCreateEvent({ data, durationHours, coverFiles, onSuccess, errorMessage: t.eventCreate.createFailed })
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
@@ -148,7 +152,11 @@ export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreatePro
         {selectedFormat === 'online' && (
           <Field>
             <FieldTitle>{t.eventCreate.meetingLink}</FieldTitle>
-            <Input {...register('onlineUrl')} placeholder={t.eventCreate.meetingLinkPlaceholder} aria-invalid={!!errors.onlineUrl} />
+            <Input
+              {...register('onlineUrl')}
+              placeholder={t.eventCreate.meetingLinkPlaceholder}
+              aria-invalid={!!errors.onlineUrl}
+            />
             <FieldError errors={errors.onlineUrl ? [errors.onlineUrl] : undefined} />
           </Field>
         )}
@@ -157,7 +165,12 @@ export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreatePro
         <EventTagsField
           tags={tags}
           onAddTag={(tag) => setValue('tags', [...tags, tag])}
-          onRemoveTag={(tag) => setValue('tags', tags.filter((t) => t !== tag))}
+          onRemoveTag={(tag) =>
+            setValue(
+              'tags',
+              tags.filter((t) => t !== tag),
+            )
+          }
         />
 
         {/* Images */}
@@ -222,11 +235,7 @@ export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreatePro
         <Field>
           <FieldTitle>{t.eventCreate.publishAtLabel}</FieldTitle>
           <FieldDescription>{t.eventCreate.publishAtHint}</FieldDescription>
-          <Input
-            {...register('publishAt')}
-            type="date"
-            aria-invalid={!!errors.publishAt}
-          />
+          <Input {...register('publishAt')} type="date" aria-invalid={!!errors.publishAt} />
           <FieldError errors={errors.publishAt ? [errors.publishAt] : undefined} />
         </Field>
       </FieldGroup>
@@ -235,5 +244,5 @@ export function EventCreate({ onSuccess, defaultOrganizationId }: EventCreatePro
         {isSubmitting ? t.common.creating : t.eventCreate.create}
       </Button>
     </form>
-  );
+  )
 }

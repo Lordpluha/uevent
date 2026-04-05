@@ -1,6 +1,6 @@
-import type { Route } from './+types/home';
-import { HomePage } from '@pages/Home';
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@shared/config/app';
+import { HomePage } from '@pages/Home'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@shared/config/app'
+import type { Route } from './+types/home'
 
 export function meta(_: Route.MetaArgs) {
   return [
@@ -14,7 +14,7 @@ export function meta(_: Route.MetaArgs) {
     { name: 'twitter:title', content: SITE_NAME },
     { name: 'twitter:description', content: SITE_DESCRIPTION },
     { tagName: 'link', rel: 'canonical', href: SITE_URL },
-  ];
+  ]
 }
 
-export default HomePage;
+export default HomePage
