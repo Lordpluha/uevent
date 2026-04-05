@@ -232,7 +232,7 @@ export class PaymentsController {
     },
   })
   validatePromoCode(@Body() body: { code: string; eventId?: string }) {
-    return this.paymentsService.validatePromoCode(body.code, body.eventId)
+    return this.paymentsService.validatePromoCodeByEvent(body.code, body.eventId)
   }
 
   @Get('promo-codes/my')

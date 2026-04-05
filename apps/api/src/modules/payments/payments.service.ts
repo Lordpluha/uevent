@@ -91,7 +91,13 @@ export class PaymentsService {
 
     let promo: Awaited<ReturnType<PaymentsService['validatePromoCode']>> | null = null
     if (input.promoCode) {
-      promo = await this.validatePromoCode(input.promoCode, input.eventId ?? ticket.event_id ?? undefined)
+      const resolvedEventId = input.eventId ?? ticket.event_id ?? undefined
+      let organizationId: string | undefined
+      if (resolvedEventId) {
+        const event = await this.eventsRepository.findOne({ where: { id: resolvedEventId }, select: { organization_id: true } })
+        organizationId = event?.organization_id ?? undefined
+      }
+      promo = await this.validatePromoCode(input.promoCode, resolvedEventId, organizationId)
     }
 
     const discountPercent = promo?.discountPercent ?? 0
@@ -108,7 +114,7 @@ export class PaymentsService {
     }
   }
 
-  async validatePromoCode(code: string, eventId?: string) {
+  async validatePromoCode(code: string, eventId?: string, organizationId?: string) {
     const normalizedCode = this.normalizePromoCode(code)
     if (!normalizedCode) {
       throw new BadRequestException('Promo code is required')
@@ -127,6 +133,10 @@ export class PaymentsService {
       throw new BadRequestException('Event id is required for this promo code')
     }
 
+    if (organizationId && promo.organizationId !== organizationId) {
+      throw new BadRequestException('Promo code is not valid for this event')
+    }
+
     if (!this.isPromoCodeActive(promo)) {
       throw new BadRequestException('Promo code is inactive or expired')
     }
@@ -138,6 +148,15 @@ export class PaymentsService {
       organizationId: promo.organizationId,
       eventId: promo.eventId,
     }
+  }
+
+  async validatePromoCodeByEvent(code: string, eventId?: string) {
+    let organizationId: string | undefined
+    if (eventId) {
+      const event = await this.eventsRepository.findOne({ where: { id: eventId }, select: { organization_id: true } })
+      organizationId = event?.organization_id ?? undefined
+    }
+    return this.validatePromoCode(code, eventId, organizationId)
   }
 
   async listOrganizationPromoCodes(organizationId: string) {
