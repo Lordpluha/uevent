@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import { toBuffer } from 'qrcode'
 import Stripe from 'stripe'
-import { Repository } from 'typeorm'
+import { DataSource, Repository } from 'typeorm'
 import { uuidv7 } from 'uuidv7'
 import { ApiConfigService } from '../../config/api-config.service'
 import { Event } from '../events/entities/event.entity'
@@ -57,6 +57,7 @@ export class PaymentsService {
     private readonly emailService: EmailService,
     private readonly notificationsService: NotificationsService,
     private readonly apiConfig: ApiConfigService,
+    private readonly dataSource: DataSource,
   ) {}
 
   private normalizePromoCode(code: string): string {
@@ -537,36 +538,39 @@ export class PaymentsService {
       throw new BadRequestException('Insufficient available balance for this withdrawal request')
     }
 
-    const request = this.organizationWithdrawalRequestsRepository.create({
-      organizationId,
-      amount,
-      currency,
-      destination: dto.destination.trim(),
-      comment: dto.comment?.trim() || null,
-      status: OrganizationWithdrawalStatus.PENDING,
-      adminComment: null,
-      processedAt: null,
-    })
-    const savedRequest = await this.organizationWithdrawalRequestsRepository.save(request)
-
-    const withdrawalTransaction = this.organizationTransactionsRepository.create({
-      organizationId,
-      type: OrganizationTransactionType.WITHDRAWAL_REQUEST,
-      amount: -Math.abs(amount),
-      currency,
-      sourcePaymentId: null,
-      sourcePaymentIntentId: null,
-      sourceWithdrawalRequestId: savedRequest.id,
-      eventTitle: null,
-      ticketTitle: null,
-      quantity: null,
-      note: dto.comment?.trim() || 'Withdrawal request created',
-      metadata: {
+    const savedRequest = await this.dataSource.transaction(async (manager) => {
+      const request = manager.create(OrganizationWithdrawalRequest, {
+        organizationId,
+        amount,
+        currency,
         destination: dto.destination.trim(),
-      },
-    })
+        comment: dto.comment?.trim() || null,
+        status: OrganizationWithdrawalStatus.PENDING,
+        adminComment: null,
+        processedAt: null,
+      })
+      const savedWithdrawal = await manager.save(OrganizationWithdrawalRequest, request)
 
-    await this.organizationTransactionsRepository.save(withdrawalTransaction)
+      const withdrawalTransaction = manager.create(OrganizationTransaction, {
+        organizationId,
+        type: OrganizationTransactionType.WITHDRAWAL_REQUEST,
+        amount: -Math.abs(amount),
+        currency,
+        sourcePaymentId: null,
+        sourcePaymentIntentId: null,
+        sourceWithdrawalRequestId: savedWithdrawal.id,
+        eventTitle: null,
+        ticketTitle: null,
+        quantity: null,
+        note: dto.comment?.trim() || 'Withdrawal request created',
+        metadata: {
+          destination: dto.destination.trim(),
+        },
+      })
+      await manager.save(OrganizationTransaction, withdrawalTransaction)
+
+      return savedWithdrawal
+    })
 
     return savedRequest
   }
@@ -719,7 +723,9 @@ export class PaymentsService {
       }),
     )
 
-    await this.ticketsRepository.save(purchasedTickets)
+    await this.dataSource.transaction(async (manager) => {
+      await manager.save(Ticket, purchasedTickets)
+    })
   }
 
   private hasSaleTransaction(paymentIntentId: string): Promise<boolean> {

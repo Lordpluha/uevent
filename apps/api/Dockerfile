@@ -1,7 +1,7 @@
 FROM node:20-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm install -g pnpm@10.33.0
 
 # ── Install all workspace dependencies ────────────────────────────────────────
 FROM base AS deps
@@ -20,6 +20,14 @@ COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY . .
 RUN pnpm --filter api build
 
+# ── Deploy: flatten prod deps with pnpm deploy ────────────────────────────────
+FROM base AS deploy
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY . .
+RUN pnpm --filter api deploy --prod --legacy /prod/api
+
 # ── Production image ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS production
 WORKDIR /app
@@ -29,8 +37,7 @@ ENV NODE_ENV=production
 RUN addgroup -g 1001 nodejs && adduser -D -u 1001 -G nodejs appuser
 
 COPY --from=build /app/apps/api/dist ./dist
-COPY --from=deps  /app/node_modules ./node_modules
-COPY --from=deps  /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deploy /prod/api/node_modules ./node_modules
 COPY apps/api/package.json ./package.json
 
 # Create storage directory with correct ownership
